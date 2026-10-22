@@ -1,7 +1,7 @@
 "use client";
 
 import type { ModuleInstance } from "@resume/contracts";
-import { BentoGrid, type RenderOptions } from "@resume/modules";
+import { BentoGrid, type RenderOptions, SystemPageView } from "@resume/modules";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@resume/ui/components/empty";
 import { cn } from "@resume/ui/lib/utils";
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -70,14 +70,18 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
           style={{ width, transform: `scale(${scale})`, transformOrigin: "top left" }}
           className="rounded-lg bg-canvas px-4 py-6 shadow-card data-[viewport=desktop]:px-10"
         >
-          {page.modules.length === 0 ? (
+          {page.kind === "system" && page.systemKey !== "home" ? (
+            <SystemPageView
+              page={page}
+              content={content}
+              options={previewOptions}
+              wrapModule={wrapModule}
+            />
+          ) : page.modules.length === 0 ? (
             <Empty className="rounded-xl bg-card">
               <EmptyHeader>
                 <EmptyTitle>이 페이지에는 아직 모듈이 없습니다</EmptyTitle>
-                <EmptyDescription>
-                  {page.title} 페이지의 구성은 다음 단계에서 정합니다. 모듈 추가 기능도 준비
-                  중입니다.
-                </EmptyDescription>
+                <EmptyDescription>왼쪽 "모듈 추가"에서 모듈을 넣으세요.</EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (

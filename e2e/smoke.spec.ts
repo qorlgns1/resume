@@ -115,6 +115,60 @@ test.describe("햄버거 메뉴", () => {
   });
 });
 
+test.describe("목록·상세·히스토리 페이지", () => {
+  test("개인 프로젝트 목록에서 상세로 이동하고 돌아온다", async ({ page }) => {
+    await page.goto(`${web}/projects`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("개인 프로젝트");
+    await expect(page.locator("main article")).toHaveCount(3);
+    await page.getByRole("link", { name: "타임카드 자세히 보기" }).click();
+    await expect(page).toHaveURL(`${web}/projects/timecard`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("타임카드");
+    await expect(page.getByRole("heading", { level: 2, name: "만든 것" })).toBeVisible();
+    // 중첩 목록: 상위 2개, 하위 2개
+    await expect(page.locator("main ul ul > li")).toHaveCount(2);
+    await page.screenshot({ path: `${screens}/project-detail-1440.png`, fullPage: true });
+    await page.getByRole("link", { name: "← 개인 프로젝트" }).click();
+    await expect(page).toHaveURL(`${web}/projects`);
+  });
+
+  test("없는 상세 주소는 404를 돌려준다", async ({ request }) => {
+    expect((await request.get(`${web}/projects/does-not-exist`)).status()).toBe(404);
+    expect((await request.get(`${web}/experience/does-not-exist`)).status()).toBe(404);
+  });
+
+  test("회사 경험 상세에 본문과 관련 성과가 보인다", async ({ page }) => {
+    await page.goto(`${web}/experience`);
+    await page.getByRole("link", { name: "샘플 회사 C 자세히 보기" }).click();
+    await expect(page).toHaveURL(`${web}/experience/company-c`);
+    await expect(page.getByRole("heading", { level: 2, name: "맡은 일" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "이 회사에서의 성과" })).toBeVisible();
+  });
+
+  test("히스토리의 챕터와 연결 링크가 모두 열린다", async ({ page, request }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${web}/history`);
+    await expect(page.locator("main section")).toHaveCount(2);
+    await expectNoHorizontalScroll(page);
+    await page.screenshot({ path: `${screens}/history-390.png`, fullPage: true });
+    const hrefs = await page
+      .locator("main section a")
+      .evaluateAll((links) => links.map((a) => a.getAttribute("href")));
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const href of hrefs) {
+      expect((await request.get(`${web}${href}`)).status(), href ?? "").toBe(200);
+    }
+  });
+
+  test("홈의 프로젝트 카드에서 상세로 이동한다", async ({ page }) => {
+    await page.goto(web);
+    await page
+      .locator('[data-module-id="mod_home_projects"]')
+      .getByRole("link", { name: "책갈피 자세히 보기" })
+      .click();
+    await expect(page).toHaveURL(`${web}/projects/bookmark`);
+  });
+});
+
 test.describe("콘텐츠 출처 모드", () => {
   test("API 모드는 어드민 API에서 읽어 렌더링한다", async ({ page }) => {
     await page.goto(`http://localhost:${ports.webApi}/`);
@@ -195,8 +249,11 @@ test.describe("어드민", () => {
     await page.screenshot({ path: `${screens}/admin-mobile.png` });
     await page.getByRole("button", { name: /데스크톱/ }).click();
 
+    // 기본 페이지는 공개 사이트와 같은 목록을 미리보기로 보여준다
     await sidebar.getByRole("button", { name: /회사 경험/ }).click();
-    await expect(page.getByText("이 페이지에는 아직 모듈이 없습니다")).toBeVisible();
+    await expect(
+      page.locator("[data-viewport]").getByRole("heading", { name: "샘플 회사 A" }),
+    ).toBeVisible();
     await sidebar.getByRole("button", { name: /^홈/ }).click();
   });
 
@@ -320,9 +377,9 @@ test.describe("어드민", () => {
   test("프로젝트 본문을 블록 편집기로 쓰고 저장한다 (한글 조합·중첩 목록)", async () => {
     const sidebar = page.getByRole("complementary", { name: "페이지와 콘텐츠" });
     await sidebar.getByRole("tab", { name: "콘텐츠" }).click();
-    await sidebar.getByRole("button", { name: "타임카드" }).click();
+    await sidebar.getByRole("button", { name: "단어장" }).click();
     await page.getByRole("button", { name: "본문 편집" }).click();
-    const editor = page.getByRole("textbox", { name: "타임카드 본문" });
+    const editor = page.getByRole("textbox", { name: "단어장 본문" });
     await editor.waitFor();
     await editor.click();
 
@@ -357,7 +414,7 @@ test.describe("어드민", () => {
     await page.keyboard.insertText("하위 항목");
     await page.screenshot({ path: `${screens}/admin-body-editor.png` });
     // 편집기 안의 Esc는 패널을 닫지 않는다 (슬래시 메뉴를 닫을 때 패널이 함께 닫히던 문제)
-    const sheet = page.getByRole("dialog", { name: "타임카드 본문" });
+    const sheet = page.getByRole("dialog", { name: "단어장 본문" });
     await page.keyboard.press("Escape");
     await expect(sheet).toBeVisible();
     await sheet.getByRole("button", { name: "닫기" }).click();
@@ -370,7 +427,7 @@ test.describe("어드민", () => {
     const { draft } = (await (await page.request.get(`${admin}/api/admin/draft`)).json()) as {
       draft: { document: { content: { projects: { title: string; body: unknown[] }[] } } };
     };
-    const body = draft.document.content.projects.find((p) => p.title === "타임카드")?.body;
+    const body = draft.document.content.projects.find((p) => p.title === "단어장")?.body;
     expect(body).toEqual([
       expect.objectContaining({ type: "paragraph", text: [{ text: "문제" }] }),
       expect.objectContaining({
@@ -378,6 +435,35 @@ test.describe("어드민", () => {
         items: [{ text: [{ text: "상위 항목" }], children: [{ text: [{ text: "하위 항목" }] }] }],
       }),
     ]);
+  });
+
+  test("히스토리 항목을 추가해 게시하면 공개 히스토리에 보인다", async ({ browser }) => {
+    const sidebar = page.getByRole("complementary", { name: "페이지와 콘텐츠" });
+    await sidebar.getByRole("tab", { name: "콘텐츠" }).click();
+    await sidebar.getByRole("button", { name: "히스토리" }).click();
+    const settings = page.getByRole("complementary", { name: "설정" });
+    await settings.getByRole("button", { name: "항목 추가" }).nth(1).click();
+    const titles = settings.getByLabel("제목", { exact: true });
+    await titles.last().fill("스모크 히스토리 항목");
+    await settings.getByLabel("연결").last().click();
+    await page.getByRole("option", { name: "회사 · 샘플 회사 D" }).click();
+    await page.screenshot({ path: `${screens}/admin-history-editor.png` });
+
+    await page.keyboard.press("ControlOrMeta+s");
+    await expect(page.getByRole("status")).toContainText("초안을 저장했습니다");
+    await page.getByRole("button", { name: "게시", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "게시" }).click();
+    await expect(page.getByRole("status")).toContainText("을 게시했습니다");
+
+    const visitor = await browser.newPage();
+    await visitor.goto(`http://localhost:${ports.webApi}/history`);
+    const entry = visitor.getByRole("listitem").filter({ hasText: "스모크 히스토리 항목" });
+    await expect(entry).toBeVisible();
+    await expect(entry.getByRole("link", { name: /샘플 회사 D/ })).toHaveAttribute(
+      "href",
+      "/experience/company-d",
+    );
+    await visitor.close();
   });
 
   test("관리자 API는 로그인과 같은 출처를 요구한다", async ({ playwright }) => {

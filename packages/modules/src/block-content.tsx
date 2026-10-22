@@ -44,11 +44,13 @@ function BulletedList({ items, depth }: { items: readonly ListItem[]; depth: num
     <ul className={cn("flex flex-col gap-1 pl-6", bulletStyles[(depth - 1) % bulletStyles.length])}>
       {items.map((item, index) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: 목록 항목에는 별도 ID가 없다
-        <li key={index} className="flex flex-col gap-1">
-          <span>
-            <Inline text={item.text} />
-          </span>
-          {item.children?.length ? <BulletedList items={item.children} depth={depth + 1} /> : null}
+        <li key={index}>
+          <Inline text={item.text} />
+          {item.children?.length ? (
+            <div className="mt-1">
+              <BulletedList items={item.children} depth={depth + 1} />
+            </div>
+          ) : null}
         </li>
       ))}
     </ul>

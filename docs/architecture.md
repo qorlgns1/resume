@@ -155,6 +155,21 @@ SiteDocument (버전 관리 단위: 콘텐츠 + 배치를 함께 저장)
 - **라이선스 규칙:** BlockNote 핵심 패키지는 MPL-2.0입니다(의존성으로 쓰는 것은 문제없음). `@blocknote/xl-*` 확장은 GPL-3.0 또는 유료이므로 **설치하지 않습니다.**
 - 한글 입력은 Chrome DevTools 프로토콜로 조합 과정을 흉내 낸 스모크 테스트와 소유자의 실제 키보드 확인으로 검증했습니다.
 
+## 5-3. 목록·상세·히스토리 페이지
+
+| 주소                 | 내용                                                                          | 데이터                                     |
+| -------------------- | ----------------------------------------------------------------------------- | ------------------------------------------ |
+| `/projects`          | 개인 프로젝트 전체 목록 + 페이지에 배치한 모듈                                | `pages/projects` 응답의 `content.projects` |
+| `/projects/[slug]`   | 프로젝트 상세: 고정 정보(상태·기간·태그·링크) + 본문 블록                     | 같은 응답에서 slug로 찾음. 없으면 404      |
+| `/experience`        | 회사 경험 목록 (시작일 역순)                                                  | `content.companies`                        |
+| `/experience/[slug]` | 회사 상세: 기본 정보 + 본문 + 이 회사에 연결된 성과                           | 같은 응답에서 slug로 찾음. 없으면 404      |
+| `/history`           | 챕터(저장 순서) + 타임라인(날짜순). 회사·프로젝트에 연결된 항목은 상세로 링크 | `content.history`                          |
+- 화면 컴포넌트(`ProjectListView`, `ProjectDetailView`, `CompanyListView`, `CompanyDetailView`, `HistoryTimelineView`, `SystemPageView`)는 `@resume/modules`에 있습니다. 공개 사이트와 어드민 미리보기가 같은 화면을 그립니다.
+- 주소 규칙은 `@resume/contracts`의 `publicPaths` 한 곳에서 만듭니다.
+- 새 API는 없습니다. 공개 API가 원본 콘텐츠 전체를 주므로 상세는 그 안에서 찾습니다. 응답에서 콘텐츠를 줄이게 되면 상세용 API를 따로 둡니다.
+- `SiteDocumentSchema`가 추가로 검사하는 것: 프로젝트끼리·회사끼리 slug 중복, 히스토리 항목과 성과가 가리키는 회사·프로젝트의 존재
+- 모듈용 색·글자 유틸리티(`.rs-fg-*`, `.rs-line` 등)는 모듈 카드 밖에서는 기본 토큰 값으로 돌아갑니다.
+
 ## 6. 배포와 실행 주소
 
 | 실행 방식      | web → admin (서버 간)               | 브라우저 → web                 | 브라우저 → admin                 |

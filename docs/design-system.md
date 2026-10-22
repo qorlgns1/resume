@@ -80,13 +80,14 @@ shadcn/ui(new-york, Radix 기반)로 생성한 뒤 토큰에 맞게 조정했습
 
 ## Storybook
 
-| 위치                    | 내용                                                       |
-| ----------------------- | ---------------------------------------------------------- |
-| `Foundations/Tokens`    | 색상, 타이포그래피, 간격, 모서리                           |
-| `UI/*`                  | 기본, 변형, 크기, disabled, focus, 오류, 열기·닫기(play)   |
-| `Modules/Cards`         | 6종 모듈, 스타일 설정 예시                                 |
-| `Modules/Projects Grid` | 개인 프로젝트 1·2·3개                                      |
-| `Modules/Home Page`     | 홈 전체 (데스크톱 1440 / 모바일 390 viewport)              |
-| `Modules/Block Content` | 상세 본문 렌더러: 모든 블록 종류, 3단계 중첩 목록, 빈 본문 |
+| 위치                    | 내용                                                                   |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `Foundations/Tokens`    | 색상, 타이포그래피, 간격, 모서리                                       |
+| `UI/*`                  | 기본, 변형, 크기, disabled, focus, 오류, 열기·닫기(play)               |
+| `Modules/Cards`         | 6종 모듈, 스타일 설정 예시                                             |
+| `Modules/Projects Grid` | 개인 프로젝트 1·2·3개                                                  |
+| `Modules/Home Page`     | 홈 전체 (데스크톱 1440 / 모바일 390 viewport)                          |
+| `Modules/Block Content` | 상세 본문 렌더러: 모든 블록 종류, 3단계 중첩 목록, 빈 본문             |
+| `Modules/Pages`         | 프로젝트·회사 목록과 상세, 히스토리 타임라인(데스크톱·모바일), 빈 목록 |
 
 실제로 구현한 컴포넌트만 등록했습니다. addon-a11y가 스토리마다 axe 검사를 실행합니다.

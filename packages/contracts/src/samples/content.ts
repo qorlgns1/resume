@@ -59,7 +59,49 @@ export const sampleContent: ContentLibrary = {
         alt: "타임카드 앱 예시 화면 자리",
       },
       links: [],
-      body: [],
+      body: [
+        {
+          id: "tc_note",
+          type: "callout",
+          tone: "info",
+          text: [
+            {
+              text: "샘플 본문입니다. 어드민의 콘텐츠 › 프로젝트 › 본문 편집에서 바꿀 수 있습니다.",
+            },
+          ],
+        },
+        { id: "tc_h_problem", type: "heading", level: 2, text: [{ text: "문제" }] },
+        {
+          id: "tc_p_problem",
+          type: "paragraph",
+          text: [
+            { text: "근무 시간을 " },
+            { text: "직접 계산", marks: ["bold"] },
+            { text: "하고 기록하는 일이 번거롭다는 가상의 문제에서 출발했습니다." },
+          ],
+        },
+        { id: "tc_h_solution", type: "heading", level: 2, text: [{ text: "만든 것" }] },
+        {
+          id: "tc_list",
+          type: "bulleted-list",
+          items: [
+            { text: [{ text: "출근·퇴근 한 번에 기록" }] },
+            {
+              text: [{ text: "주간 합계" }],
+              children: [
+                { text: [{ text: "요일별 근무 시간" }] },
+                { text: [{ text: "예상 급여 계산" }] },
+              ],
+            },
+          ],
+        },
+        { id: "tc_divider", type: "divider" },
+        {
+          id: "tc_quote",
+          type: "quote",
+          text: [{ text: "작게 시작해서, 출시 후에 꾸준히 개선한다." }],
+        },
+      ],
       isSample: true,
     },
     {
@@ -138,7 +180,23 @@ export const sampleContent: ContentLibrary = {
       period: { start: "2023-01", end: "2024-06" },
       summary: "교육 플랫폼",
       tags: ["실시간 수업"],
-      body: [],
+      body: [
+        {
+          id: "coc_note",
+          type: "callout",
+          tone: "info",
+          text: [{ text: "샘플 회사의 예시 본문입니다. 실제 경력이 아닙니다." }],
+        },
+        { id: "coc_h_role", type: "heading", level: 2, text: [{ text: "맡은 일" }] },
+        {
+          id: "coc_list",
+          type: "bulleted-list",
+          items: [
+            { text: [{ text: "실시간 수업 화면 개발" }] },
+            { text: [{ text: "연결 안정성 개선" }] },
+          ],
+        },
+      ],
       isSample: true,
     },
     {

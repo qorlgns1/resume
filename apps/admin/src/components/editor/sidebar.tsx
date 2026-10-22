@@ -205,9 +205,8 @@ function ContentTab() {
   const isSelected = (section: ContentSection, itemId?: string) =>
     selection?.kind === "content" && selection.section === section && selection.itemId === itemId;
 
-  const single = (section: "site" | "profile") => {
-    const hasIssues =
-      issues.under(section === "site" ? ["site"] : ["content", "profile"]).length > 0;
+  const single = (section: "site" | "profile" | "history") => {
+    const hasIssues = issues.under(section === "site" ? ["site"] : ["content", section]).length > 0;
     return (
       <li key={section}>
         <button
@@ -234,6 +233,7 @@ function ContentTab() {
         <ul className="flex flex-col gap-0.5">
           {single("site")}
           {single("profile")}
+          {single("history")}
         </ul>
       </Section>
       {listSections.map((section) => {

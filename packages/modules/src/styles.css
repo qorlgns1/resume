@@ -89,31 +89,32 @@
   }
 }
 
+/* 모듈 카드 밖(상세 페이지 등)에서 쓰일 때는 기본 토큰 값으로 돌아간다. */
 .rs-fg {
-  color: var(--mod-fg);
+  color: var(--mod-fg, var(--rs-color-text));
 }
 .rs-fg-muted {
-  color: var(--mod-fg-muted);
+  color: var(--mod-fg-muted, var(--rs-color-text-muted));
 }
 .rs-fg-subtle {
-  color: var(--mod-fg-subtle);
+  color: var(--mod-fg-subtle, var(--rs-color-text-subtle));
 }
 .rs-accent-text {
-  color: var(--mod-accent-text);
+  color: var(--mod-accent-text, var(--rs-color-primary-text));
 }
 .rs-line {
-  border-color: var(--mod-line);
+  border-color: var(--mod-line, var(--rs-color-border));
 }
 .rs-raised {
-  background-color: var(--mod-raised);
+  background-color: var(--mod-raised, var(--rs-color-surface-muted));
 }
 .rs-justify {
-  justify-content: var(--mod-justify);
+  justify-content: var(--mod-justify, flex-start);
 }
 
 /* ── 모듈 타이포그래피 (textScale 반영) ─────────────── */
 .rs-type-display {
-  font-size: calc(var(--rs-text-display-sm) * var(--mod-scale));
+  font-size: calc(var(--rs-text-display-sm) * var(--mod-scale, 1));
   line-height: var(--rs-text-display-sm--line-height);
   font-weight: 800;
   letter-spacing: var(--rs-tracking-tight);
@@ -121,13 +122,13 @@
 
 @container (min-width: 34rem) {
   .rs-type-display {
-    font-size: calc(var(--rs-text-display) * var(--mod-scale));
+    font-size: calc(var(--rs-text-display) * var(--mod-scale, 1));
     line-height: var(--rs-text-display--line-height);
   }
 }
 
 .rs-type-headline {
-  font-size: calc(1.75rem * var(--mod-scale));
+  font-size: calc(1.75rem * var(--mod-scale, 1));
   line-height: 1.25;
   font-weight: 800;
   letter-spacing: var(--rs-tracking-tight);
@@ -135,36 +136,36 @@
 
 @container (min-width: 28rem) {
   .rs-type-headline {
-    font-size: calc(2.25rem * var(--mod-scale));
+    font-size: calc(2.25rem * var(--mod-scale, 1));
   }
 }
 
 .rs-type-heading {
-  font-size: calc(var(--rs-text-heading) * var(--mod-scale));
+  font-size: calc(var(--rs-text-heading) * var(--mod-scale, 1));
   line-height: var(--rs-text-heading--line-height);
   font-weight: 800;
   letter-spacing: var(--rs-tracking-tight);
 }
 
 .rs-type-title {
-  font-size: calc(var(--rs-text-title) * var(--mod-scale));
+  font-size: calc(var(--rs-text-title) * var(--mod-scale, 1));
   line-height: var(--rs-text-title--line-height);
   font-weight: 700;
   letter-spacing: var(--rs-tracking-tight);
 }
 
 .rs-type-body-lg {
-  font-size: calc(var(--rs-text-body-lg) * var(--mod-scale));
+  font-size: calc(var(--rs-text-body-lg) * var(--mod-scale, 1));
   line-height: var(--rs-text-body-lg--line-height);
 }
 
 .rs-type-body {
-  font-size: calc(var(--rs-text-body) * var(--mod-scale));
+  font-size: calc(var(--rs-text-body) * var(--mod-scale, 1));
   line-height: var(--rs-text-body--line-height);
 }
 
 .rs-type-body-sm {
-  font-size: calc(var(--rs-text-body-sm) * var(--mod-scale));
+  font-size: calc(var(--rs-text-body-sm) * var(--mod-scale, 1));
   line-height: var(--rs-text-body-sm--line-height);
 }
 

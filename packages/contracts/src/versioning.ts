@@ -34,6 +34,60 @@ export const SiteDocumentSchema = z
         });
       }
     }
+    // 상세 페이지 주소(slug)는 종류별로 겹치면 안 된다.
+    for (const [section, items] of [
+      ["projects", document.content.projects],
+      ["companies", document.content.companies],
+    ] as const) {
+      const seen = new Set<string>();
+      items.forEach((item, index) => {
+        if (seen.has(item.slug)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `주소용 이름(slug) "${item.slug}"이(가) 이미 쓰이고 있습니다.`,
+            path: ["content", section, index, "slug"],
+          });
+        }
+        seen.add(item.slug);
+      });
+    }
+
+    // 히스토리·성과가 가리키는 회사·프로젝트가 있어야 한다.
+    const projectIds = new Set(document.content.projects.map((p) => p.id));
+    const companyIds = new Set(document.content.companies.map((c) => c.id));
+    document.content.history.chapters.forEach((chapter, ci) => {
+      chapter.entries.forEach((entry, ei) => {
+        if (!entry.ref) return;
+        const exists =
+          entry.ref.kind === "project"
+            ? projectIds.has(entry.ref.id)
+            : companyIds.has(entry.ref.id);
+        if (!exists) {
+          ctx.addIssue({
+            code: "custom",
+            message: "연결한 회사·프로젝트가 없습니다.",
+            path: ["content", "history", "chapters", ci, "entries", ei, "ref"],
+          });
+        }
+      });
+    });
+    document.content.achievements.forEach((achievement, index) => {
+      if (achievement.companyId && !companyIds.has(achievement.companyId)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "연결한 회사가 없습니다.",
+          path: ["content", "achievements", index, "companyId"],
+        });
+      }
+      if (achievement.projectId && !projectIds.has(achievement.projectId)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "연결한 프로젝트가 없습니다.",
+          path: ["content", "achievements", index, "projectId"],
+        });
+      }
+    });
+
     if (!document.pages.some((p) => p.kind === "system" && p.systemKey === "home")) {
       ctx.addIssue({ code: "custom", message: "홈 페이지가 없습니다.", path: ["pages"] });
     }

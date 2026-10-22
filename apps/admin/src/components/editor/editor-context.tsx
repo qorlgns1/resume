@@ -10,7 +10,8 @@ export type ContentSection =
   | "projects"
   | "companies"
   | "achievements"
-  | "techStack";
+  | "techStack"
+  | "history";
 
 export type Selection =
   | { kind: "module"; moduleId: string }

@@ -5,6 +5,7 @@ export * from "./errors";
 export * from "./layout";
 export * from "./modules";
 export * from "./page";
+export * from "./paths";
 export * from "./primitives";
 export * from "./references";
 export * from "./responses";
