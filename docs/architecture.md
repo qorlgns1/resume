@@ -118,7 +118,27 @@ SiteDocument (버전 관리 단위: 콘텐츠 + 배치를 함께 저장)
   - 어드민은 DB의 **가장 최근 게시본**으로 응답합니다 (`source: "published"`). 초안은 공개 API로 노출하지 않습니다.
   - `source: "sample"`은 공개 사이트의 샘플 모드에서만 씁니다.
   - `content`는 지금 전체 라이브러리를 담습니다. 페이지가 참조하는 항목만 담도록 줄일 수 있습니다.
-- 관리자 변경 API(`/api/admin/*`)는 아직 없습니다. 만들 때는 각 핸들러에서 세션을 검증합니다.
+- 관리자 API (`apps/admin/src/app/api/admin`, 계약: `packages/contracts/src/versioning.ts`)
+
+  | 메서드 | 경로                              | 동작                                                                                         | 주요 오류             |
+  | ------ | --------------------------------- | -------------------------------------------------------------------------------------------- | --------------------- |
+  | GET    | `/api/admin/draft`                | 초안 상태 (`document`, `revision`, `latestVersion`, `hasUnpublishedChanges`, `restoredFrom`) | 401                   |
+  | PUT    | `/api/admin/draft`                | 초안 저장 `{ revision, document }`                                                           | 400 검증, 409 충돌    |
+  | POST   | `/api/admin/publish`              | 초안을 새 버전으로 게시 `{ revision, note? }`                                                | 409, 422 바뀐 것 없음 |
+  | GET    | `/api/admin/versions`             | 버전 목록 (최신순, 본문 제외)                                                                | 401                   |
+  | POST   | `/api/admin/versions/{n}/restore` | 버전 n을 초안으로 가져옴 (게시하지 않음) `{ revision }`                                      | 404, 409              |
+  - 모든 핸들러는 `withAdmin()`을 거칩니다: 세션을 DB에서 검증(없으면 401), GET 외 요청은 `Origin`이 `ADMIN_URL`과 같아야 함(아니면 403, CSRF 방어).
+  - 초안을 바꾸는 요청은 클라이언트가 본 `revision`을 함께 보냅니다. 서버 값과 다르면 다른 탭·기기에서 먼저 바꾼 것이므로 409로 거부합니다(낙관적 잠금).
+  - 문서는 저장 전에 `SiteDocumentSchema`로 다시 검증합니다. 페이지 ID 중복, 존재하지 않는 콘텐츠 참조, 홈 페이지 누락도 거부합니다.
+
+## 5-1. 어드민 편집 화면
+
+- 상태: 서버에 저장된 초안(`saved`)과 화면의 작업본(`document`)을 따로 둡니다. 둘이 다르면 "저장하지 않은 변경"입니다.
+- 작업본은 바뀔 때마다 `SiteDocumentSchema`로 검사하고, 오류는 문서 경로(예: `pages.0.modules.3.props.heading`)로 해당 입력칸에 표시합니다. 오류가 있으면 저장할 수 없습니다. 오류 문구는 `configureKoreanErrors()`로 한국어로 바꿉니다.
+- 미리보기는 공개 사이트와 같은 `BentoGrid`로 작업본을 그립니다.
+- 모듈 인스턴스 설정(오른쪽 패널의 콘텐츠·스타일·배치)과 원본 콘텐츠 편집(왼쪽 "콘텐츠" 탭)을 구분합니다. 원본을 고치면 그것을 참조하는 모든 모듈에 반영됩니다.
+- 새 모듈 기본값은 `@resume/modules`의 `createModuleDraft()`가 만듭니다. 연결할 원본 콘텐츠가 없으면 이유를 알려주고 추가하지 않습니다.
+- 성공 안내는 서버 응답을 받은 뒤에만 표시합니다.
 
 ## 6. 배포와 실행 주소
 

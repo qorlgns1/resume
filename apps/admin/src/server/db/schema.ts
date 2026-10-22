@@ -135,6 +135,8 @@ export const siteDraft = sqliteTable(
     baseVersion: integer("base_version"),
     /** 저장할 때마다 1씩 증가. 다른 탭의 변경을 덮어쓰지 않도록 비교에 쓴다. */
     revision: integer("revision").notNull().default(1),
+    /** 이전 버전을 복원한 초안이면 그 버전 번호. 게시할 때 published_versions.restored_from으로 옮긴다. */
+    restoredFrom: integer("restored_from"),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).default(now).notNull(),
   },
   (table) => [check("site_draft_single_row", sql`${table.id} = 1`)],

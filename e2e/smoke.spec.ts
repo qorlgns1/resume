@@ -174,14 +174,15 @@ test.describe("어드민", () => {
   });
 
   test("페이지·모듈 선택과 미리보기 전환 (DB 초안)", async () => {
-    const settings = page.getByRole("complementary", { name: "모듈 설정" });
-    await expect(settings).toContainText("모듈을 선택하세요");
+    const settings = page.getByRole("complementary", { name: "설정" });
+    await expect(settings).toContainText("모듈이나 콘텐츠를 선택하세요");
+    await expect(page.getByTestId("draft-status")).toHaveText("게시됨 · 버전 1");
 
     await page.getByRole("button", { name: "성과 모듈 선택" }).click();
     await expect(settings.getByRole("heading", { level: 2 })).toHaveText("성과");
     await expect(settings).toContainText("mod_home_achievements");
 
-    const sidebar = page.getByRole("complementary", { name: "페이지와 모듈" });
+    const sidebar = page.getByRole("complementary", { name: "페이지와 콘텐츠" });
     await expect(sidebar.locator("button[aria-pressed=true]")).toHaveText(/^성과/);
     await page.screenshot({ path: `${screens}/admin-desktop.png` });
 
@@ -192,21 +193,144 @@ test.describe("어드민", () => {
     );
     await expect(page.locator("[data-viewport=mobile]")).toHaveCSS("width", "390px");
     await page.screenshot({ path: `${screens}/admin-mobile.png` });
+    await page.getByRole("button", { name: /데스크톱/ }).click();
 
     await sidebar.getByRole("button", { name: /회사 경험/ }).click();
     await expect(page.getByText("이 페이지에는 아직 모듈이 없습니다")).toBeVisible();
-    await expect(settings).toContainText("모듈을 선택하세요");
+    await sidebar.getByRole("button", { name: /^홈/ }).click();
   });
 
-  test("미구현 동작은 비활성이며 성공 메시지를 띄우지 않는다", async () => {
-    for (const name of [/초안 저장/, /게시/, /버전 기록/]) {
-      const button = page.getByRole("button", { name });
-      await expect(button).toHaveAttribute("aria-disabled", "true");
-      // aria-disabled 버튼은 Playwright가 비활성으로 보므로 강제로 클릭해 아무 일도 없는지 확인한다.
-      await button.click({ force: true });
-    }
-    await expect(page.getByRole("status")).toHaveCount(0);
-    await expect(page.getByText(/저장되었습니다|게시되었습니다/)).toHaveCount(0);
+  test("바꿀 것이 없으면 저장·게시 버튼이 꺼져 있다", async () => {
+    await expect(page.getByRole("button", { name: "초안 저장" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "게시", exact: true })).toBeDisabled();
+  });
+
+  test("잘못된 값은 해당 칸에 오류로 보이고 저장할 수 없다", async () => {
+    const sidebar = page.getByRole("complementary", { name: "페이지와 콘텐츠" });
+    await sidebar.getByRole("tab", { name: "콘텐츠" }).click();
+    await sidebar.getByRole("button", { name: "프로필" }).click();
+    const name = page.getByLabel("이름", { exact: true });
+    await name.fill("");
+    await expect(page.locator("[data-slot=field-error]").first()).toHaveText("값을 입력하세요.");
+    await expect(page.getByRole("button", { name: /오류 1개/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "초안 저장" })).toBeDisabled();
+    await page.screenshot({ path: `${screens}/admin-edit-error.png` });
+    await name.fill("홍길동");
+    await expect(page.getByRole("button", { name: /오류/ })).toHaveCount(0);
+    await expect(page.getByTestId("draft-status")).toHaveText("게시됨 · 버전 1");
+  });
+
+  test("편집 → 저장 → 게시하면 공개 사이트에 반영된다", async ({ browser }) => {
+    const headline = "편집으로 바꾼 대표 문구";
+    await page.getByLabel("대표 문구").fill(headline);
+    await expect(page.getByTestId("draft-status")).toHaveText("저장하지 않은 변경");
+    await expect(page.locator("[data-viewport] h1").first()).toHaveText(headline);
+    await expect(page.getByRole("button", { name: "게시", exact: true })).toBeDisabled();
+
+    await page.keyboard.press("ControlOrMeta+s");
+    await expect(page.getByRole("status")).toContainText("초안을 저장했습니다");
+    await expect(page.getByTestId("draft-status")).toHaveText("게시하지 않은 초안");
+
+    // 저장만 해서는 공개 사이트가 바뀌지 않는다
+    const visitor = await browser.newPage();
+    await visitor.goto(`http://localhost:${ports.webApi}/`);
+    await expect(visitor.getByRole("heading", { level: 1 })).toContainText("아이디어를 제품으로");
+
+    await page.getByRole("button", { name: "게시", exact: true }).click();
+    await page.getByLabel("메모 (선택)").fill("스모크 테스트 게시");
+    await page.getByRole("dialog").getByRole("button", { name: "게시" }).click();
+    await expect(page.getByRole("status")).toContainText("버전 2을 게시했습니다");
+    await expect(page.getByTestId("draft-status")).toHaveText("게시됨 · 버전 2");
+
+    await visitor.reload();
+    await expect(visitor.getByRole("heading", { level: 1 })).toHaveText(headline);
+    await visitor.close();
+  });
+
+  test("이전 버전을 복원해 게시하면 기록에 남는다", async ({ browser }) => {
+    await page.getByRole("button", { name: "버전 기록" }).click();
+    const sheet = page.getByRole("dialog", { name: "버전 기록" });
+    await expect(sheet.getByText("스모크 테스트 게시")).toBeVisible();
+    await page.screenshot({ path: `${screens}/admin-history.png` });
+    await sheet
+      .getByRole("listitem")
+      .filter({ hasText: "버전 1" })
+      .getByRole("button", { name: /복원/ })
+      .click();
+    await page
+      .getByRole("dialog", { name: /버전 1의 내용으로/ })
+      .getByRole("button", { name: "복원" })
+      .click();
+    await expect(page.getByRole("status")).toContainText("버전 1의 내용을 초안으로 가져왔습니다");
+    await expect(page.getByTestId("draft-status")).toHaveText("게시하지 않은 초안");
+
+    await page.getByRole("button", { name: "게시", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "게시" }).click();
+    await expect(page.getByRole("status")).toContainText("버전 3을 게시했습니다");
+
+    const versions = await page.request.get(`${admin}/api/admin/versions`);
+    const body = (await versions.json()) as {
+      versions: { version: number; restoredFrom: number | null }[];
+    };
+    expect(body.versions[0]).toMatchObject({ version: 3, restoredFrom: 1 });
+
+    const visitor = await browser.newPage();
+    await visitor.goto(`http://localhost:${ports.webApi}/`);
+    await expect(visitor.getByRole("heading", { level: 1 })).toContainText("아이디어를 제품으로");
+    await visitor.close();
+  });
+
+  test("모듈을 추가하고 삭제할 수 있다", async () => {
+    const sidebar = page.getByRole("complementary", { name: "페이지와 콘텐츠" });
+    await sidebar.getByRole("tab", { name: "페이지" }).click();
+    await page.getByRole("button", { name: "현재 상태 모듈 추가" }).click();
+    const settings = page.getByRole("complementary", { name: "설정" });
+    await expect(settings.getByRole("heading", { level: 2 })).toHaveText("현재 상태");
+    await settings.getByLabel("제목", { exact: true }).fill("추가한 상태 카드");
+    await expect(page.locator("[data-viewport]").getByText("추가한 상태 카드")).toBeVisible();
+
+    await settings.getByRole("button", { name: "모듈 삭제" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "삭제" }).click();
+    await expect(page.locator("[data-viewport]").getByText("추가한 상태 카드")).toHaveCount(0);
+    // 추가 후 삭제했으므로 저장된 초안과 같다
+    await expect(page.getByTestId("draft-status")).toHaveText("게시됨 · 버전 3");
+  });
+
+  test("다른 곳에서 먼저 저장하면 덮어쓰지 않고 알린다", async () => {
+    const { draft } = (await (await page.request.get(`${admin}/api/admin/draft`)).json()) as {
+      draft: { revision: number; document: unknown };
+    };
+    const background = await page.request.put(`${admin}/api/admin/draft`, {
+      headers: { origin: admin },
+      data: { revision: draft.revision, document: draft.document },
+    });
+    expect(background.status()).toBe(200);
+
+    await page.getByRole("button", { name: "개인 프로젝트 목록 모듈 선택" }).click();
+    await page.getByLabel("제목", { exact: true }).fill("충돌 테스트");
+    await page.keyboard.press("ControlOrMeta+s");
+    await expect(page.getByRole("alert").filter({ hasText: "먼저 바뀌었습니다" })).toBeVisible();
+
+    page.once("dialog", (dialog) => void dialog.accept());
+    await page.getByRole("button", { name: "최신 초안 불러오기" }).click();
+    await expect(page.getByRole("status")).toContainText("최신 초안을 불러왔습니다");
+    await expect(page.getByTestId("draft-status")).toHaveText("게시됨 · 버전 3");
+  });
+
+  test("관리자 API는 로그인과 같은 출처를 요구한다", async ({ playwright }) => {
+    const anonymous = await playwright.request.newContext();
+    expect((await anonymous.get(`${admin}/api/admin/draft`)).status()).toBe(401);
+    await anonymous.dispose();
+    const crossSite = await page.request.put(`${admin}/api/admin/draft`, {
+      headers: { origin: "https://attacker.example" },
+      data: {},
+    });
+    expect(crossSite.status()).toBe(403);
+    const invalid = await page.request.put(`${admin}/api/admin/draft`, {
+      headers: { origin: admin },
+      data: { revision: 1, document: { site: {} } },
+    });
+    expect(invalid.status()).toBe(400);
   });
 
   test("로그아웃하면 다시 로그인 화면으로 간다", async () => {

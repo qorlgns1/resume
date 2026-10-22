@@ -14,6 +14,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // 로그인 화면, 인증 API, 공개 API, 헬스 체크, 정적 파일은 제외한다.
-  matcher: ["/((?!login|api/auth|api/public|api/health|_next/|favicon.ico|robots.txt).*)"],
+  // 로그인 화면, 정적 파일, API는 제외한다. 관리자 API는 각 핸들러가 직접 세션을 검증하고 401을 돌려준다.
+  matcher: ["/((?!login|api/|_next/|favicon.ico|robots.txt).*)"],
 };

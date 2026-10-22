@@ -1,0 +1,1 @@
+ALTER TABLE `site_draft` ADD `restored_from` integer;

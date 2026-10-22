@@ -15,7 +15,8 @@
   },
   "imports": {
     "#components/*": "./src/components/*.tsx",
-    "#lib/*": "./src/lib/*.ts"
+    "#lib/*": "./src/lib/*.ts",
+    "#hooks/*": "./src/hooks/*.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

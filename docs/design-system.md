@@ -53,11 +53,12 @@ shadcn/ui(new-york, Radix 기반)로 생성한 뒤 토큰에 맞게 조정했습
 | Select, Tabs, Badge(+soft/success/warning), Card |                                                               |
 | Dialog, Sheet                                    | Radix Dialog: 포커스 가두기, Escape, 포커스 복원, 스크롤 잠금 |
 | Tooltip                                          | 앱 루트에 `TooltipProvider` 필요                              |
+| Switch, Checkbox                                 | 어드민 편집 폼 (켜기/끄기, 참조 콘텐츠 선택)                  |
 | Empty                                            | 빈 상태와 오류 상태                                           |
 
 컴포넌트를 추가할 때는 다음 순서로 합니다.
 1. `packages/ui`에서 `pnpm dlx shadcn@4.22.1 add <name>`을 실행합니다.
-2. 생성된 import가 `#lib/utils`, `#components/*`인지 확인합니다.
+2. 생성된 import가 `#lib/utils`, `#components/*`인지 확인합니다. shadcn CLI 4.22.1은 `cn`을 `"cn"` 패키지에서 가져오도록 잘못 생성하고 `cn` 의존성을 추가하므로, import를 고치고 그 의존성을 지웁니다.
 3. `dark:` 클래스를 지우고 토큰에 맞게 조정합니다.
 4. Storybook에 스토리를 추가합니다.
 

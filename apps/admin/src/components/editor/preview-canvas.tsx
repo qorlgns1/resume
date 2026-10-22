@@ -1,37 +1,37 @@
 "use client";
 
-import type { ContentLibrary, ModuleInstance, Page } from "@resume/contracts";
+import type { ModuleInstance } from "@resume/contracts";
 import { BentoGrid, type RenderOptions } from "@resume/modules";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@resume/ui/components/empty";
 import { cn } from "@resume/ui/lib/utils";
-import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PreviewViewport } from "./editor";
+import { useCurrentPage, useEditor } from "./editor-context";
 
 const FRAME_WIDTH: Record<PreviewViewport, number> = { desktop: 1440, mobile: 390 };
 const previewOptions: RenderOptions = { inert: true };
 
-interface PreviewCanvasProps {
-  page: Page;
-  content: ContentLibrary;
-  viewport: PreviewViewport;
-  selectedModuleId: string | null;
-  onSelectModule: (id: string) => void;
-}
-
 /**
- * 공개 사이트와 같은 BentoGrid로 페이지를 그린다.
+ * 공개 사이트와 같은 BentoGrid로 작업본을 그린다. 입력하는 즉시 반영된다.
  * 그리드는 container query를 쓰므로 프레임 폭(1440/390)만 바꾸면 해당 화면의 배치가 재현된다.
  * 데스크톱 프레임은 가운데 영역에 맞게 축소해서 보여준다.
  */
-export function PreviewCanvas({
-  page,
-  content,
-  viewport,
-  selectedModuleId,
-  onSelectModule,
-}: PreviewCanvasProps) {
+export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
+  const { document, selection, select } = useEditor();
+  const { page } = useCurrentPage();
+  const content = document.content;
+  const selectedModuleId = selection?.kind === "module" ? selection.moduleId : null;
+  const onSelectModule = (moduleId: string) => select({ kind: "module", moduleId });
   const width = FRAME_WIDTH[viewport];
   const { outerRef, innerRef, scale, height } = useFitScale(width);
+
+  // 목록에서 고르거나 새로 추가한 모듈이 보이도록 미리보기를 옮긴다.
+  useEffect(() => {
+    if (!selectedModuleId) return;
+    innerRef.current
+      ?.querySelector(`[data-module-id="${CSS.escape(selectedModuleId)}"]`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [selectedModuleId, innerRef]);
 
   function wrapModule(module: ModuleInstance, node: ReactNode) {
     const selected = module.id === selectedModuleId;

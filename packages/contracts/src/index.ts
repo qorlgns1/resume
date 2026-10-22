@@ -1,6 +1,7 @@
 export * from "./api";
 export * from "./blocks";
 export * from "./content";
+export * from "./errors";
 export * from "./layout";
 export * from "./modules";
 export * from "./page";

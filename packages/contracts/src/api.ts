@@ -47,7 +47,16 @@ export type PublicPageData = PublicPageResponse["data"];
 
 export const ApiErrorResponseSchema = z.object({
   error: z.object({
-    code: z.enum(["not_found", "invalid_request", "internal_error"]),
+    code: z.enum([
+      "not_found",
+      "invalid_request",
+      "internal_error",
+      // 관리자 API
+      "unauthorized", // 로그인 필요
+      "forbidden", // 허용되지 않은 출처(Origin)
+      "conflict", // 다른 곳에서 초안이 먼저 바뀜 (revision 불일치)
+      "nothing_to_publish", // 초안이 최근 게시본과 같음
+    ]),
     message: z.string(),
   }),
 });
