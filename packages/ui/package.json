@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "shadcn/ui 기반 공통 UI 컴포넌트",
+  "license": "MIT",
   "type": "module",
   "sideEffects": [
     "**/*.css"

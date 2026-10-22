@@ -153,9 +153,13 @@ pnpm test:smoke    # 빌드 결과물로 스모크 검증 (31xx 포트 사용)
 
 ## 디자인 기준
 
-공개 사이트는 벤토 카드 스타일의 C 시안([docs/home-c.png](docs/home-c.png))을 기준으로 만들었습니다. 카드 구성과 분위기를 참고했을 뿐, 이미지와 픽셀 단위로 같지는 않습니다.
-시안의 인물·회사·수치는 옮기지 않았고, 모두 "샘플"로 표시한 가상 콘텐츠로 바꿨습니다. 자세한 내용은 [docs/design-system.md](docs/design-system.md)를 보세요.
+공개 사이트는 크기가 다른 카드를 정돈된 그리드로 배치하는 벤토 카드 레이아웃을 사용합니다. 배경 #F2F3F5, 흰 카드, 강조색 #2F6BFF, 어두운 카드 #1C1D21, Pretendard 서체가 기본입니다.
+저장소에 들어 있는 인물·회사·프로젝트·수치는 모두 "샘플"로 표시한 가상 콘텐츠입니다. 자세한 내용은 [docs/design-system.md](docs/design-system.md)를 보세요.
 
 ## 라이선스
 
-아직 정하지 않았습니다. 소유자가 라이선스를 고르기 전까지는 오픈소스 라이선스가 적용되지 않습니다.
+[MIT](LICENSE) © 2026 KIHOON BAE
+
+라이선스는 이 저장소의 **코드**에만 적용됩니다. 설치한 사람이 어드민에 입력하는 경력, 글, 사진 등의 콘텐츠는 각 작성자의 것이며 이 라이선스에 포함되지 않습니다. 저장소의 샘플 콘텐츠는 가상의 예시입니다.
+
+사용한 서체 Pretendard는 [SIL Open Font License 1.1](https://github.com/orioncactus/pretendard/blob/main/LICENSE)을 따릅니다.

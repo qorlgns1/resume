@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "공개 포트폴리오 사이트",
+  "license": "MIT",
   "scripts": {
     "dev": "next dev --port 3000",
     "build": "next build",

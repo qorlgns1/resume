@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "공통 TypeScript 설정",
+  "license": "MIT",
   "files": [
     "tsconfig"
   ],

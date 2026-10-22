@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "CSS 변수 기반 디자인 토큰과 Tailwind 테마 매핑",
+  "license": "MIT",
   "type": "module",
   "sideEffects": [
     "**/*.css"

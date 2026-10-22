@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "포트폴리오 모듈 렌더러. 공개 사이트와 어드민 미리보기에서 공유한다.",
+  "license": "MIT",
   "type": "module",
   "sideEffects": [
     "**/*.css"
