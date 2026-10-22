@@ -1,3 +1,4 @@
+import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 /*
@@ -15,6 +16,10 @@ export const ports = {
 const start = (filter: string, port: number) =>
   `pnpm --filter ${filter} exec next start --port ${port}`;
 
+/** 테스트용 관리자 계정. 매 실행마다 빈 DB에 CLI로 새로 만든다. */
+export const testAdmin = { username: "owner", password: "smoke-test-password" } as const;
+const adminDatabase = path.resolve("test-results/smoke-data/resume.db");
+
 export default defineConfig({
   testDir: "./e2e",
   outputDir: "./test-results/smoke",
@@ -24,9 +29,21 @@ export default defineConfig({
   use: { ...devices["Desktop Chrome"], trace: "retain-on-failure" },
   webServer: [
     {
-      command: start("@resume/admin", ports.admin),
+      // 빈 DB → CLI로 관리자 생성 → 서버 시작 (서버가 시작할 때 샘플로 초안·게시본을 채운다)
+      command: [
+        `rm -rf ${path.dirname(adminDatabase)}`,
+        "pnpm --filter @resume/admin exec node dist/cli.mjs create",
+        start("@resume/admin", ports.admin),
+      ].join(" && "),
       url: `http://localhost:${ports.admin}/api/health`,
-      env: { PUBLIC_SITE_URL: `http://localhost:${ports.web}` },
+      env: {
+        DATABASE_PATH: adminDatabase,
+        AUTH_SECRET: "smoke-test-secret-0123456789-abcdefghij",
+        ADMIN_URL: `http://localhost:${ports.admin}`,
+        ADMIN_USERNAME: testAdmin.username,
+        ADMIN_PASSWORD: testAdmin.password,
+        PUBLIC_SITE_URL: `http://localhost:${ports.web}`,
+      },
       reuseExistingServer: false,
     },
     {

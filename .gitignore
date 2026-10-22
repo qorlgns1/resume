@@ -28,3 +28,6 @@ blob-report/
 .DS_Store
 *.log
 .vercel
+
+# 로컬 개발용 SQLite DB와 업로드 파일
+apps/admin/data/

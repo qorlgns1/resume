@@ -6,15 +6,21 @@
   "license": "MIT",
   "scripts": {
     "dev": "next dev --port 3001",
-    "build": "next build",
+    "build": "next build && node scripts/build-cli.mjs",
     "start": "next start --port 3001",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "admin:create": "tsx scripts/cli.ts create",
+    "admin:reset-password": "tsx scripts/cli.ts reset-password"
   },
   "dependencies": {
     "@resume/contracts": "workspace:*",
     "@resume/modules": "workspace:*",
     "@resume/tokens": "workspace:*",
     "@resume/ui": "workspace:*",
+    "better-auth": "1.7.12",
+    "better-sqlite3": "13.0.3",
+    "drizzle-orm": "0.45.4",
     "lucide-react": "1.61.0",
     "next": "16.4.2",
     "react": "19.3.1",
@@ -24,10 +30,14 @@
   "devDependencies": {
     "@resume/config": "workspace:*",
     "@tailwindcss/postcss": "4.3.3",
+    "@types/better-sqlite3": "9.6.0",
     "@types/node": "24.19.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "drizzle-kit": "0.31.11",
+    "esbuild": "0.25.12",
     "tailwindcss": "4.3.3",
+    "tsx": "4.21.0",
     "typescript": "6.0.3"
   }
 }

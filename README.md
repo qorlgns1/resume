@@ -3,8 +3,8 @@
 관리자 화면에서 페이지 콘텐츠와 모듈 배치를 편집하는 오픈소스 포트폴리오입니다.
 저장소를 복제해 자신의 서버에 설치하고, 공개 사이트와 어드민을 따로 배포하는 것을 목표로 합니다.
 
-> **현재 단계: 초기 기반.** 모노레포, 디자인 시스템, 공개 홈 샘플, 어드민 기본 화면, 읽기 전용 샘플 API까지만 구현했습니다.
-> 저장·게시·인증·DB는 아직 없습니다. 어드민은 **로컬 검토용**이며 운영 서비스로 공개하면 안 됩니다.
+> **현재 단계: 저장소와 로그인.** 어드민이 SQLite에 사이트 문서를 저장하고, 관리자 로그인으로 보호됩니다. 공개 API는 DB의 게시본을 제공합니다.
+> 편집·초안 저장·게시는 아직 없습니다. HTTPS 구성 안내 전까지 어드민은 **로컬 검토용**으로만 실행하세요.
 
 ## 구성
 
@@ -43,7 +43,26 @@ pnpm install
 | Storybook   | `pnpm dev:storybook` | http://localhost:6006 |
 | 전부        | `pnpm dev`           | 위 주소 모두          |
 
-각 앱의 `.env.example`을 `.env.local`로 복사해 설정을 바꿀 수 있습니다. 설정하지 않아도 기본값(샘플 모드)으로 실행됩니다.
+각 앱의 `.env.example`을 `.env.local`로 복사해 설정을 바꿀 수 있습니다. 설정하지 않아도 개발 기본값으로 실행됩니다.
+
+### 어드민 처음 실행하기
+
+어드민은 처음 시작할 때 `apps/admin/data/resume.db`를 만들고, 샘플 콘텐츠로 초안과 첫 게시본(버전 1)을 채웁니다.
+로그인하려면 관리자 계정을 **서버에서 명령으로** 만들어야 합니다. 웹 가입은 없습니다.
+
+```bash
+pnpm --filter @resume/admin admin:create          # 아이디와 비밀번호 입력 (관리자는 1명)
+pnpm --filter @resume/admin admin:reset-password  # 비밀번호를 잊었을 때 (모든 로그인 세션도 끊음)
+```
+
+| 어드민 환경 변수  | 설명                                                            | 개발 기본값                         |
+| ----------------- | --------------------------------------------------------------- | ----------------------------------- |
+| `ADMIN_URL`       | 브라우저가 접속하는 어드민 주소. 로그인 요청의 출처 검사에 사용 | `http://localhost:3001` (운영 필수) |
+| `AUTH_SECRET`     | 세션 서명 키, 32자 이상. `openssl rand -base64 32`              | 개발용 고정값 (운영 필수)           |
+| `DATABASE_PATH`   | SQLite 파일 경로                                                | `./data/resume.db`                  |
+| `PUBLIC_SITE_URL` | 상단 "공개 사이트" 링크 주소                                    | 없음                                |
+
+운영 모드(`next start`, Docker)에서 `ADMIN_URL`이나 `AUTH_SECRET`이 없으면 어드민은 시작하지 않고 종료합니다.
 
 ## 빌드
 
@@ -54,7 +73,7 @@ pnpm build:admin      # 어드민만
 pnpm build:storybook  # Storybook만 → apps/storybook/storybook-static
 ```
 
-빌드 결과 실행: `pnpm --filter @resume/web start`, `pnpm --filter @resume/admin start`
+빌드 결과 실행: `pnpm --filter @resume/web start`, `pnpm --filter @resume/admin start` (어드민은 `apps/admin/.env.local`에 `ADMIN_URL`, `AUTH_SECRET` 필요)
 
 공통 패키지는 따로 빌드하지 않습니다. 각 Next 앱이 `transpilePackages`로 TypeScript 소스를 함께 컴파일하므로, 앱 하나만 빌드해도 필요한 패키지가 포함됩니다.
 
@@ -69,7 +88,8 @@ pnpm build:storybook  # Storybook만 → apps/storybook/storybook-static
 - API 호출이 실패하면 샘플로 몰래 바꾸지 않고 **오류 화면**을 보여줍니다 (연결 실패, 시간 초과, HTTP 오류, 계약 불일치를 구분).
 - 모든 설정은 서버에서만 읽습니다 (`NEXT_PUBLIC_` 없음). 브라우저에 API 주소가 노출되지 않습니다.
 - 페이지는 요청 시점에 렌더링합니다. 그래서 빌드 단계는 어드민 API에 의존하지 않고, 같은 빌드 결과를 어느 모드로든 실행할 수 있습니다.
-- 현재 API는 **샘플 데이터를 돌려주는 읽기 전용 API**이며 최종 저장 구조가 아닙니다.
+- API는 어드민 DB의 **가장 최근 게시본**을 돌려줍니다 (`meta.source: "published"`, `meta.version`). 초안은 노출하지 않습니다.
+- 게시본이 아직 저장소의 샘플 콘텐츠라면 공개 사이트에 "샘플 데이터" 안내가 표시됩니다.
 
 ```bash
 # 예: API 모드로 로컬 실행
@@ -89,11 +109,16 @@ pnpm build:storybook   # 정적 빌드
 ## Docker
 
 ```bash
+cp .env.example .env        # AUTH_SECRET 채우기: openssl rand -base64 32
 docker compose up --build
+docker compose exec -it admin node cli.mjs create   # 관리자 계정 만들기
 # 공개 사이트 http://localhost:3000 (API 모드), 어드민 http://localhost:3001
 ```
 
-- 포트가 이미 쓰이고 있다면: `WEB_PORT=3200 ADMIN_PORT=3201 docker compose up --build`
+- 포트가 이미 쓰이고 있다면 `.env`의 `WEB_PORT`, `ADMIN_PORT`를 바꿉니다.
+- 비밀번호 재설정: `docker compose exec -it admin node cli.mjs reset-password`
+- 데이터(SQLite DB, 앞으로 올릴 이미지)는 `admin-data` 볼륨의 `/data`에 있습니다. `docker compose down`으로 컨테이너를 지워도 남고, `down -v`를 하면 지워집니다.
+- 백업은 어드민을 멈춘 뒤(`docker compose stop admin`) `/data`를 복사합니다: `docker compose cp admin:/data ./backup`. 실행 중에 안전하게 백업하는 명령은 다음 단계에서 제공합니다.
 - 컨테이너 안에서 web은 `http://admin:3001`로 어드민을 호출하고, 브라우저는 `localhost` 주소로 접속합니다. 두 주소를 섞지 마세요.
 - compose는 두 포트를 `127.0.0.1`에만 엽니다 (어드민이 로컬 검토용이기 때문).
 - 이미지를 따로 빌드할 때는 저장소 루트를 컨텍스트로 사용합니다.
@@ -124,11 +149,14 @@ pnpm test:smoke    # 빌드 결과물로 스모크 검증 (31xx 포트 사용)
 ```
 
 스모크 검증은 다음을 확인합니다.
-- API 샘플 응답의 계약
+- 공개 API 응답(DB 게시본)의 계약
 - 홈 화면 1440px / 390px (스크린샷: `test-results/screens`)
 - 메뉴의 키보드 동작, Escape 닫기, 포커스 복원, 스크롤 잠금, reduced-motion
 - API 모드 렌더링과 API 실패 시 오류 화면
+- 어드민 로그인: 미로그인 차단, 오입력 오류, 로그인·로그아웃, 웹 가입 차단, 로그인 시도 제한
 - 어드민의 선택 상태, 미리보기 전환, 미구현 버튼
+
+스모크 검증은 매번 `test-results/smoke-data`에 빈 DB를 만들고 CLI로 테스트 계정을 생성합니다.
 
 ## 현재 구현 범위
 
@@ -139,13 +167,16 @@ pnpm test:smoke    # 빌드 결과물로 스모크 검증 (31xx 포트 사용)
 - 모듈 6종(자기소개, 대표 프로젝트, 성과, 기술 스택, 현재 상태, 히스토리 진입부)과 12칼럼 / 모바일 2칼럼 벤토 그리드
 - 공개 홈 샘플, 개인 프로젝트·회사 경험·히스토리 빈 상태 페이지, 오른쪽 슬라이드 메뉴
 - 어드민 3단 레이아웃, 페이지·모듈 선택, 설정 패널(읽기 전용), 데스크톱/모바일 미리보기
-- 읽기 전용 샘플 API, 응답 계약 검증, 샘플/API 모드 분리
-- 앱별 Dockerfile, 로컬 Docker Compose, `.env.example`
+- SQLite 저장소(Drizzle 마이그레이션, 초안·게시본 문서, 첫 실행 시 샘플 채우기)
+- 관리자 로그인(Better Auth, 아이디 + 비밀번호, 웹 가입 차단, 시도 제한), 계정 생성·재설정 CLI
+- 공개 API가 DB 게시본 제공, 응답 계약 검증, 공개 사이트 샘플/API 모드 분리
+- 앱별 Dockerfile, 데이터 볼륨을 쓰는 로컬 Docker Compose, `.env.example`
 
 **아직 없음**
 - 콘텐츠·스타일 편집, 모듈 추가·삭제·드래그·크기 변경
 - 초안 저장, 게시, 버전 기록·복원
-- 관리자 인증, 데이터베이스, 미디어 업로드·저장소
+- 미디어 업로드·저장소
+- HTTPS·리버스 프록시 구성 안내, 2단계 인증·패스키
 - 프로젝트 상세(블록 본문), 회사 경험 목록·상세, 히스토리 타임라인 화면
 - 사용자 페이지 추가
 

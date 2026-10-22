@@ -4,21 +4,24 @@
 
 2026-10-22 기준으로 npm 레지스트리와 공식 문서(peer dependency, engines)를 확인해 정했습니다. canary, beta, rc 버전은 쓰지 않았고, 모든 의존성은 정확한 버전으로 고정했습니다. 잠금 파일은 `pnpm-lock.yaml`입니다.
 
-| 항목              | 버전      | 비고                                                                                          |
-| ----------------- | --------- | --------------------------------------------------------------------------------------------- |
-| Node.js           | 24.x      | Docker 이미지 `node:24-alpine`. Next 16(>=20.9), Vite 8(>=20.19/22.12)과 호환                 |
-| pnpm              | 10.33.0   | `packageManager`에 고정                                                                       |
-| Turborepo         | 2.11.10   |                                                                                               |
-| TypeScript        | **6.0.3** | 7.0.2(Go 구현)가 최신이지만 Next/Storybook 도구 체인과의 호환을 아직 확인하지 않아 6.0을 사용 |
-| Next.js           | 16.4.2    | web·admin 모두 App Router, Turbopack 빌드                                                     |
-| React / React DOM | 19.3.1    |                                                                                               |
-| Tailwind CSS      | 4.3.3     | `@tailwindcss/postcss`(Next), `@tailwindcss/vite`(Storybook)                                  |
-| shadcn CLI        | 4.22.1    | new-york 스타일, `radix-ui` 1.8.1 통합 패키지                                                 |
-| Zod               | 4.6.7     |                                                                                               |
-| Storybook         | 10.6.3    | `@storybook/react-vite` + Vite 8.3.5, addon-docs, addon-a11y                                  |
-| Biome             | 2.6.2     | 린트 + 포맷. `next`, `react` 도메인 규칙 사용                                                 |
-| Playwright        | 1.64.1    | 스모크 검증 전용                                                                              |
-| Pretendard        | 1.3.9     | variable dynamic subset                                                                       |
+| 항목              | 버전             | 비고                                                                                          |
+| ----------------- | ---------------- | --------------------------------------------------------------------------------------------- |
+| Node.js           | 24.x             | Docker 이미지 `node:24-alpine`. Next 16(>=20.9), Vite 8(>=20.19/22.12)과 호환                 |
+| pnpm              | 10.33.0          | `packageManager`에 고정                                                                       |
+| Turborepo         | 2.11.10          |                                                                                               |
+| TypeScript        | **6.0.3**        | 7.0.2(Go 구현)가 최신이지만 Next/Storybook 도구 체인과의 호환을 아직 확인하지 않아 6.0을 사용 |
+| Next.js           | 16.4.2           | web·admin 모두 App Router, Turbopack 빌드                                                     |
+| React / React DOM | 19.3.1           |                                                                                               |
+| Tailwind CSS      | 4.3.3            | `@tailwindcss/postcss`(Next), `@tailwindcss/vite`(Storybook)                                  |
+| shadcn CLI        | 4.22.1           | new-york 스타일, `radix-ui` 1.8.1 통합 패키지                                                 |
+| Zod               | 4.6.7            |                                                                                               |
+| Storybook         | 10.6.3           | `@storybook/react-vite` + Vite 8.3.5, addon-docs, addon-a11y                                  |
+| Biome             | 2.6.2            | 린트 + 포맷. `next`, `react` 도메인 규칙 사용                                                 |
+| Playwright        | 1.64.1           | 스모크 검증 전용                                                                              |
+| Pretendard        | 1.3.9            | variable dynamic subset                                                                       |
+| better-sqlite3    | 13.0.3           | SQLite 3.53. 패키지에 플랫폼별 바이너리(glibc·musl 포함)가 들어 있어 설치 시 빌드하지 않음    |
+| Drizzle ORM / Kit | 0.45.4 / 0.31.11 | 스키마·마이그레이션. 1.0은 아직 RC라 0.45 사용                                                |
+| Better Auth       | 1.7.12           | 아이디 + 비밀번호(username 플러그인), Drizzle 어댑터                                          |
 
 **ESLint 대신 Biome를 쓴 이유:** `eslint-config-next`가 쓰는 플러그인 일부(react, import, jsx-a11y)가 ESLint 10을 peer로 허용하지 않고, typescript-eslint는 TypeScript `<6.1`만 지원합니다. 그래서 소유자와 협의해 린트와 포맷을 한 도구로 처리하는 Biome를 택했습니다. 타입 정보가 필요한 규칙의 빈자리는 각 패키지의 `tsc --noEmit`으로 보완합니다.
 
@@ -65,7 +68,33 @@ SiteDocument (버전 관리 단위: 콘텐츠 + 배치를 함께 저장)
 - **실행 가능한 문자열을 저장하지 않음.** 날짜는 `YYYY-MM`, 스타일은 enum, 링크는 `/`, `#`, `http(s)`, `mailto:`만 허용합니다. 본문은 HTML이 아닌 블록 JSON입니다.
 - **스키마 수준 무결성.** 중복 ID, 배치 누락, 칼럼 초과, 겹침, 존재하지 않는 콘텐츠 참조를 Zod `superRefine`으로 거부합니다.
 - 홈의 개인 프로젝트 목록은 1~3개입니다 (`MAX_HOME_PROJECTS`).
-- `Draft`와 `PublishedVersion` 타입은 초안·게시·복원 흐름을 위한 자리 표시입니다. 저장 계층이 정해지기 전까지 이 타입으로 데이터를 저장하는 코드는 없습니다.
+- `Draft`와 `PublishedVersion` 타입은 초안·게시·복원 흐름의 계약입니다. 실제 저장은 아래 "저장소"를 보세요.
+
+## 3-1. 저장소 (SQLite, 어드민 전용)
+
+- 파일 하나: `DATABASE_PATH` (개발 `apps/admin/data/resume.db`, Docker `/data/resume.db`). WAL 모드, 외래 키 사용.
+- 스키마: [`apps/admin/src/server/db/schema.ts`](../apps/admin/src/server/db/schema.ts), 마이그레이션: `apps/admin/drizzle/`
+  - 스키마를 바꾸면 `pnpm --filter @resume/admin db:generate`로 SQL을 만듭니다. 서버와 CLI는 DB를 열 때 미적용 마이그레이션을 자동으로 적용합니다.
+  - 이미 커밋한 마이그레이션 파일은 수정하거나 다시 생성하지 않습니다. 기존 DB에서 같은 변경이 다시 실행되어 어드민이 시작하지 못합니다.
+- **문서 스냅샷 방식**
+  - `site_draft`: 편집 중인 `SiteDocument` JSON 1행 (`base_version`, 덮어쓰기 충돌 방지용 `revision`)
+  - `published_versions`: 게시할 때마다 1행 (`version`, `document`, `note`, `restored_from`)
+  - 읽고 쓸 때 항상 `SiteDocumentSchema`로 검증합니다. 저장된 JSON이 계약과 다르면 오류를 냅니다.
+- 첫 시작 시 DB가 비어 있으면 샘플 문서로 초안과 게시 버전 1을 만듭니다 (`instrumentation-node.ts`).
+- DB 접근은 `apps/admin/src/server`에만 있습니다. contracts·modules·web은 DB를 모릅니다.
+
+## 3-2. 인증 (어드민 전용)
+
+- Better Auth, 관리자 1명, 아이디 + 비밀번호. 설정: [`apps/admin/src/server/auth/config.ts`](../apps/admin/src/server/auth/config.ts)
+- 웹 가입은 닫혀 있습니다(`disableSignUp`, `/sign-up/email` 비활성). 계정은 서버 CLI로만 만듭니다.
+  - `admin:create`: 계정이 이미 있으면 거부. 내부 어댑터로 사용자와 비밀번호 계정을 만듦
+  - `admin:reset-password`: 비밀번호를 바꾸고 모든 세션을 끊음
+  - Docker 이미지에는 esbuild로 묶은 `cli.mjs`가 들어 있습니다.
+- 비밀번호는 10~128자, scrypt 해시. 로그인 시도는 같은 IP에서 1분에 5번까지 (메모리 저장, 프로세스 1개 기준).
+- 세션 쿠키: HttpOnly, SameSite=Lax, HTTPS일 때 Secure. 7일 유지, 하루에 한 번 연장.
+- 보호 방식: `proxy.ts`가 쿠키가 없으면 `/login`으로 보내고(빠른 확인), 각 페이지는 `requireSession()`으로 세션을 DB에서 검증합니다.
+  공개 경로: `/login`, `/api/auth/*`, `/api/public/*`, `/api/health`.
+- 필수 설정: 운영 모드에서 `AUTH_SECRET`(32자 이상)과 `ADMIN_URL`이 없으면 서버가 시작하지 않고 종료합니다.
 
 ## 4. 벤토 그리드와 반응형
 
@@ -86,9 +115,10 @@ SiteDocument (버전 관리 단위: 콘텐츠 + 배치를 함께 저장)
 - 응답은 항상 `PublicPageResponseSchema`로 검증합니다. 실패 종류(`config`, `network`, `timeout`, `http`, `invalid-response`, `not-found`)는 결과 타입으로 돌려주고, 화면은 오류 상태를 렌더링합니다.
 - `connection()`으로 요청 시점에 렌더링합니다. 그래서 빌드에 어드민 API나 환경 변수가 필요하지 않습니다. 캐시와 재검증(ISR, 게시 웹훅)은 게시 흐름을 설계할 때 정합니다.
 - 어드민 API 응답: `{ schemaVersion: 1, data: { site, page, content }, meta: { source: "sample" | "published", generatedAt, version? } }`
-  - `content`는 지금 전체 라이브러리를 담습니다. 게시 구조를 정할 때 페이지가 참조하는 항목만 담도록 줄일 수 있습니다.
-  - 지금 응답은 **샘플 데이터이며 최종 저장 구조가 아닙니다.**
-- 관리자 변경 API, 인증, DB는 이번 범위에 없습니다.
+  - 어드민은 DB의 **가장 최근 게시본**으로 응답합니다 (`source: "published"`). 초안은 공개 API로 노출하지 않습니다.
+  - `source: "sample"`은 공개 사이트의 샘플 모드에서만 씁니다.
+  - `content`는 지금 전체 라이브러리를 담습니다. 페이지가 참조하는 항목만 담도록 줄일 수 있습니다.
+- 관리자 변경 API(`/api/admin/*`)는 아직 없습니다. 만들 때는 각 핸들러에서 세션을 검증합니다.
 
 ## 6. 배포와 실행 주소
 
@@ -96,6 +126,9 @@ SiteDocument (버전 관리 단위: 콘텐츠 + 배치를 함께 저장)
 | -------------- | ----------------------------------- | ------------------------------ | -------------------------------- |
 | 로컬 dev       | `http://localhost:3001`             | `http://localhost:3000`        | `http://localhost:3001`          |
 | Docker Compose | `http://admin:3001` (내부 네트워크) | `http://localhost:${WEB_PORT}` | `http://localhost:${ADMIN_PORT}` |
+
+`ADMIN_URL`은 마지막 열(브라우저 → admin) 주소여야 합니다.
 - Docker: `turbo prune --docker`로 앱별 작업 공간을 만들고, `NEXT_OUTPUT=standalone`으로 빌드합니다. `outputFileTracingRoot`를 모노레포 루트로 지정해 `packages/*` 파일도 추적에 포함합니다. 실행 이미지에는 standalone 서버, static, public만 담고 비루트 사용자로 실행합니다.
 - Vercel: Root Directory를 `apps/web`로 지정합니다. standalone 출력은 사용하지 않습니다 (README 참고).
-- 어드민은 인증이 생기기 전까지 외부에 노출하지 않습니다 (`robots` noindex, compose 포트는 127.0.0.1에만 바인딩).
+- 어드민 이미지: `/data` 볼륨(DB·업로드), `MIGRATIONS_DIR`, 계정 CLI `cli.mjs`를 포함합니다. CLI가 standalone 안의 `better-sqlite3`를 찾도록 `apps/admin/node_modules`에 링크를 둡니다.
+- 어드민은 로그인으로 보호되지만, HTTPS 리버스 프록시 안내가 나오기 전까지는 외부에 노출하지 않습니다 (`robots` noindex, compose 포트는 127.0.0.1에만 바인딩).

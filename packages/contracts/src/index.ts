@@ -6,5 +6,6 @@ export * from "./modules";
 export * from "./page";
 export * from "./primitives";
 export * from "./references";
+export * from "./responses";
 export * from "./style";
 export * from "./versioning";

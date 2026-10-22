@@ -7,12 +7,14 @@ import { cn } from "@resume/ui/lib/utils";
 import { ArrowUpRight, History, Monitor, Save, Send, Smartphone } from "lucide-react";
 import type { PreviewViewport } from "./editor";
 import { NotReadyButton } from "./not-ready";
+import { SignOutButton } from "./sign-out-button";
 
 interface TopBarProps {
   page: Page;
   viewport: PreviewViewport;
   onViewportChange: (viewport: PreviewViewport) => void;
   publicSiteUrl: string | null;
+  userName: string;
 }
 
 const viewports = [
@@ -20,7 +22,13 @@ const viewports = [
   { value: "mobile", label: "모바일", detail: "390px", Icon: Smartphone },
 ] as const;
 
-export function EditorTopBar({ page, viewport, onViewportChange, publicSiteUrl }: TopBarProps) {
+export function EditorTopBar({
+  page,
+  viewport,
+  onViewportChange,
+  publicSiteUrl,
+  userName,
+}: TopBarProps) {
   return (
     <header className="flex items-center justify-between gap-4 border-b border-border bg-card px-4 py-2.5">
       <div className="flex min-w-0 items-center gap-3">
@@ -82,6 +90,9 @@ export function EditorTopBar({ page, viewport, onViewportChange, publicSiteUrl }
           게시
         </NotReadyButton>
         <span className="text-caption text-subtle-foreground">준비 중</span>
+        <span className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
+        <span className="text-body-sm text-muted-foreground">{userName}</span>
+        <SignOutButton />
       </div>
     </header>
   );

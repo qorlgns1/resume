@@ -28,7 +28,8 @@ export function PageShell({
         role={content.profile.role}
         navigation={site.navigation}
       />
-      {response.meta.source === "sample" ? <SampleNotice /> : null}
+      {/* 샘플 모드이거나, 게시본이 아직 저장소의 샘플 콘텐츠일 때 */}
+      {response.meta.source === "sample" || content.profile.isSample ? <SampleNotice /> : null}
       <main id="main" className="flex-1 pb-12">
         {children}
       </main>

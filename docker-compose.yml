@@ -1,5 +1,7 @@
 # 로컬 확인용 구성. 운영 배포 설정이 아니다.
+#   cp .env.example .env   # AUTH_SECRET 채우기
 #   docker compose up --build
+#   docker compose exec -it admin node cli.mjs create   # 관리자 계정 만들기
 # 공개 사이트: http://localhost:3000   어드민: http://localhost:3001
 # 포트가 겹치면 WEB_PORT / ADMIN_PORT로 바꾼다: WEB_PORT=3200 ADMIN_PORT=3201 docker compose up --build
 
@@ -9,8 +11,15 @@ services:
       context: .
       dockerfile: apps/admin/Dockerfile
     environment:
+      # 세션 서명 키. 저장소 루트 .env에 둔다 (커밋 금지).
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET을 .env에 설정하세요. 만들기 - openssl rand -base64 32}
+      # 브라우저가 접속하는 어드민 주소 (로그인 요청의 출처 검사에 사용)
+      ADMIN_URL: http://localhost:${ADMIN_PORT:-3001}
       # 브라우저가 여는 공개 사이트 주소 (컨테이너 이름이 아니라 호스트 주소)
       PUBLIC_SITE_URL: http://localhost:${WEB_PORT:-3000}
+    volumes:
+      # SQLite DB(/data/resume.db)와 업로드 파일. 백업은 이 볼륨을 복사한다.
+      - admin-data:/data
     ports:
       # 어드민은 인증 전까지 로컬 검토용이므로 이 컴퓨터에서만 접근하도록 127.0.0.1에 묶는다.
       - "127.0.0.1:${ADMIN_PORT:-3001}:3001"
@@ -33,3 +42,6 @@ services:
     depends_on:
       admin:
         condition: service_healthy
+
+volumes:
+  admin-data:

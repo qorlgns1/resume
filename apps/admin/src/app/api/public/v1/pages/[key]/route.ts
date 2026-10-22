@@ -1,14 +1,15 @@
 import {
   type ApiErrorResponse,
+  createPageResponse,
   PublicPageResponseSchema,
   SystemPageKeySchema,
 } from "@resume/contracts";
-import { createSamplePageResponse } from "@resume/contracts/samples";
+import { getLatestPublished } from "@/server/site-repository";
 
 /*
- * 공개 콘텐츠 읽기 API (v1) — 샘플 응답.
- * 저장소에 포함된 샘플 데이터를 계약 스키마로 검증해 돌려준다.
- * DB와 게시 흐름이 정해지면 "게시된 버전"을 읽도록 교체한다. 지금 응답 구조는 최종 저장 구조가 아니다.
+ * 공개 콘텐츠 읽기 API (v1).
+ * 가장 최근에 게시된 버전을 돌려준다. 초안은 절대 노출하지 않는다.
+ * 인증이 필요 없으며, 공개 사이트 서버가 호출한다.
  */
 
 export const dynamic = "force-dynamic";
@@ -28,10 +29,31 @@ export async function GET(_request: Request, context: RouteContext<"/api/public/
     });
   }
 
-  const sample = createSamplePageResponse(parsedKey.data);
-  const parsed = PublicPageResponseSchema.safeParse(sample);
+  let published: ReturnType<typeof getLatestPublished>;
+  try {
+    published = getLatestPublished();
+  } catch (cause) {
+    console.error("[api] 게시본을 읽지 못했습니다", cause);
+    return error(500, { error: { code: "internal_error", message: "콘텐츠를 읽지 못했습니다." } });
+  }
+  if (!published) {
+    return error(404, { error: { code: "not_found", message: "아직 게시된 버전이 없습니다." } });
+  }
+
+  const body = createPageResponse(published.document, parsedKey.data, {
+    source: "published",
+    version: published.version,
+    generatedAt: new Date().toISOString(),
+  });
+  if (!body) {
+    return error(404, {
+      error: { code: "not_found", message: `페이지를 찾을 수 없습니다: ${key}` },
+    });
+  }
+
+  const parsed = PublicPageResponseSchema.safeParse(body);
   if (!parsed.success) {
-    console.error("[api] 샘플 응답이 계약과 다릅니다", parsed.error.issues);
+    console.error("[api] 응답이 계약과 다릅니다", parsed.error.issues);
     return error(500, { error: { code: "internal_error", message: "응답을 만들지 못했습니다." } });
   }
   return Response.json(parsed.data, { headers });

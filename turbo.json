@@ -6,7 +6,7 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "env": ["NEXT_OUTPUT"],
-      "outputs": [".next/**", "!.next/cache/**", "storybook-static/**"]
+      "outputs": [".next/**", "!.next/cache/**", "storybook-static/**", "dist/**"]
     },
     "typecheck": {
       "dependsOn": ["^typecheck"]
@@ -19,7 +19,10 @@
         "CONTENT_API_URL",
         "CONTENT_API_TIMEOUT_MS",
         "PUBLIC_SITE_URL",
-        "PORT"
+        "PORT",
+        "DATABASE_PATH",
+        "AUTH_SECRET",
+        "ADMIN_URL"
       ]
     },
     "start": {
@@ -31,7 +34,10 @@
         "CONTENT_API_TIMEOUT_MS",
         "PUBLIC_SITE_URL",
         "PORT",
-        "HOSTNAME"
+        "HOSTNAME",
+        "DATABASE_PATH",
+        "AUTH_SECRET",
+        "ADMIN_URL"
       ]
     }
   }

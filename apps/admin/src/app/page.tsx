@@ -1,18 +1,22 @@
-import { sampleContent, samplePages, sampleSite } from "@resume/contracts/samples";
 import { connection } from "next/server";
 import { Editor } from "@/components/editor/editor";
+import { requireSession } from "@/server/auth";
+import { getDraft } from "@/server/site-repository";
 
 export default async function AdminHomePage() {
-  // PUBLIC_SITE_URL을 빌드 시점이 아닌 실행 시점에 읽는다.
+  // 환경 변수와 DB를 빌드 시점이 아닌 요청 시점에 읽는다.
   await connection();
+  const session = await requireSession();
+  const draft = getDraft();
   const publicSiteUrl = process.env.PUBLIC_SITE_URL?.trim() || null;
 
   return (
     <Editor
-      pages={samplePages}
-      content={sampleContent}
-      site={sampleSite}
+      pages={draft.document.pages}
+      content={draft.document.content}
+      site={draft.document.site}
       publicSiteUrl={publicSiteUrl}
+      userName={session.user.displayUsername ?? session.user.username ?? session.user.name}
     />
   );
 }

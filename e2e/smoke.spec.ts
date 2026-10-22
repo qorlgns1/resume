@@ -4,7 +4,7 @@ import {
   PublicPageResponseSchema,
   type SystemPageKey,
 } from "@resume/contracts";
-import { ports } from "../playwright.config";
+import { ports, testAdmin } from "../playwright.config";
 
 const web = `http://localhost:${ports.web}`;
 const admin = `http://localhost:${ports.admin}`;
@@ -18,14 +18,16 @@ async function expectNoHorizontalScroll(page: Page) {
   expect(scrollWidth).toBeLessThanOrEqual(innerWidth);
 }
 
-test.describe("공개 콘텐츠 API (샘플)", () => {
+test.describe("공개 콘텐츠 API (DB 게시본)", () => {
   for (const key of ["home", "projects", "experience", "history"] satisfies SystemPageKey[]) {
     test(`${key} 응답이 계약을 만족한다`, async ({ request }) => {
       const res = await request.get(`${admin}/api/public/v1/pages/${key}`);
       expect(res.status()).toBe(200);
       expect(res.headers()["cache-control"]).toContain("no-store");
       const body = PublicPageResponseSchema.parse(await res.json());
-      expect(body.meta.source).toBe("sample");
+      // 첫 실행 시 샘플 콘텐츠가 게시 버전 1로 저장된다.
+      expect(body.meta.source).toBe("published");
+      expect(body.meta.version).toBe(1);
     });
   }
 
@@ -130,10 +132,48 @@ test.describe("콘텐츠 출처 모드", () => {
 });
 
 test.describe("어드민", () => {
+  // 로그인 시도 제한(1분에 5번)을 넘지 않도록 한 페이지에서 순서대로 진행한다.
+  test.describe.configure({ mode: "serial" });
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  test("페이지·모듈 선택과 미리보기 전환", async ({ page }) => {
+  let page: Page;
+  test.beforeAll(async ({ browser }) => {
+    page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  });
+  test.afterAll(async () => {
+    await page.close();
+  });
+
+  test("로그인하지 않으면 로그인 화면으로 보낸다", async ({ request }) => {
     await page.goto(admin);
+    await expect(page).toHaveURL(`${admin}/login`);
+    // 웹 가입 경로는 닫혀 있다
+    const signUp = await request.post(`${admin}/api/auth/sign-up/email`, {
+      headers: { origin: admin },
+      data: { email: "x@example.com", password: "aaaaaaaaaaaa", name: "x" },
+    });
+    expect(signUp.status()).toBe(404);
+  });
+
+  test("비밀번호가 틀리면 오류를 보여주고, 맞으면 편집 화면으로 들어간다", async () => {
+    await page.getByLabel("아이디").fill(testAdmin.username);
+    await page.getByLabel("비밀번호").fill("wrong-password");
+    await page.getByRole("button", { name: "로그인" }).click();
+    await expect(page.locator("[data-slot=field-error]")).toHaveText(
+      "아이디 또는 비밀번호가 올바르지 않습니다.",
+    );
+    await page.screenshot({ path: `${screens}/admin-login-error.png` });
+
+    await page.getByLabel("비밀번호").fill(testAdmin.password);
+    await page.getByRole("button", { name: "로그인" }).click();
+    await expect(page).toHaveURL(`${admin}/`);
+    await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
+    const cookie = (await page.context().cookies()).find((c) => c.name.endsWith("session_token"));
+    expect(cookie?.httpOnly).toBe(true);
+    expect(cookie?.sameSite).toBe("Lax");
+  });
+
+  test("페이지·모듈 선택과 미리보기 전환 (DB 초안)", async () => {
     const settings = page.getByRole("complementary", { name: "모듈 설정" });
     await expect(settings).toContainText("모듈을 선택하세요");
 
@@ -141,7 +181,6 @@ test.describe("어드민", () => {
     await expect(settings.getByRole("heading", { level: 2 })).toHaveText("성과");
     await expect(settings).toContainText("mod_home_achievements");
 
-    // 왼쪽 목록에서도 같은 선택 상태
     const sidebar = page.getByRole("complementary", { name: "페이지와 모듈" });
     await expect(sidebar.locator("button[aria-pressed=true]")).toHaveText(/^성과/);
     await page.screenshot({ path: `${screens}/admin-desktop.png` });
@@ -159,8 +198,7 @@ test.describe("어드민", () => {
     await expect(settings).toContainText("모듈을 선택하세요");
   });
 
-  test("미구현 동작은 비활성이며 성공 메시지를 띄우지 않는다", async ({ page }) => {
-    await page.goto(admin);
+  test("미구현 동작은 비활성이며 성공 메시지를 띄우지 않는다", async () => {
     for (const name of [/초안 저장/, /게시/, /버전 기록/]) {
       const button = page.getByRole("button", { name });
       await expect(button).toHaveAttribute("aria-disabled", "true");
@@ -169,5 +207,24 @@ test.describe("어드민", () => {
     }
     await expect(page.getByRole("status")).toHaveCount(0);
     await expect(page.getByText(/저장되었습니다|게시되었습니다/)).toHaveCount(0);
+  });
+
+  test("로그아웃하면 다시 로그인 화면으로 간다", async () => {
+    await page.getByRole("button", { name: "로그아웃" }).click();
+    await expect(page).toHaveURL(`${admin}/login`);
+    await page.goto(admin);
+    await expect(page).toHaveURL(`${admin}/login`);
+  });
+
+  test("로그인 시도가 많으면 잠시 막는다", async () => {
+    const statuses: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      const res = await page.request.post(`${admin}/api/auth/sign-in/username`, {
+        headers: { origin: admin },
+        data: { username: testAdmin.username, password: "wrong-password" },
+      });
+      statuses.push(res.status());
+    }
+    expect(statuses).toContain(429);
   });
 });

@@ -14,13 +14,14 @@ interface EditorProps {
   content: ContentLibrary;
   site: SiteSettings;
   publicSiteUrl: string | null;
+  userName: string;
 }
 
 /**
  * 어드민 편집 화면의 상태 루트.
  * 이번 단계에서는 선택 상태와 미리보기 크기만 다룬다. 편집 내용은 아직 없으므로 저장할 것도 없다.
  */
-export function Editor({ pages, content, publicSiteUrl }: EditorProps) {
+export function Editor({ pages, content, publicSiteUrl, userName }: EditorProps) {
   const [pageId, setPageId] = useState(pages[0]?.id ?? "");
   const [moduleId, setModuleId] = useState<string | null>(null);
   const [viewport, setViewport] = useState<PreviewViewport>("desktop");
@@ -41,6 +42,7 @@ export function Editor({ pages, content, publicSiteUrl }: EditorProps) {
         viewport={viewport}
         onViewportChange={setViewport}
         publicSiteUrl={publicSiteUrl}
+        userName={userName}
       />
       <div className="grid min-h-0 grid-cols-[17rem_minmax(0,1fr)_22rem]">
         <Sidebar

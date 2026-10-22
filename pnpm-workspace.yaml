@@ -7,3 +7,7 @@ onlyBuiltDependencies:
   - "@biomejs/biome"
   - esbuild
   - sharp
+
+# better-sqlite3는 미리 빌드된 바이너리를 패키지에 포함하므로 설치 스크립트가 필요 없다.
+ignoredBuiltDependencies:
+  - better-sqlite3
