@@ -12,14 +12,18 @@ import {
   useCreateBlockNote,
 } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/shadcn";
-import type { Block } from "@resume/contracts";
+import { ADMIN_MEDIA_BASE, type Block, type MediaAsset, mediaUrl } from "@resume/contracts";
 import { Info } from "lucide-react";
+import { useRef } from "react";
 import { blocksToEditor, type ConversionResult, editorToBlocks } from "./convert";
 import { type EditorSchema, editorSchema } from "./schema";
 
 interface BlockEditorProps {
   initialBlocks: readonly Block[];
   onChange: (result: ConversionResult) => void;
+  /** 이미지 블록에 파일을 올린다 (우리 미디어 저장소) */
+  uploadMedia: (file: File) => Promise<MediaAsset>;
+  lookupMedia: (assetId: string) => MediaAsset | undefined;
   /** 편집 영역의 접근성 이름 */
   label: string;
 }
@@ -51,13 +55,26 @@ function slashMenuItems(editor: Editor): DefaultReactSuggestionItem[] {
  * 저장 형식은 @resume/contracts의 Block[]이며, 편집기 내부 형식은 convert.ts에서만 다룬다.
  * 브라우저 전용이므로 next/dynamic(ssr: false)으로 불러온다.
  */
-export function BlockEditor({ initialBlocks, onChange, label }: BlockEditorProps) {
+export function BlockEditor({
+  initialBlocks,
+  onChange,
+  label,
+  uploadMedia,
+  lookupMedia,
+}: BlockEditorProps) {
   const initialContent = blocksToEditor(initialBlocks);
+  // 편집기는 한 번만 만들어지므로 최신 함수는 ref로 넘긴다.
+  const uploadRef = useRef(uploadMedia);
+  uploadRef.current = uploadMedia;
   const editor = useCreateBlockNote({
     schema: editorSchema,
     dictionary: ko,
     initialContent: initialContent.length > 0 ? initialContent : undefined,
     domAttributes: { editor: { "aria-label": label } },
+    uploadFile: async (file: File) => {
+      const asset = await uploadRef.current(file);
+      return mediaUrl(ADMIN_MEDIA_BASE, asset.id, asset.widths.at(-1) ?? asset.width);
+    },
   });
 
   return (
@@ -67,7 +84,7 @@ export function BlockEditor({ initialBlocks, onChange, label }: BlockEditorProps
         theme="light"
         slashMenu={false}
         emojiPicker={false}
-        onChange={() => onChange(editorToBlocks(editor.document))}
+        onChange={() => onChange(editorToBlocks(editor.document, { lookupMedia }))}
       >
         <SuggestionMenuController
           triggerCharacter="/"

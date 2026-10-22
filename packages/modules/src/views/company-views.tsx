@@ -59,9 +59,11 @@ export function CompanyListView({
 export function CompanyDetailView({
   company,
   content,
+  options = {},
 }: {
   company: Company;
   content: ContentLibrary;
+  options?: RenderOptions;
 }) {
   const achievements = content.achievements.filter((a) => a.companyId === company.id);
   return (
@@ -81,7 +83,7 @@ export function CompanyDetailView({
       </div>
       <div className="rounded-xl bg-card p-6 shadow-card lg:p-8">
         {company.body.length > 0 ? (
-          <BlockContent blocks={company.body} className="max-w-3xl" />
+          <BlockContent blocks={company.body} options={options} className="max-w-3xl" />
         ) : (
           <p className="text-body text-muted-foreground">아직 작성한 본문이 없습니다.</p>
         )}

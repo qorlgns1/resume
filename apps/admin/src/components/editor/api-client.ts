@@ -5,6 +5,9 @@ import {
   adminApiPaths,
   DraftResponseSchema,
   type DraftState,
+  type MediaAsset,
+  MediaListResponseSchema,
+  MediaUploadResponseSchema,
   PublishResponseSchema,
   type SiteDocument,
   VersionListResponseSchema,
@@ -28,10 +31,16 @@ async function call<T extends z.ZodType>(
   init?: RequestInit,
 ): Promise<z.infer<T>> {
   let res: Response;
+  // FormData는 브라우저가 경계(boundary)를 포함한 content-type을 직접 붙인다.
+  const jsonBody = init?.body !== undefined && !(init.body instanceof FormData);
   try {
     res = await fetch(path, {
       ...init,
-      headers: { "content-type": "application/json", accept: "application/json", ...init?.headers },
+      headers: {
+        ...(jsonBody ? { "content-type": "application/json" } : {}),
+        accept: "application/json",
+        ...init?.headers,
+      },
       cache: "no-store",
     });
   } catch {
@@ -53,6 +62,25 @@ async function call<T extends z.ZodType>(
 }
 
 export const adminApi = {
+  listMedia: async (): Promise<MediaAsset[]> =>
+    (await call(adminApiPaths.media, MediaListResponseSchema)).assets,
+  uploadMedia: async (file: File): Promise<MediaAsset> => {
+    const form = new FormData();
+    form.append("file", file);
+    return (
+      await call(adminApiPaths.media, MediaUploadResponseSchema, { method: "POST", body: form })
+    ).asset;
+  },
+  deleteMedia: async (id: string): Promise<void> => {
+    const res = await fetch(adminApiPaths.mediaItem(id), { method: "DELETE", cache: "no-store" });
+    if (res.ok) return;
+    const parsed = ApiErrorResponseSchema.safeParse(await res.json().catch(() => null));
+    throw new AdminApiError(
+      res.status,
+      parsed.success ? parsed.data.error.code : "unknown",
+      parsed.success ? parsed.data.error.message : `삭제하지 못했습니다 (HTTP ${res.status}).`,
+    );
+  },
   getDraft: async (): Promise<DraftState> =>
     (await call(adminApiPaths.draft, DraftResponseSchema)).draft,
   saveDraft: async (revision: number, document: SiteDocument): Promise<DraftState> =>

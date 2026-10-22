@@ -56,6 +56,9 @@ export const ApiErrorResponseSchema = z.object({
       "forbidden", // 허용되지 않은 출처(Origin)
       "conflict", // 다른 곳에서 초안이 먼저 바뀜 (revision 불일치)
       "nothing_to_publish", // 초안이 최근 게시본과 같음
+      "in_use", // 사용 중이라 삭제할 수 없음
+      "unsupported_media", // 받지 않는 파일 형식
+      "too_large", // 파일이 너무 큼
     ]),
     message: z.string(),
   }),

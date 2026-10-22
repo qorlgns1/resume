@@ -1,8 +1,8 @@
 import type { ContentLibrary, Project } from "@resume/contracts";
 import { BlockContent } from "../block-content";
 import { formatPeriod } from "../format";
+import { CoverMedia } from "../media-image";
 import { ModuleLink } from "../module-link";
-import { PlaceholderMedia } from "../placeholder-media";
 import { SampleBadge } from "../sample-badge";
 import type { RenderOptions } from "../types";
 import { EmptyList } from "./page-header";
@@ -83,17 +83,17 @@ export function ProjectDetailView({
         {project.summary ? (
           <p className="text-body text-muted-foreground">{project.summary}</p>
         ) : null}
-        {project.cover?.kind === "placeholder" ? (
-          <PlaceholderMedia
-            label={project.cover.label}
-            alt={project.cover.alt}
-            className="max-w-2xl"
-          />
-        ) : null}
+        <CoverMedia
+          media={project.cover}
+          options={options}
+          frame="natural"
+          sizes="(min-width: 1024px) 768px, 100vw"
+          className="max-w-3xl"
+        />
       </div>
       <div className="rounded-xl bg-card p-6 shadow-card lg:p-8">
         {project.body.length > 0 ? (
-          <BlockContent blocks={project.body} className="max-w-3xl" />
+          <BlockContent blocks={project.body} options={options} className="max-w-3xl" />
         ) : (
           <p className="text-body text-muted-foreground">아직 작성한 본문이 없습니다.</p>
         )}

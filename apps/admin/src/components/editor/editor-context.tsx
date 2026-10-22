@@ -11,7 +11,8 @@ export type ContentSection =
   | "companies"
   | "achievements"
   | "techStack"
-  | "history";
+  | "history"
+  | "media";
 
 export type Selection =
   | { kind: "module"; moduleId: string }

@@ -24,6 +24,14 @@ export function getMigrationsDir(): string {
   return path.resolve(/*turbopackIgnore: true*/ process.env.MIGRATIONS_DIR?.trim() || "./drizzle");
 }
 
+/** 업로드 이미지 폴더. 기본값은 DB 파일 옆의 media/ (Docker: /data/media) */
+export function getMediaDir(): string {
+  const dir = process.env.MEDIA_DIR?.trim();
+  return dir
+    ? path.resolve(/*turbopackIgnore: true*/ dir)
+    : path.join(path.dirname(getDatabasePath()), "media");
+}
+
 export function getAuthSecret(): string {
   const secret = process.env.AUTH_SECRET?.trim();
   if (secret) {

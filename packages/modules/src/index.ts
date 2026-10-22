@@ -9,6 +9,7 @@ export {
   moduleCatalog,
 } from "./catalog";
 export { formatPeriod, formatYearMonth, projectStatusLabel } from "./format";
+export { CoverMedia, MediaImage } from "./media-image";
 export { ModuleFrame } from "./module-frame";
 export { ModuleLink } from "./module-link";
 export { ModuleContent } from "./module-renderer";

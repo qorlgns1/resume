@@ -1,7 +1,7 @@
 import type { Project } from "@resume/contracts";
 import { cn } from "@resume/ui/lib/utils";
+import { CoverMedia } from "../media-image";
 import { ModuleLink } from "../module-link";
-import { PlaceholderMedia } from "../placeholder-media";
 import { SampleBadge } from "../sample-badge";
 import type { ModuleRenderProps, RenderOptions } from "../types";
 import { ProjectCard } from "../views/project-card";
@@ -84,14 +84,13 @@ function ProjectSpotlight({
         <p className="rs-fg-subtle rs-type-body-sm mt-auto">{project.tags.join(" · ")}</p>
       </div>
       <div className="flex flex-col items-center gap-4 @md:items-end">
-        {project.cover?.kind === "placeholder" ? (
-          <PlaceholderMedia
-            variant="phone"
-            label={project.cover.label}
-            alt={project.cover.alt}
-            className="w-40 @md:w-44"
-          />
-        ) : null}
+        <CoverMedia
+          media={project.cover}
+          options={options}
+          frame="phone"
+          sizes="(min-width: 1024px) 256px, 50vw"
+          className="w-40 @md:w-44"
+        />
         {link ? (
           <ModuleLink
             href={link.href}

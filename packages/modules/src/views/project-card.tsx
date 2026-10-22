@@ -3,8 +3,8 @@ import { Badge } from "@resume/ui/components/badge";
 import { cn } from "@resume/ui/lib/utils";
 import { Clock, Code, House, Leaf, PenLine, Sparkles } from "lucide-react";
 import { projectStatusLabel } from "../format";
+import { CoverMedia } from "../media-image";
 import { ModuleLink } from "../module-link";
-import { PlaceholderMedia } from "../placeholder-media";
 import { SampleBadge } from "../sample-badge";
 import type { RenderOptions } from "../types";
 
@@ -57,10 +57,17 @@ export function ProjectCard({
   layout: "wide" | "stacked";
   options: RenderOptions;
 }) {
-  const media =
-    project.cover?.kind === "placeholder" ? (
-      <PlaceholderMedia label={project.cover.label} alt={project.cover.alt} />
-    ) : null;
+  const media = (
+    <CoverMedia
+      media={project.cover}
+      options={options}
+      sizes={
+        layout === "wide"
+          ? "(min-width: 1024px) 640px, 100vw"
+          : "(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
+      }
+    />
+  );
   return (
     <article
       className={cn(

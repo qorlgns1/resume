@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminApiError, adminApi } from "./api-client";
 import { EditorContext, type EditorContextValue, type Selection } from "./editor-context";
 import { IssueIndex } from "./issues";
+import { MediaLibraryProvider } from "./media-library";
 import { PreviewCanvas } from "./preview-canvas";
 import { SettingsPanel } from "./settings-panel";
 import { Sidebar } from "./sidebar";
@@ -177,44 +178,46 @@ export function Editor({ initialDraft, publicSiteUrl, userName }: EditorProps) {
 
   return (
     <EditorContext.Provider value={context}>
-      <div className="grid h-dvh min-h-0 grid-rows-[auto_auto_minmax(0,1fr)]">
-        <EditorTopBar
-          viewport={viewport}
-          onViewportChange={setViewport}
-          publicSiteUrl={publicSiteUrl}
-          userName={userName}
-          actions={actions}
-        />
-        <div aria-live="polite" className="empty:hidden">
-          {feedback ? (
-            <div
-              role={feedback.kind === "error" ? "alert" : "status"}
-              className={
-                feedback.kind === "error"
-                  ? "flex items-center justify-between gap-3 bg-destructive-soft px-4 py-2 text-body-sm text-destructive"
-                  : "flex items-center justify-between gap-3 bg-success-soft px-4 py-2 text-body-sm text-success"
-              }
-            >
-              <span>{feedback.message}</span>
-              <span className="flex gap-2">
-                {feedback.conflict ? (
-                  <Button size="xs" variant="outline" onClick={() => void reloadLatest()}>
-                    최신 초안 불러오기
+      <MediaLibraryProvider>
+        <div className="grid h-dvh min-h-0 grid-rows-[auto_auto_minmax(0,1fr)]">
+          <EditorTopBar
+            viewport={viewport}
+            onViewportChange={setViewport}
+            publicSiteUrl={publicSiteUrl}
+            userName={userName}
+            actions={actions}
+          />
+          <div aria-live="polite" className="empty:hidden">
+            {feedback ? (
+              <div
+                role={feedback.kind === "error" ? "alert" : "status"}
+                className={
+                  feedback.kind === "error"
+                    ? "flex items-center justify-between gap-3 bg-destructive-soft px-4 py-2 text-body-sm text-destructive"
+                    : "flex items-center justify-between gap-3 bg-success-soft px-4 py-2 text-body-sm text-success"
+                }
+              >
+                <span>{feedback.message}</span>
+                <span className="flex gap-2">
+                  {feedback.conflict ? (
+                    <Button size="xs" variant="outline" onClick={() => void reloadLatest()}>
+                      최신 초안 불러오기
+                    </Button>
+                  ) : null}
+                  <Button size="xs" variant="ghost" onClick={() => setFeedback(null)}>
+                    닫기
                   </Button>
-                ) : null}
-                <Button size="xs" variant="ghost" onClick={() => setFeedback(null)}>
-                  닫기
-                </Button>
-              </span>
-            </div>
-          ) : null}
+                </span>
+              </div>
+            ) : null}
+          </div>
+          <div className="grid min-h-0 grid-cols-[17rem_minmax(0,1fr)_24rem]">
+            <Sidebar />
+            <PreviewCanvas viewport={viewport} />
+            <SettingsPanel />
+          </div>
         </div>
-        <div className="grid min-h-0 grid-cols-[17rem_minmax(0,1fr)_24rem]">
-          <Sidebar />
-          <PreviewCanvas viewport={viewport} />
-          <SettingsPanel />
-        </div>
-      </div>
+      </MediaLibraryProvider>
     </EditorContext.Provider>
   );
 }

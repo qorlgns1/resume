@@ -3,6 +3,7 @@ import { type ApiErrorResponse, configureKoreanErrors } from "@resume/contracts"
 import { ZodError, type z } from "zod";
 import { getAuth } from "./auth";
 import { getAdminUrl } from "./env";
+import { MediaInUseError, MediaNotFoundError, MediaRejectedError } from "./media-store";
 import {
   ConflictError,
   NothingToPublishError,
@@ -64,6 +65,12 @@ export async function withAdmin(request: Request, handler: () => Response | Prom
     if (cause instanceof NothingToPublishError)
       return error(422, "nothing_to_publish", cause.message);
     if (cause instanceof VersionNotFoundError) return error(404, "not_found", cause.message);
+    if (cause instanceof MediaRejectedError) {
+      return error(cause.code === "too_large" ? 413 : 400, cause.code, cause.message);
+    }
+    if (cause instanceof MediaInUseError) return error(409, "in_use", cause.message);
+    if (cause instanceof MediaNotFoundError)
+      return error(404, "not_found", "이미지를 찾을 수 없습니다.");
     if (cause instanceof InvalidRequestError) return error(400, "invalid_request", cause.message);
     if (cause instanceof ZodError) {
       const message = cause.issues

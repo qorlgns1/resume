@@ -151,3 +151,18 @@ export const publishedVersions = sqliteTable("published_versions", {
   restoredFrom: integer("restored_from"),
   publishedAt: integer("published_at", { mode: "timestamp_ms" }).default(now).notNull(),
 });
+
+// ── 미디어 ──────────────────────────────────────────────
+
+/** 업로드한 이미지. 파일은 MEDIA_DIR/{id}/{width}.webp, 원본은 저장하지 않는다. */
+export const mediaAssets = sqliteTable("media_assets", {
+  id: text("id").primaryKey(),
+  originalName: text("original_name").notNull(),
+  width: integer("width").notNull(),
+  height: integer("height").notNull(),
+  /** 만들어 둔 변환본 너비 목록 */
+  widths: text("widths", { mode: "json" }).$type<number[]>().notNull(),
+  bytes: integer("bytes").notNull(),
+  animated: integer("animated", { mode: "boolean" }).notNull().default(false),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).default(now).notNull(),
+});

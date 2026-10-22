@@ -43,6 +43,7 @@ export const editorSchema = BlockNoteSchema.create({
     bulletListItem: defaultBlockSpecs.bulletListItem,
     quote: defaultBlockSpecs.quote,
     divider: defaultBlockSpecs.divider,
+    image: defaultBlockSpecs.image,
     callout: calloutBlock(),
   },
   styleSpecs: {

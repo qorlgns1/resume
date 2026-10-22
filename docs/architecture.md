@@ -22,6 +22,7 @@
 | better-sqlite3    | 13.0.3           | SQLite 3.53. 패키지에 플랫폼별 바이너리(glibc·musl 포함)가 들어 있어 설치 시 빌드하지 않음    |
 | Drizzle ORM / Kit | 0.45.4 / 0.31.11 | 스키마·마이그레이션. 1.0은 아직 RC라 0.45 사용                                                |
 | Better Auth       | 1.7.12           | 아이디 + 비밀번호(username 플러그인), Drizzle 어댑터                                          |
+| sharp             | 0.35.5           | 업로드 이미지 변환 (Next 16이 쓰는 버전과 같음, alpine용 바이너리 포함)                       |
 | BlockNote         | 0.56.0           | 어드민 본문 편집기(@blocknote/core·react·shadcn). 1.0 전이라 정확한 버전으로 고정             |
 
 **ESLint 대신 Biome를 쓴 이유:** `eslint-config-next`가 쓰는 플러그인 일부(react, import, jsx-a11y)가 ESLint 10을 peer로 허용하지 않고, typescript-eslint는 TypeScript `<6.1`만 지원합니다. 그래서 소유자와 협의해 린트와 포맷을 한 도구로 처리하는 Biome를 택했습니다. 타입 정보가 필요한 규칙의 빈자리는 각 패키지의 `tsc --noEmit`으로 보완합니다.
@@ -169,6 +170,22 @@ SiteDocument (버전 관리 단위: 콘텐츠 + 배치를 함께 저장)
 - 새 API는 없습니다. 공개 API가 원본 콘텐츠 전체를 주므로 상세는 그 안에서 찾습니다. 응답에서 콘텐츠를 줄이게 되면 상세용 API를 따로 둡니다.
 - `SiteDocumentSchema`가 추가로 검사하는 것: 프로젝트끼리·회사끼리 slug 중복, 히스토리 항목과 성과가 가리키는 회사·프로젝트의 존재
 - 모듈용 색·글자 유틸리티(`.rs-fg-*`, `.rs-line` 등)는 모듈 카드 밖에서는 기본 토큰 값으로 돌아갑니다.
+
+## 5-4. 미디어 (업로드 이미지)
+
+```
+브라우저 ─ 업로드 ─> admin POST /api/admin/media ── sharp ──> MEDIA_DIR/{id}/{480|960|1600|2560}.webp + media_assets 행
+방문자 ─> web /media/{id}/{w}.webp ─(서버 간)─> admin GET /api/public/v1/media/{id}/{w}.webp
+```
+
+- 형식은 확장자가 아니라 파일 내용으로 판별합니다. JPEG·PNG·WebP·GIF만 받고(움직이는 GIF는 움직이는 WebP로), SVG는 거부합니다. 최대 10MB.
+- EXIF 회전 정보를 반영한 뒤 메타데이터(EXIF·GPS·ICC·XMP)를 모두 지웁니다. **원본은 저장하지 않습니다.**
+- 변환본 너비는 480/960/1600/2560 중 원본보다 작은 것 + 원본 너비(최대 2560). 주소의 내용은 바뀌지 않으므로 1년 `immutable` 캐시.
+- 문서에는 파일 대신 참조(`{ kind: "image", assetId, alt, width, height, widths }`)만 저장합니다. 렌더러(`MediaImage`)가 `srcset`을 만듭니다.
+  - 공개 사이트는 `mediaBase: "/media"`, 어드민 미리보기는 `"/api/public/v1/media"`.
+- 공개 제공은 DB에 등록된 ID·너비만 엽니다(경로 조작 방지). 공개 사이트 프록시도 ID·파일 형식을 확인한 뒤에만 어드민으로 넘깁니다.
+- 삭제: 초안이나 어느 게시 버전의 JSON에 `"assetId":"<id>"`가 있으면 409(`in_use`). 어드민 화면은 저장하지 않은 작업본에서 쓰는 이미지도 삭제를 막습니다.
+- 본문 편집기의 이미지 블록은 우리 업로드 API로 올리고, 외부 이미지 주소는 저장하지 않습니다(경고). 캡션을 대체 텍스트로 씁니다.
 
 ## 6. 배포와 실행 주소
 

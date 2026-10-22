@@ -30,7 +30,7 @@ export default async function CompanyDetailPage({ params }: PageProps<"/experien
     <PageShell response={result.response}>
       <div className="flex flex-col gap-4 pt-6">
         <BackLink label={page.title} href={publicPaths.experience} options={siteRenderOptions} />
-        <CompanyDetailView company={company} content={content} />
+        <CompanyDetailView company={company} content={content} options={siteRenderOptions} />
       </div>
     </PageShell>
   );

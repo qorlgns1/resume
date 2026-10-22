@@ -1,5 +1,7 @@
 import type { Block, ListItem, RichText } from "@resume/contracts";
 import { cn } from "@resume/ui/lib/utils";
+import { MediaImage } from "./media-image";
+import type { RenderOptions } from "./types";
 
 /*
  * 프로젝트·회사 상세 본문(노션형 블록) 렌더러.
@@ -57,7 +59,7 @@ function BulletedList({ items, depth }: { items: readonly ListItem[]; depth: num
   );
 }
 
-function BlockView({ block }: { block: Block }) {
+function BlockView({ block, options }: { block: Block; options: RenderOptions }) {
   switch (block.type) {
     case "paragraph":
       return (
@@ -99,21 +101,36 @@ function BlockView({ block }: { block: Block }) {
     case "divider":
       return <hr className="border-border" />;
     case "image":
-      return null;
+      if (block.media.kind !== "image") return null;
+      return (
+        <figure className="flex flex-col gap-2">
+          <MediaImage
+            media={block.media}
+            options={options}
+            sizes="(min-width: 1024px) 768px, 100vw"
+            className="max-h-[40rem] w-auto rounded-lg border border-border"
+          />
+          {block.caption ? (
+            <figcaption className="text-body-sm text-muted-foreground">{block.caption}</figcaption>
+          ) : null}
+        </figure>
+      );
   }
 }
 
 export function BlockContent({
   blocks,
   className,
+  options = {},
 }: {
   blocks: readonly Block[];
   className?: string;
+  options?: RenderOptions;
 }) {
   return (
     <div className={cn("flex flex-col gap-4 text-body leading-relaxed", className)}>
       {blocks.map((block) => (
-        <BlockView key={block.id} block={block} />
+        <BlockView key={block.id} block={block} options={options} />
       ))}
     </div>
   );

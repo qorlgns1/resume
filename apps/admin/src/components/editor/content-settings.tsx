@@ -24,8 +24,10 @@ import { FieldGroup } from "@resume/ui/components/field";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { BodyEditor } from "./body-editor";
+import { CoverField } from "./cover-field";
 import { type ContentSection, useEditor } from "./editor-context";
 import { CommaListField, Group, SelectField, SwitchField, TextField } from "./fields";
+import { MediaLibraryPanel } from "./media-settings";
 
 /*
  * 원본 콘텐츠 편집. 여기서 고친 내용은 이 콘텐츠를 참조하는 모든 페이지·모듈에 반영된다.
@@ -39,6 +41,7 @@ export const contentSectionLabels: Record<ContentSection, string> = {
   achievements: "성과",
   techStack: "기술 스택",
   history: "히스토리",
+  media: "미디어",
 };
 
 export type ListSection = "projects" | "companies" | "achievements" | "techStack";
@@ -148,13 +151,19 @@ export function ContentSettings({ section, itemId }: { section: ContentSection; 
       <header className="flex flex-col gap-1">
         <h2 className="text-title font-bold tracking-tight">{contentSectionLabels[section]}</h2>
         <p className="text-caption text-muted-foreground">
-          원본 콘텐츠입니다. 이 내용을 쓰는 모든 페이지와 모듈에 함께 반영됩니다.
+          {section === "media"
+            ? "업로드한 이미지입니다. 초안이나 게시 버전에서 쓰는 이미지는 삭제할 수 없습니다."
+            : "원본 콘텐츠입니다. 이 내용을 쓰는 모든 페이지와 모듈에 함께 반영됩니다."}
         </p>
       </header>
       {section === "site" ? <SiteForm /> : null}
       {section === "profile" ? <ProfileForm /> : null}
       {section === "history" ? <HistoryForm /> : null}
-      {section !== "site" && section !== "profile" && section !== "history" ? (
+      {section === "media" ? <MediaLibraryPanel /> : null}
+      {section !== "site" &&
+      section !== "profile" &&
+      section !== "history" &&
+      section !== "media" ? (
         <ListItemForm section={section} itemId={itemId} />
       ) : null}
     </div>
@@ -721,6 +730,15 @@ function ProjectFields({ index, project }: { index: number; project: Project }) 
           기간 추가
         </Button>
       )}
+      <CoverField
+        cover={project.cover}
+        path={[...path, "cover"]}
+        onChange={(cover) =>
+          set((p) => {
+            p.cover = cover;
+          })
+        }
+      />
       <BodyEditor
         title={project.title}
         body={project.body}

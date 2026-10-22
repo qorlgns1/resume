@@ -1,6 +1,6 @@
 "use client";
 
-import type { ModuleInstance } from "@resume/contracts";
+import { ADMIN_MEDIA_BASE, type ModuleInstance } from "@resume/contracts";
 import { BentoGrid, type RenderOptions, SystemPageView } from "@resume/modules";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@resume/ui/components/empty";
 import { cn } from "@resume/ui/lib/utils";
@@ -9,7 +9,7 @@ import type { PreviewViewport } from "./editor";
 import { useCurrentPage, useEditor } from "./editor-context";
 
 const FRAME_WIDTH: Record<PreviewViewport, number> = { desktop: 1440, mobile: 390 };
-const previewOptions: RenderOptions = { inert: true };
+const previewOptions: RenderOptions = { inert: true, mediaBase: ADMIN_MEDIA_BASE };
 
 /**
  * 공개 사이트와 같은 BentoGrid로 작업본을 그린다. 입력하는 즉시 반영된다.

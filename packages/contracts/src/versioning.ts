@@ -151,6 +151,8 @@ export const VersionListResponseSchema = z.object({ versions: z.array(VersionSum
 export type VersionListResponse = z.infer<typeof VersionListResponseSchema>;
 
 export const adminApiPaths = {
+  media: "/api/admin/media",
+  mediaItem: (id: string) => `/api/admin/media/${encodeURIComponent(id)}`,
   draft: "/api/admin/draft",
   publish: "/api/admin/publish",
   versions: "/api/admin/versions",

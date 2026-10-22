@@ -1,4 +1,12 @@
-import { type Block, type ListItem, MAX_LIST_DEPTH, type RichText } from "@resume/contracts";
+import {
+  ADMIN_MEDIA_BASE,
+  type Block,
+  type ListItem,
+  MAX_LIST_DEPTH,
+  type MediaAsset,
+  mediaUrl,
+  type RichText,
+} from "@resume/contracts";
 import type { EditorBlock, EditorPartialBlock } from "./schema";
 
 /*
@@ -63,7 +71,21 @@ function hasNonDefaultProps(block: EditorBlock): boolean {
   );
 }
 
-export function editorToBlocks(editorBlocks: readonly EditorBlock[]): ConversionResult {
+/** 편집기의 이미지 주소에서 업로드 이미지 ID를 꺼낸다. 우리 미디어 주소가 아니면 null */
+function assetIdFromUrl(url: string): string | null {
+  const match = /\/api\/public\/v1\/media\/(med_[a-f0-9]{16})\/\d+\.webp$/.exec(url);
+  return match?.[1] ?? null;
+}
+
+export interface ConversionOptions {
+  /** 업로드 이미지 정보 (크기·변환본 너비). 이미지 블록을 저장 형식으로 바꿀 때 필요하다. */
+  lookupMedia?: (assetId: string) => MediaAsset | undefined;
+}
+
+export function editorToBlocks(
+  editorBlocks: readonly EditorBlock[],
+  { lookupMedia }: ConversionOptions = {},
+): ConversionResult {
   const blocks: Block[] = [];
   const warnings = new Set<string>();
 
@@ -128,6 +150,38 @@ export function editorToBlocks(editorBlocks: readonly EditorBlock[]): Conversion
             text: toRichText(block.content),
           });
           break;
+        case "image": {
+          const url = block.props.url;
+          if (!url) break; // 아직 이미지를 고르지 않은 빈 블록
+          const assetId = assetIdFromUrl(url);
+          const asset = assetId ? lookupMedia?.(assetId) : undefined;
+          if (!asset) {
+            warnings.add(
+              "외부 이미지 주소는 저장되지 않습니다. 이미지 블록에서 파일을 올려 주세요.",
+            );
+            break;
+          }
+          const caption = block.props.caption.trim();
+          if (!caption)
+            warnings.add(
+              "캡션이 없는 이미지는 대체 텍스트 없이 저장됩니다. 캡션에 이미지 설명을 적어 주세요.",
+            );
+          blocks.push({
+            id: block.id,
+            type: "image",
+            media: {
+              id: block.id,
+              kind: "image",
+              assetId: asset.id,
+              alt: caption.slice(0, 200),
+              width: asset.width,
+              height: asset.height,
+              widths: asset.widths,
+            },
+            ...(caption ? { caption } : {}),
+          });
+          break;
+        }
       }
       if (block.type !== "bulletListItem" && block.children.length > 0) {
         warnings.add(
@@ -203,7 +257,19 @@ export function blocksToEditor(blocks: readonly Block[]): EditorPartialBlock[] {
         result.push({ id: block.id, type: "divider" } as EditorPartialBlock);
         break;
       case "image":
-        // 이미지는 업로드 단계에서 지원한다. 시험 구현에서는 건너뛴다.
+        if (block.media.kind !== "image") break;
+        result.push({
+          id: block.id,
+          type: "image",
+          props: {
+            url: mediaUrl(
+              ADMIN_MEDIA_BASE,
+              block.media.assetId,
+              block.media.widths.at(-1) ?? block.media.width,
+            ),
+            caption: block.caption ?? block.media.alt,
+          },
+        } as EditorPartialBlock);
         break;
     }
   }

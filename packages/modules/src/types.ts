@@ -17,6 +17,10 @@ export interface RenderOptions {
    * 어드민 미리보기에서 모듈 선택과 링크 이동이 겹치지 않게 한다.
    */
   inert?: boolean;
+  /**
+   * 업로드 이미지 주소의 앞부분. 공개 사이트는 "/media"(기본값), 어드민 미리보기는 어드민 API 주소를 쓴다.
+   */
+  mediaBase?: string;
 }
 
 export interface ModuleRenderProps<T extends ModuleType = ModuleType> {

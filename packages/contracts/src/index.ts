@@ -3,6 +3,7 @@ export * from "./blocks";
 export * from "./content";
 export * from "./errors";
 export * from "./layout";
+export * from "./media";
 export * from "./modules";
 export * from "./page";
 export * from "./paths";

@@ -1,3 +1,4 @@
+import fs from "node:fs/promises";
 import { expect, type Page, test } from "@playwright/test";
 import {
   ApiErrorResponseSchema,
@@ -5,6 +6,7 @@ import {
   type SystemPageKey,
 } from "@resume/contracts";
 import { ports, testAdmin } from "../playwright.config";
+import { gpsPhoto, imageInfo } from "./fixtures";
 
 const web = `http://localhost:${ports.web}`;
 const admin = `http://localhost:${ports.admin}`;
@@ -191,6 +193,8 @@ test.describe("어드민", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
   let page: Page;
+  let unusedAssetId = "";
+  let usedAssetId = "";
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   });
@@ -464,6 +468,115 @@ test.describe("어드민", () => {
       "/experience/company-d",
     );
     await visitor.close();
+  });
+
+  test("업로드한 사진은 위치 정보를 지우고 회전을 반영한 WebP로 저장한다", async () => {
+    const file = await gpsPhoto();
+    const res = await page.request.post(`${admin}/api/admin/media`, {
+      headers: { origin: admin },
+      multipart: {
+        file: { name: "gps.jpg", mimeType: "image/jpeg", buffer: await fs.readFile(file) },
+      },
+    });
+    expect(res.status()).toBe(201);
+    const { asset } = (await res.json()) as {
+      asset: { id: string; width: number; height: number; widths: number[] };
+    };
+    // 세로 회전(6)이 반영되어 2000×3000 세로 이미지가 된다
+    expect(asset).toMatchObject({ width: 2000, height: 3000, widths: [480, 960, 1600, 2000] });
+
+    const served = await page.request.get(`${admin}/api/public/v1/media/${asset.id}/480.webp`);
+    expect(served.headers()["content-type"]).toBe("image/webp");
+    expect(served.headers()["cache-control"]).toContain("immutable");
+    expect(await imageInfo(await served.body())).toEqual({
+      format: "webp",
+      width: 480,
+      height: 720,
+      exif: false,
+      xmp: false,
+    });
+    unusedAssetId = asset.id;
+  });
+
+  test("SVG와 10MB를 넘는 파일은 거부한다", async () => {
+    const svg = await page.request.post(`${admin}/api/admin/media`, {
+      headers: { origin: admin },
+      multipart: {
+        file: {
+          name: "image.png",
+          mimeType: "image/png",
+          buffer: Buffer.from(
+            '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
+          ),
+        },
+      },
+    });
+    expect(svg.status()).toBe(400);
+    expect((await svg.json()).error.code).toBe("unsupported_media");
+    const big = await page.request.post(`${admin}/api/admin/media`, {
+      headers: { origin: admin },
+      multipart: {
+        file: {
+          name: "big.jpg",
+          mimeType: "image/jpeg",
+          buffer: Buffer.alloc(11 * 1024 * 1024, 1),
+        },
+      },
+    });
+    expect(big.status()).toBe(413);
+  });
+
+  test("커버 이미지를 고르고 게시하면 공개 사이트에서 /media 주소로 보인다", async ({
+    browser,
+    request,
+  }) => {
+    const sidebar = page.getByRole("complementary", { name: "페이지와 콘텐츠" });
+    await sidebar.getByRole("tab", { name: "콘텐츠" }).click();
+    await sidebar.getByRole("button", { name: "책갈피" }).click();
+    const settings = page.getByRole("complementary", { name: "설정" });
+    await settings.getByRole("button", { name: "이미지 고르기" }).click();
+    const picker = page.getByRole("dialog", { name: "이미지 고르기" });
+    await picker.locator("input[type=file]").setInputFiles(await gpsPhoto());
+    await expect(picker).toBeHidden();
+    await settings.getByLabel("대체 텍스트").fill("독서 기록 화면");
+    await page.keyboard.press("ControlOrMeta+s");
+    await expect(page.getByRole("status")).toContainText("초안을 저장했습니다");
+    await page.getByRole("button", { name: "게시", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "게시" }).click();
+    await expect(page.getByRole("status")).toContainText("을 게시했습니다");
+
+    const visitor = await browser.newPage();
+    await visitor.goto(`http://localhost:${ports.webApi}/projects/bookmark`);
+    const cover = visitor.getByRole("img", { name: "독서 기록 화면" });
+    await expect(cover).toBeVisible();
+    await expect
+      .poll(() => cover.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0))
+      .toBe(true);
+    const src = (await cover.getAttribute("src")) ?? "";
+    expect(src).toMatch(/^\/media\/med_[a-f0-9]{16}\/\d+\.webp$/);
+    const proxied = await request.get(`http://localhost:${ports.webApi}${src}`);
+    expect(proxied.status()).toBe(200);
+    expect(proxied.headers()["cache-control"]).toContain("immutable");
+    await visitor.close();
+    usedAssetId = src.split("/")[2] ?? "";
+
+    // 샘플 모드에는 업로드 이미지가 없다
+    expect((await request.get(`${web}${src}`)).status()).toBe(404);
+  });
+
+  test("사용 중인 이미지는 삭제할 수 없고, 쓰지 않는 이미지는 삭제된다", async () => {
+    const inUse = await page.request.delete(`${admin}/api/admin/media/${usedAssetId}`, {
+      headers: { origin: admin },
+    });
+    expect(inUse.status()).toBe(409);
+    expect((await inUse.json()).error.code).toBe("in_use");
+    const unused = await page.request.delete(`${admin}/api/admin/media/${unusedAssetId}`, {
+      headers: { origin: admin },
+    });
+    expect(unused.status()).toBe(204);
+    expect(
+      (await page.request.get(`${admin}/api/public/v1/media/${unusedAssetId}/480.webp`)).status(),
+    ).toBe(404);
   });
 
   test("관리자 API는 로그인과 같은 출처를 요구한다", async ({ playwright }) => {

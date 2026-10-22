@@ -15,6 +15,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useEditor } from "./editor-context";
 import type { Path } from "./issues";
+import { useMediaLibrary } from "./media-library";
 
 // 블록 편집기는 브라우저 전용이고 용량이 커서, 본문 편집을 열 때만 불러온다.
 const BlockEditor = dynamic(
@@ -42,6 +43,7 @@ interface BodyEditorProps {
  */
 export function BodyEditor({ title, body, path, onChange }: BodyEditorProps) {
   const { issues } = useEditor();
+  const { upload, lookup } = useMediaLibrary();
   const [warnings, setWarnings] = useState<string[]>([]);
   const bodyIssues = issues.under(path);
 
@@ -100,6 +102,8 @@ export function BodyEditor({ title, body, path, onChange }: BodyEditorProps) {
               <BlockEditor
                 label={`${title} 본문`}
                 initialBlocks={body}
+                uploadMedia={upload}
+                lookupMedia={lookup}
                 onChange={(result) => {
                   setWarnings(result.warnings);
                   onChange(result.blocks);

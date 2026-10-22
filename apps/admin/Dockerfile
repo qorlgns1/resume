@@ -32,6 +32,7 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     PORT=3001 \
     DATABASE_PATH=/data/resume.db \
+    MEDIA_DIR=/data/media \
     MIGRATIONS_DIR=/app/apps/admin/drizzle
 RUN addgroup -S -g 1001 nodejs && adduser -S -u 1001 -G nodejs nextjs \
     && mkdir -p /data && chown nextjs:nodejs /data
