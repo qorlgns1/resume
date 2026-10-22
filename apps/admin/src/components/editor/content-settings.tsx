@@ -23,6 +23,7 @@ import {
 import { FieldGroup } from "@resume/ui/components/field";
 import { Plus, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
+import { BodyEditor } from "./body-editor";
 import { type ContentSection, useEditor } from "./editor-context";
 import { CommaListField, Group, SelectField, SwitchField, TextField } from "./fields";
 
@@ -704,6 +705,16 @@ function ProjectFields({ index, project }: { index: number; project: Project }) 
           기간 추가
         </Button>
       )}
+      <BodyEditor
+        title={project.title}
+        body={project.body}
+        path={[...path, "body"]}
+        onChange={(blocks) =>
+          set((p) => {
+            p.body = blocks;
+          })
+        }
+      />
       <SampleSwitch
         checked={project.isSample ?? false}
         onChange={(checked) =>
@@ -782,6 +793,16 @@ function CompanyFields({ index, company }: { index: number; company: Company }) 
         onChange={(v) =>
           set((c) => {
             c.tags = v;
+          })
+        }
+      />
+      <BodyEditor
+        title={company.name}
+        body={company.body}
+        path={[...path, "body"]}
+        onChange={(blocks) =>
+          set((c) => {
+            c.body = blocks;
           })
         }
       />

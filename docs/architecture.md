@@ -22,6 +22,7 @@
 | better-sqlite3    | 13.0.3           | SQLite 3.53. 패키지에 플랫폼별 바이너리(glibc·musl 포함)가 들어 있어 설치 시 빌드하지 않음    |
 | Drizzle ORM / Kit | 0.45.4 / 0.31.11 | 스키마·마이그레이션. 1.0은 아직 RC라 0.45 사용                                                |
 | Better Auth       | 1.7.12           | 아이디 + 비밀번호(username 플러그인), Drizzle 어댑터                                          |
+| BlockNote         | 0.56.0           | 어드민 본문 편집기(@blocknote/core·react·shadcn). 1.0 전이라 정확한 버전으로 고정             |
 
 **ESLint 대신 Biome를 쓴 이유:** `eslint-config-next`가 쓰는 플러그인 일부(react, import, jsx-a11y)가 ESLint 10을 peer로 허용하지 않고, typescript-eslint는 TypeScript `<6.1`만 지원합니다. 그래서 소유자와 협의해 린트와 포맷을 한 도구로 처리하는 Biome를 택했습니다. 타입 정보가 필요한 규칙의 빈자리는 각 패키지의 `tsc --noEmit`으로 보완합니다.
 
@@ -139,6 +140,20 @@ SiteDocument (버전 관리 단위: 콘텐츠 + 배치를 함께 저장)
 - 모듈 인스턴스 설정(오른쪽 패널의 콘텐츠·스타일·배치)과 원본 콘텐츠 편집(왼쪽 "콘텐츠" 탭)을 구분합니다. 원본을 고치면 그것을 참조하는 모든 모듈에 반영됩니다.
 - 새 모듈 기본값은 `@resume/modules`의 `createModuleDraft()`가 만듭니다. 연결할 원본 콘텐츠가 없으면 이유를 알려주고 추가하지 않습니다.
 - 성공 안내는 서버 응답을 받은 뒤에만 표시합니다.
+
+## 5-2. 본문 블록 편집기 (BlockNote)
+
+- 프로젝트·회사의 상세 본문은 노션형 블록입니다. 저장 형식은 `@resume/contracts`의 `BlockSchema`이고, 편집기는 어드민에서 글을 쓰는 도구일 뿐입니다.
+  - 블록: 문단, 제목(2·3단계), 글머리 목록(3단계까지 중첩), 인용, 안내 상자(info·warning), 구분선, 이미지(미디어 단계에서 편집 지원)
+  - 인라인: 굵게, 기울임, 코드, 링크
+- 편집기 의존성은 `apps/admin/src/components/block-editor`에만 있습니다.
+  - `schema.tsx`: 편집기에서 고를 수 있는 블록을 저장 형식에 있는 것으로만 제한하고, 안내 상자를 사용자 정의 블록으로 정의
+  - `convert.ts`: BlockNote 문서 ↔ `Block[]` 변환. 저장 형식에 없는 들여쓰기·정렬·색은 경고와 함께 정리합니다.
+  - 편집기는 `next/dynamic`(ssr: false)으로 본문 편집 패널을 열 때만 불러옵니다 (압축 약 320KB). 공개 사이트에는 포함되지 않습니다.
+- 공개 사이트는 `@resume/modules`의 `BlockContent`로 본문을 그립니다. HTML 문자열을 쓰지 않습니다.
+- 편집기를 바꿔야 하면 `block-editor` 폴더만 교체합니다. 저장된 본문은 그대로 유지됩니다.
+- **라이선스 규칙:** BlockNote 핵심 패키지는 MPL-2.0입니다(의존성으로 쓰는 것은 문제없음). `@blocknote/xl-*` 확장은 GPL-3.0 또는 유료이므로 **설치하지 않습니다.**
+- 한글 입력은 Chrome DevTools 프로토콜로 조합 과정을 흉내 낸 스모크 테스트와 소유자의 실제 키보드 확인으로 검증했습니다.
 
 ## 6. 배포와 실행 주소
 

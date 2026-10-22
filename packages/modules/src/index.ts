@@ -1,4 +1,5 @@
 export { BentoGrid } from "./bento-grid";
+export { BlockContent } from "./block-content";
 export {
   createId,
   createModuleDraft,

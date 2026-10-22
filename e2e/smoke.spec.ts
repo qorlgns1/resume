@@ -317,6 +317,69 @@ test.describe("어드민", () => {
     await expect(page.getByTestId("draft-status")).toHaveText("게시됨 · 버전 3");
   });
 
+  test("프로젝트 본문을 블록 편집기로 쓰고 저장한다 (한글 조합·중첩 목록)", async () => {
+    const sidebar = page.getByRole("complementary", { name: "페이지와 콘텐츠" });
+    await sidebar.getByRole("tab", { name: "콘텐츠" }).click();
+    await sidebar.getByRole("button", { name: "타임카드" }).click();
+    await page.getByRole("button", { name: "본문 편집" }).click();
+    const editor = page.getByRole("textbox", { name: "타임카드 본문" });
+    await editor.waitFor();
+    await editor.click();
+
+    // 슬래시 메뉴: 이모지는 없고 안내 상자는 있다
+    await page.keyboard.type("/");
+    const menu = page.locator(".bn-suggestion-menu");
+    await expect(menu.getByText("안내 상자", { exact: true })).toBeVisible();
+    await expect(menu.getByText("이모지", { exact: true })).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Backspace");
+
+    // 한글 조합 입력 (Chrome DevTools 프로토콜로 조합 과정을 흉내 낸다)
+    const cdp = await page.context().newCDPSession(page);
+    for (const [steps, final] of [
+      [["ㅁ", "무", "문"], "문"],
+      [["ㅈ", "제"], "제"],
+    ] as const) {
+      for (const text of steps) {
+        await cdp.send("Input.imeSetComposition", {
+          text,
+          selectionStart: text.length,
+          selectionEnd: text.length,
+        });
+      }
+      await cdp.send("Input.insertText", { text: final });
+    }
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("- ");
+    await page.keyboard.insertText("상위 항목");
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Tab");
+    await page.keyboard.insertText("하위 항목");
+    await page.screenshot({ path: `${screens}/admin-body-editor.png` });
+    // 편집기 안의 Esc는 패널을 닫지 않는다 (슬래시 메뉴를 닫을 때 패널이 함께 닫히던 문제)
+    const sheet = page.getByRole("dialog", { name: "타임카드 본문" });
+    await page.keyboard.press("Escape");
+    await expect(sheet).toBeVisible();
+    await sheet.getByRole("button", { name: "닫기" }).click();
+    await expect(sheet).toBeHidden();
+
+    await expect(page.getByText("블록 2개")).toBeVisible();
+    await page.keyboard.press("ControlOrMeta+s");
+    await expect(page.getByRole("status")).toContainText("초안을 저장했습니다");
+
+    const { draft } = (await (await page.request.get(`${admin}/api/admin/draft`)).json()) as {
+      draft: { document: { content: { projects: { title: string; body: unknown[] }[] } } };
+    };
+    const body = draft.document.content.projects.find((p) => p.title === "타임카드")?.body;
+    expect(body).toEqual([
+      expect.objectContaining({ type: "paragraph", text: [{ text: "문제" }] }),
+      expect.objectContaining({
+        type: "bulleted-list",
+        items: [{ text: [{ text: "상위 항목" }], children: [{ text: [{ text: "하위 항목" }] }] }],
+      }),
+    ]);
+  });
+
   test("관리자 API는 로그인과 같은 출처를 요구한다", async ({ playwright }) => {
     const anonymous = await playwright.request.newContext();
     expect((await anonymous.get(`${admin}/api/admin/draft`)).status()).toBe(401);

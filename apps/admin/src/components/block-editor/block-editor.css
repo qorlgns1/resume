@@ -1,0 +1,35 @@
+/*
+ * BlockNote 기본 스타일을 디자인 토큰에 맞춘다.
+ * 공개 사이트의 BlockContent 렌더러와 비슷한 크기·색으로 보이게 해서 편집 결과를 예상하기 쉽게 한다.
+ */
+.rs-block-editor .bn-container {
+  --bn-colors-editor-text: var(--rs-color-text);
+  --bn-colors-editor-background: transparent;
+  --bn-colors-menu-text: var(--rs-color-text);
+  --bn-colors-side-menu: var(--rs-color-text-subtle);
+  --bn-border-radius: var(--rs-radius-md);
+  --bn-border-radius-small: var(--rs-radius-sm);
+}
+
+.rs-block-editor .bn-default-styles {
+  font-family: var(--rs-font-sans);
+  letter-spacing: var(--rs-tracking-normal);
+  word-break: keep-all;
+}
+
+.rs-block-editor [data-content-type="heading"] {
+  letter-spacing: var(--rs-tracking-tight);
+}
+
+.rs-block-editor [data-content-type="heading"][data-level="2"] {
+  --level: 1.625em; /* --rs-text-heading 26px */
+}
+
+.rs-block-editor [data-content-type="heading"][data-level="3"] {
+  --level: 1.25em; /* --rs-text-title 20px */
+}
+
+.rs-block-editor [data-content-type="quote"] blockquote {
+  color: var(--rs-color-text-muted);
+  border-left: 4px solid var(--rs-color-border-strong);
+}

@@ -12,7 +12,8 @@
       "!**/.next",
       "!**/.turbo",
       "!**/next-env.d.ts",
-      "!apps/admin/drizzle"
+      "!apps/admin/drizzle",
+      "!pnpm-lock.yaml"
     ]
   },
   "formatter": {
