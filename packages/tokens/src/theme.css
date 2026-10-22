@@ -1,0 +1,140 @@
+/*
+ * Tailwind CSS v4 테마 매핑.
+ * 사용 측 CSS에서 `@import "tailwindcss";` 다음에 import한다.
+ *
+ * 색상 이름은 shadcn/ui 관례를 따른다.
+ *  - primary   : 브랜드 강조색(#2F6BFF)
+ *  - accent    : shadcn 관례상 "옅은 hover 배경". 브랜드 강조색이 아님에 주의
+ *  - inverse   : 어두운 카드(#1C1D21)
+ *  - canvas    : 페이지 배경(#F2F3F5)
+ */
+@import "./tokens.css";
+
+@theme inline {
+  --color-canvas: var(--rs-color-canvas);
+  --color-background: var(--rs-color-surface);
+  --color-foreground: var(--rs-color-text);
+
+  --color-card: var(--rs-color-surface);
+  --color-card-foreground: var(--rs-color-text);
+  --color-popover: var(--rs-color-surface);
+  --color-popover-foreground: var(--rs-color-text);
+
+  --color-primary: var(--rs-color-primary);
+  --color-primary-hover: var(--rs-color-primary-hover);
+  --color-primary-foreground: var(--rs-color-primary-foreground);
+  --color-primary-soft: var(--rs-color-primary-soft);
+  --color-primary-text: var(--rs-color-primary-text);
+
+  --color-secondary: var(--rs-color-surface-sunken);
+  --color-secondary-foreground: var(--rs-color-text);
+  --color-muted: var(--rs-color-surface-muted);
+  --color-muted-foreground: var(--rs-color-text-muted);
+  --color-subtle-foreground: var(--rs-color-text-subtle);
+  --color-accent: var(--rs-color-surface-sunken);
+  --color-accent-foreground: var(--rs-color-text);
+
+  --color-inverse: var(--rs-color-surface-inverse);
+  --color-inverse-raised: var(--rs-color-surface-inverse-raised);
+  --color-inverse-foreground: var(--rs-color-text-inverse);
+  --color-inverse-muted: var(--rs-color-text-inverse-muted);
+  --color-inverse-border: var(--rs-color-border-inverse);
+
+  --color-destructive: var(--rs-color-danger);
+  --color-destructive-soft: var(--rs-color-danger-soft);
+  --color-success: var(--rs-color-success);
+  --color-success-soft: var(--rs-color-success-soft);
+  --color-warning: var(--rs-color-warning);
+  --color-warning-soft: var(--rs-color-warning-soft);
+
+  --color-border: var(--rs-color-border);
+  --color-border-strong: var(--rs-color-border-strong);
+  --color-input: var(--rs-color-input);
+  --color-ring: var(--rs-color-ring);
+  --color-overlay: var(--rs-color-overlay);
+
+  --color-tone-blue: var(--rs-tone-blue);
+  --color-tone-violet: var(--rs-tone-violet);
+  --color-tone-green: var(--rs-tone-green);
+  --color-tone-slate: var(--rs-tone-slate);
+
+  --font-sans: var(--rs-font-sans);
+  --font-mono: var(--rs-font-mono);
+
+  --text-caption: var(--rs-text-caption);
+  --text-caption--line-height: var(--rs-text-caption--line-height);
+  --text-body-sm: var(--rs-text-body-sm);
+  --text-body-sm--line-height: var(--rs-text-body-sm--line-height);
+  --text-body: var(--rs-text-body);
+  --text-body--line-height: var(--rs-text-body--line-height);
+  --text-body-lg: var(--rs-text-body-lg);
+  --text-body-lg--line-height: var(--rs-text-body-lg--line-height);
+  --text-title: var(--rs-text-title);
+  --text-title--line-height: var(--rs-text-title--line-height);
+  --text-heading: var(--rs-text-heading);
+  --text-heading--line-height: var(--rs-text-heading--line-height);
+  --text-display-sm: var(--rs-text-display-sm);
+  --text-display-sm--line-height: var(--rs-text-display-sm--line-height);
+  --text-display: var(--rs-text-display);
+  --text-display--line-height: var(--rs-text-display--line-height);
+
+  --tracking-tight: var(--rs-tracking-tight);
+  --tracking-normal: var(--rs-tracking-normal);
+  --tracking-eyebrow: var(--rs-tracking-eyebrow);
+
+  --radius-xs: var(--rs-radius-xs);
+  --radius-sm: var(--rs-radius-sm);
+  --radius-md: var(--rs-radius-md);
+  --radius-lg: var(--rs-radius-lg);
+  --radius-xl: var(--rs-radius-xl);
+
+  --shadow-card: var(--rs-shadow-card);
+  --shadow-overlay: var(--rs-shadow-overlay);
+
+  --ease-out: var(--rs-ease-out);
+  --ease-in: var(--rs-ease-in);
+}
+
+/* @theme inline 값은 런타임 CSS 변수로 남지 않으므로 기본 스타일은 원천 토큰(--rs-*)을 직접 참조한다. */
+@layer base {
+  *,
+  ::after,
+  ::before {
+    border-color: var(--rs-color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--rs-color-canvas);
+    color: var(--rs-color-text);
+    font-family: var(--rs-font-sans);
+    letter-spacing: var(--rs-tracking-normal);
+    word-break: keep-all; /* 한글 어절 단위 줄바꿈 */
+    overflow-wrap: anywhere;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--rs-color-ring);
+    outline-offset: 2px;
+  }
+
+  /* 동작 줄이기를 설정한 사용자에게는 모든 애니메이션·전환을 사실상 끈다. 컴포넌트 단위 설정보다 우선해야 하므로 !important를 쓴다. */
+  /* biome-ignore-start lint/complexity/noImportantStyles: reduced-motion 전역 재정의 */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  /* biome-ignore-end lint/complexity/noImportantStyles: reduced-motion 전역 재정의 */
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@resume/storybook",
+  "version": "0.0.0",
+  "private": true,
+  "description": "디자인 토큰, 공통 UI, 포트폴리오 모듈 확인용 Storybook",
+  "type": "module",
+  "scripts": {
+    "dev": "storybook dev --port 6006 --no-open",
+    "build": "storybook build --output-dir storybook-static",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@resume/contracts": "workspace:*",
+    "@resume/modules": "workspace:*",
+    "@resume/tokens": "workspace:*",
+    "@resume/ui": "workspace:*",
+    "lucide-react": "1.61.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@resume/config": "workspace:*",
+    "@storybook/addon-a11y": "10.6.3",
+    "@storybook/addon-docs": "10.6.3",
+    "@storybook/react-vite": "10.6.3",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "storybook": "10.6.3",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3",
+    "vite": "8.3.5"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "@resume/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "공개 포트폴리오 사이트",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@resume/contracts": "workspace:*",
+    "@resume/modules": "workspace:*",
+    "@resume/tokens": "workspace:*",
+    "@resume/ui": "workspace:*",
+    "lucide-react": "1.61.0",
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@resume/config": "workspace:*",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3"
+  }
+}

@@ -1,0 +1,182 @@
+/*
+ * 포트폴리오 모듈 공통 스타일.
+ *
+ * 벤토 그리드는 viewport가 아닌 container query로 데스크톱/모바일 배치를 전환한다.
+ * 덕분에 어드민 미리보기에서 390px 프레임 안에 넣기만 해도 모바일 배치가 그대로 재현된다.
+ *
+ * 모듈 스타일(배경·글자 크기·정렬·여백·테두리)은 렌더러가 인라인 CSS 변수
+ * (--mod-*-m: 모바일, --mod-*-d: 데스크톱)로 넘기고, 여기서 화면 폭에 맞는 값을 고른다.
+ */
+@source "./";
+
+.rs-bento {
+  container: rs-bento / inline-size;
+}
+
+.rs-bento__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--rs-bento-gap);
+}
+
+.rs-bento__item {
+  display: var(--m-display, block);
+  grid-column: span var(--m-span, 2);
+  order: var(--m-order, 0);
+  min-width: 0;
+}
+
+@container rs-bento (min-width: 48rem) {
+  .rs-bento__grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--rs-bento-gap-lg);
+  }
+
+  .rs-bento__item {
+    display: block;
+    grid-column: var(--d-col) / span var(--d-span);
+    grid-row: var(--d-row) / span var(--d-rspan, 1);
+    order: 0;
+  }
+}
+
+/* ── 모듈 프레임 ───────────────────────────────────── */
+.rs-mod {
+  --mod-bg: var(--mod-bg-m);
+  --mod-fg: var(--mod-fg-m);
+  --mod-fg-muted: var(--mod-fg-muted-m);
+  --mod-fg-subtle: var(--mod-fg-subtle-m);
+  --mod-line: var(--mod-line-m);
+  --mod-raised: var(--mod-raised-m);
+  --mod-accent-text: var(--mod-accent-text-m);
+  --mod-pad: var(--mod-pad-m);
+  --mod-scale: var(--mod-scale-m);
+  --mod-align: var(--mod-align-m);
+  --mod-justify: var(--mod-justify-m);
+  --mod-border: var(--mod-border-m);
+  --mod-radius: var(--mod-radius-m);
+  --mod-shadow: var(--mod-shadow-m);
+
+  container-type: inline-size;
+  height: 100%;
+  min-width: 0;
+  padding: var(--mod-pad);
+  border: 1px solid var(--mod-border);
+  border-radius: var(--mod-radius);
+  background: var(--mod-bg);
+  box-shadow: var(--mod-shadow);
+  color: var(--mod-fg);
+  text-align: var(--mod-align);
+  scroll-margin-top: 5rem;
+}
+
+@container rs-bento (min-width: 48rem) {
+  .rs-mod {
+    --mod-bg: var(--mod-bg-d);
+    --mod-fg: var(--mod-fg-d);
+    --mod-fg-muted: var(--mod-fg-muted-d);
+    --mod-fg-subtle: var(--mod-fg-subtle-d);
+    --mod-line: var(--mod-line-d);
+    --mod-raised: var(--mod-raised-d);
+    --mod-accent-text: var(--mod-accent-text-d);
+    --mod-pad: var(--mod-pad-d);
+    --mod-scale: var(--mod-scale-d);
+    --mod-align: var(--mod-align-d);
+    --mod-justify: var(--mod-justify-d);
+    --mod-border: var(--mod-border-d);
+    --mod-radius: var(--mod-radius-d);
+    --mod-shadow: var(--mod-shadow-d);
+  }
+}
+
+.rs-fg {
+  color: var(--mod-fg);
+}
+.rs-fg-muted {
+  color: var(--mod-fg-muted);
+}
+.rs-fg-subtle {
+  color: var(--mod-fg-subtle);
+}
+.rs-accent-text {
+  color: var(--mod-accent-text);
+}
+.rs-line {
+  border-color: var(--mod-line);
+}
+.rs-raised {
+  background-color: var(--mod-raised);
+}
+.rs-justify {
+  justify-content: var(--mod-justify);
+}
+
+/* ── 모듈 타이포그래피 (textScale 반영) ─────────────── */
+.rs-type-display {
+  font-size: calc(var(--rs-text-display-sm) * var(--mod-scale));
+  line-height: var(--rs-text-display-sm--line-height);
+  font-weight: 800;
+  letter-spacing: var(--rs-tracking-tight);
+}
+
+@container (min-width: 34rem) {
+  .rs-type-display {
+    font-size: calc(var(--rs-text-display) * var(--mod-scale));
+    line-height: var(--rs-text-display--line-height);
+  }
+}
+
+.rs-type-headline {
+  font-size: calc(1.75rem * var(--mod-scale));
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: var(--rs-tracking-tight);
+}
+
+@container (min-width: 28rem) {
+  .rs-type-headline {
+    font-size: calc(2.25rem * var(--mod-scale));
+  }
+}
+
+.rs-type-heading {
+  font-size: calc(var(--rs-text-heading) * var(--mod-scale));
+  line-height: var(--rs-text-heading--line-height);
+  font-weight: 800;
+  letter-spacing: var(--rs-tracking-tight);
+}
+
+.rs-type-title {
+  font-size: calc(var(--rs-text-title) * var(--mod-scale));
+  line-height: var(--rs-text-title--line-height);
+  font-weight: 700;
+  letter-spacing: var(--rs-tracking-tight);
+}
+
+.rs-type-body-lg {
+  font-size: calc(var(--rs-text-body-lg) * var(--mod-scale));
+  line-height: var(--rs-text-body-lg--line-height);
+}
+
+.rs-type-body {
+  font-size: calc(var(--rs-text-body) * var(--mod-scale));
+  line-height: var(--rs-text-body--line-height);
+}
+
+.rs-type-body-sm {
+  font-size: calc(var(--rs-text-body-sm) * var(--mod-scale));
+  line-height: var(--rs-text-body-sm--line-height);
+}
+
+.rs-type-caption {
+  font-size: var(--rs-text-caption);
+  line-height: var(--rs-text-caption--line-height);
+}
+
+.rs-type-eyebrow {
+  font-size: var(--rs-text-caption);
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: var(--rs-tracking-eyebrow);
+  text-transform: uppercase;
+}

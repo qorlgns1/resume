@@ -1,0 +1,14 @@
+{
+  "name": "@resume/config",
+  "version": "0.0.0",
+  "private": true,
+  "description": "공통 TypeScript 설정",
+  "files": [
+    "tsconfig"
+  ],
+  "exports": {
+    "./tsconfig/base.json": "./tsconfig/base.json",
+    "./tsconfig/library.json": "./tsconfig/library.json",
+    "./tsconfig/nextjs.json": "./tsconfig/nextjs.json"
+  }
+}

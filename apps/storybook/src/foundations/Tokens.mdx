@@ -1,0 +1,29 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { ColorTable, SpacingTable, TypeTable } from "./token-tables";
+
+<Meta title="Foundations/Tokens" />
+
+# 디자인 토큰
+
+모든 값은 `@resume/tokens`의 CSS 변수(`--rs-*`)가 원천입니다. 공개 사이트, 어드민, Storybook이 같은 파일을 불러옵니다.
+Tailwind 유틸리티 이름은 shadcn/ui 관례를 따르므로 `primary`가 브랜드 강조색이고 `accent`는 옅은 hover 배경입니다.
+
+전체 테마를 바꾸는 기능은 없습니다. 모듈마다 배경·글자 크기·정렬·여백·테두리만 정해진 선택지 안에서 바꿀 수 있습니다.
+
+## 색상
+
+작은 글자용 링크 색은 `primary-text`(#1F58E6)를 사용합니다. `primary`(#2F6BFF)는 회색 배경 위의 작은 글자에서 4.5:1을 넘지 못하기 때문입니다.
+
+<ColorTable />
+
+## 타이포그래피
+
+서체는 Pretendard Variable이며 한글 제목은 자간을 -0.025em으로 줄입니다. 본문은 `word-break: keep-all`로 어절 단위로 줄을 바꿉니다.
+
+<TypeTable />
+
+## 간격과 모서리
+
+간격은 Tailwind 기본 4px 스케일을 쓰고, 레이아웃과 카드 간격만 토큰으로 정의합니다.
+
+<SpacingTable />

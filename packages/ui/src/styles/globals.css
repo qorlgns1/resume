@@ -1,0 +1,10 @@
+/*
+ * 앱 공통 스타일 진입점.
+ * Tailwind, 애니메이션 유틸리티, 디자인 토큰을 불러오고 이 패키지의 소스를 스캔 대상으로 등록한다.
+ * 앱은 이 파일을 import한 뒤 자신의 소스와 @resume/modules를 @source로 추가한다.
+ */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@resume/tokens/theme.css";
+
+@source "../components";

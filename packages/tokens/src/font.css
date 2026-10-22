@@ -1,0 +1,5 @@
+/*
+ * Pretendard Variable (dynamic subset).
+ * 한글 글리프를 유니코드 범위별로 나눈 woff2를 필요한 만큼만 내려받는다.
+ */
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";

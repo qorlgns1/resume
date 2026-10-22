@@ -1,0 +1,35 @@
+# 로컬 확인용 구성. 운영 배포 설정이 아니다.
+#   docker compose up --build
+# 공개 사이트: http://localhost:3000   어드민: http://localhost:3001
+# 포트가 겹치면 WEB_PORT / ADMIN_PORT로 바꾼다: WEB_PORT=3200 ADMIN_PORT=3201 docker compose up --build
+
+services:
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    environment:
+      # 브라우저가 여는 공개 사이트 주소 (컨테이너 이름이 아니라 호스트 주소)
+      PUBLIC_SITE_URL: http://localhost:${WEB_PORT:-3000}
+    ports:
+      # 어드민은 인증 전까지 로컬 검토용이므로 이 컴퓨터에서만 접근하도록 127.0.0.1에 묶는다.
+      - "127.0.0.1:${ADMIN_PORT:-3001}:3001"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      CONTENT_SOURCE: ${CONTENT_SOURCE:-api}
+      # web 서버가 컨테이너 네트워크 안에서 호출하는 주소 (브라우저용 주소가 아님)
+      CONTENT_API_URL: http://admin:3001
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3000}:3000"
+    depends_on:
+      admin:
+        condition: service_healthy

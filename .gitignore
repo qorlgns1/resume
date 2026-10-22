@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+.next/
+out/
+dist/
+storybook-static/
+*.tsbuildinfo
+next-env.d.ts
+
+# turbo
+.turbo/
+out-prune/
+
+# env (example 파일만 커밋한다)
+.env
+.env.*
+!.env.example
+
+# playwright
+test-results/
+playwright-report/
+blob-report/
+
+# misc
+.DS_Store
+*.log
+.vercel

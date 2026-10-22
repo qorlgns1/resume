@@ -1,0 +1,4 @@
+{
+  "extends": "@resume/config/tsconfig/library.json",
+  "include": ["src"]
+}

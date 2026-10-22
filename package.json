@@ -1,0 +1,35 @@
+{
+  "name": "resume",
+  "private": true,
+  "description": "관리자 화면에서 페이지 콘텐츠와 모듈 배치를 편집할 수 있는 셀프 호스팅 포트폴리오",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24.0.0 <25",
+    "pnpm": ">=10.33.0 <11"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@resume/web",
+    "dev:admin": "turbo run dev --filter=@resume/admin",
+    "dev:storybook": "turbo run dev --filter=@resume/storybook",
+    "build": "turbo run build",
+    "build:web": "turbo run build --filter=@resume/web",
+    "build:admin": "turbo run build --filter=@resume/admin",
+    "build:storybook": "turbo run build --filter=@resume/storybook",
+    "typecheck": "turbo run typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "check": "pnpm lint && pnpm typecheck",
+    "test:smoke": "playwright test",
+    "test:smoke:install": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.2",
+    "@playwright/test": "1.64.1",
+    "@resume/contracts": "workspace:*",
+    "@resume/config": "workspace:*",
+    "@types/node": "24.19.2",
+    "turbo": "2.11.10",
+    "typescript": "6.0.3"
+  }
+}

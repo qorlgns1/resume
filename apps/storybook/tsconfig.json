@@ -1,0 +1,7 @@
+{
+  "extends": "@resume/config/tsconfig/library.json",
+  "compilerOptions": {
+    "types": ["vite/client"]
+  },
+  "include": ["src", ".storybook", "vite.config.ts"]
+}
