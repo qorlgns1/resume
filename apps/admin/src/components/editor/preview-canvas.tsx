@@ -4,6 +4,7 @@ import { ADMIN_MEDIA_BASE, type ModuleInstance } from "@resume/contracts";
 import { BentoGrid, type RenderOptions, SystemPageView } from "@resume/modules";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@resume/ui/components/empty";
 import { cn } from "@resume/ui/lib/utils";
+import { Menu } from "lucide-react";
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PreviewViewport } from "./editor";
 import { useCurrentPage, useEditor } from "./editor-context";
@@ -70,6 +71,11 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
           style={{ width, transform: `scale(${scale})`, transformOrigin: "top left" }}
           className="rounded-lg bg-canvas px-4 py-6 shadow-card data-[viewport=desktop]:px-10"
         >
+          <PreviewHeader
+            name={content.profile.name}
+            role={content.profile.role}
+            onSelect={() => select({ kind: "content", section: "profile" })}
+          />
           {page.kind === "system" && page.systemKey !== "home" ? (
             <SystemPageView
               page={page}
@@ -95,6 +101,35 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
         </div>
       </div>
     </section>
+  );
+}
+
+/** 공개 사이트 머리글(SiteHeader)과 같은 모양. 누르면 프로필 편집으로 간다. */
+function PreviewHeader({
+  name,
+  role,
+  onSelect,
+}: {
+  name: string;
+  role: string;
+  onSelect: () => void;
+}) {
+  return (
+    <header className="relative flex items-center justify-between gap-4 pb-4">
+      <div className="flex min-w-0 items-baseline gap-3">
+        <span className="text-title font-extrabold tracking-tight">{name}</span>
+        <span className="truncate text-body-sm text-muted-foreground">{role}</span>
+      </div>
+      <span className="inline-flex size-10 items-center justify-center rounded-md border border-border bg-card">
+        <Menu aria-hidden="true" className="size-5" />
+      </span>
+      <button
+        type="button"
+        aria-label="머리글: 프로필 편집으로 이동"
+        onClick={onSelect}
+        className="absolute -inset-1 rounded-md border-[3px] border-transparent transition-colors hover:border-primary/40 focus-visible:border-primary focus-visible:outline-none"
+      />
+    </header>
   );
 }
 
