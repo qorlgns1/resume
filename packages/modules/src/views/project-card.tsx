@@ -75,9 +75,9 @@ export function ProjectCard({
       )}
     >
       <div className="flex flex-col gap-4">
-        <header className="flex items-start gap-3">
+        <header className="flex items-center gap-3">
           <ProjectIcon project={project} />
-          <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex min-w-0 flex-col gap-0.5">
             <div className="flex flex-wrap items-center gap-1.5">
               <h3 className="text-title font-bold tracking-tight">{project.title}</h3>
               <ProjectStatusBadge project={project} />

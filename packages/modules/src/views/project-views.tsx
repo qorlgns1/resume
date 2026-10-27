@@ -47,9 +47,9 @@ export function ProjectDetailView({
   return (
     <article className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 rounded-xl bg-card p-6 shadow-card lg:p-8">
-        <div className="flex items-start gap-4">
+        <div className="flex items-center gap-4">
           <ProjectIcon project={project} size="lg" />
-          <div className="flex min-w-0 flex-col gap-1.5">
+          <div className="flex min-w-0 flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-display-sm font-extrabold tracking-tight">{project.title}</h1>
               <ProjectStatusBadge project={project} />
