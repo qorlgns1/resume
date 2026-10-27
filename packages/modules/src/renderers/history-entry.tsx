@@ -1,7 +1,6 @@
 import type { Company } from "@resume/contracts";
 import { formatPeriod } from "../format";
 import { ModuleLink } from "../module-link";
-import { SampleBadge } from "../sample-badge";
 import type { ModuleRenderProps } from "../types";
 
 export function HistoryEntryModule({
@@ -13,7 +12,6 @@ export function HistoryEntryModule({
   const companies = props.companyIds
     .map((id) => content.companies.find((c) => c.id === id))
     .filter((c): c is Company => Boolean(c));
-  const hasSample = companies.some((c) => c.isSample);
 
   return (
     <div className="flex flex-col gap-5">
@@ -21,7 +19,6 @@ export function HistoryEntryModule({
         <div className="flex flex-col gap-1 @2xl:flex-row @2xl:items-baseline @2xl:gap-3">
           <div className="flex items-center gap-2">
             <h2 className="rs-type-title">{props.heading}</h2>
-            <SampleBadge show={hasSample} />
           </div>
           {props.description ? (
             <p className="rs-fg-muted rs-type-body-sm">{props.description}</p>

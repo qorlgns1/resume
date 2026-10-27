@@ -26,7 +26,7 @@ import type { ReactNode } from "react";
 import { BodyEditor } from "./body-editor";
 import { CoverField } from "./cover-field";
 import { type ContentSection, useEditor } from "./editor-context";
-import { CommaListField, Group, SelectField, SwitchField, TextField } from "./fields";
+import { CommaListField, Group, SelectField, TextField } from "./fields";
 import { MediaLibraryPanel } from "./media-settings";
 
 /*
@@ -397,16 +397,6 @@ function ProfileForm() {
           </div>
         ))}
       </Group>
-      <SwitchField
-        label="샘플 콘텐츠로 표시"
-        description="켜 두면 공개 사이트에 '샘플' 표시가 붙습니다. 실제 내용으로 바꿨다면 끄세요."
-        checked={profile.isSample ?? false}
-        onChange={(checked) =>
-          edit((d) => {
-            d.content.profile.isSample = checked || undefined;
-          })
-        }
-      />
     </FieldGroup>
   );
 }
@@ -537,23 +527,6 @@ function DeleteContentButton({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function SampleSwitch({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <SwitchField
-      label="샘플로 표시"
-      description="공개 사이트에서 이 항목에 '샘플' 표시를 붙입니다."
-      checked={checked}
-      onChange={onChange}
-    />
   );
 }
 
@@ -749,14 +722,6 @@ function ProjectFields({ index, project }: { index: number; project: Project }) 
           })
         }
       />
-      <SampleSwitch
-        checked={project.isSample ?? false}
-        onChange={(checked) =>
-          set((p) => {
-            p.isSample = checked || undefined;
-          })
-        }
-      />
     </>
   );
 }
@@ -840,14 +805,6 @@ function CompanyFields({ index, company }: { index: number; company: Company }) 
           })
         }
       />
-      <SampleSwitch
-        checked={company.isSample ?? false}
-        onChange={(checked) =>
-          set((c) => {
-            c.isSample = checked || undefined;
-          })
-        }
-      />
     </>
   );
 }
@@ -927,14 +884,6 @@ function AchievementFields({ index, achievement }: { index: number; achievement:
         onChange={(v) =>
           set((a) => {
             a.companyId = v === NONE ? undefined : v;
-          })
-        }
-      />
-      <SampleSwitch
-        checked={achievement.isSample ?? false}
-        onChange={(checked) =>
-          set((a) => {
-            a.isSample = checked || undefined;
           })
         }
       />

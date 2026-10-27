@@ -37,7 +37,6 @@ export const sampleContent: ContentLibrary = {
       { id: "pr_build", title: "끝까지 만들고", keywords: ["프론트엔드", "배포"] },
       { id: "pr_improve", title: "출시 후 개선합니다", keywords: ["운영", "피드백 반영"] },
     ],
-    isSample: true,
   },
   projects: [
     {
@@ -102,7 +101,6 @@ export const sampleContent: ContentLibrary = {
           text: [{ text: "작게 시작해서, 출시 후에 꾸준히 개선한다." }],
         },
       ],
-      isSample: true,
     },
     {
       id: "prj_bookmark",
@@ -124,7 +122,6 @@ export const sampleContent: ContentLibrary = {
       },
       links: [],
       body: [],
-      isSample: true,
     },
     {
       id: "prj_wordbook",
@@ -146,7 +143,6 @@ export const sampleContent: ContentLibrary = {
       },
       links: [],
       body: [],
-      isSample: true,
     },
   ],
   companies: [
@@ -159,7 +155,6 @@ export const sampleContent: ContentLibrary = {
       summary: "사내 업무 시스템",
       tags: ["업무 도구"],
       body: [],
-      isSample: true,
     },
     {
       id: "co_b",
@@ -170,7 +165,6 @@ export const sampleContent: ContentLibrary = {
       summary: "B2B SaaS",
       tags: ["대시보드"],
       body: [],
-      isSample: true,
     },
     {
       id: "co_c",
@@ -197,7 +191,6 @@ export const sampleContent: ContentLibrary = {
           ],
         },
       ],
-      isSample: true,
     },
     {
       id: "co_d",
@@ -208,7 +201,6 @@ export const sampleContent: ContentLibrary = {
       summary: "커머스",
       tags: ["성능 개선"],
       body: [],
-      isSample: true,
     },
   ],
   achievements: [
@@ -220,7 +212,6 @@ export const sampleContent: ContentLibrary = {
       description:
         "로그를 분석해 연결 종료 원인을 찾고 재연결 흐름을 개선한 사례를 적는 자리입니다.",
       companyId: "co_c",
-      isSample: true,
     },
     {
       id: "ach_performance",
@@ -229,7 +220,6 @@ export const sampleContent: ContentLibrary = {
       metric: { label: "예시 지표", before: "3.1초", after: "1.6초" },
       description: "프레임워크 전환과 함께 첫 화면 로딩을 개선한 사례를 적는 자리입니다.",
       companyId: "co_d",
-      isSample: true,
     },
   ],
   techStack: [

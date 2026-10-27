@@ -3,7 +3,6 @@ import { BlockContent } from "../block-content";
 import { formatPeriod } from "../format";
 import { CoverMedia } from "../media-image";
 import { ModuleLink } from "../module-link";
-import { SampleBadge } from "../sample-badge";
 import type { RenderOptions } from "../types";
 import { EmptyList } from "./page-header";
 import { ProjectCard, ProjectIcon, ProjectStatusBadge } from "./project-card";
@@ -54,7 +53,6 @@ export function ProjectDetailView({
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-display-sm font-extrabold tracking-tight">{project.title}</h1>
               <ProjectStatusBadge project={project} />
-              <SampleBadge show={project.isSample} />
             </div>
             <p className="text-body-lg text-muted-foreground">{project.tagline}</p>
           </div>

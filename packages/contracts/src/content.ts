@@ -5,7 +5,6 @@ import {
   LinkSchema,
   MediaSchema,
   PeriodSchema,
-  SampleFlagSchema,
   SlugSchema,
   YearMonthSchema,
 } from "./primitives";
@@ -34,7 +33,6 @@ export const ProfileSchema = z.object({
       }),
     )
     .max(4),
-  isSample: SampleFlagSchema,
 });
 export type Profile = z.infer<typeof ProfileSchema>;
 
@@ -61,7 +59,6 @@ export const ProjectSchema = z.object({
   links: z.array(LinkSchema).max(6),
   /** 상세 페이지 본문 (노션형 블록). 이번 단계에서는 비어 있을 수 있다. */
   body: z.array(BlockSchema),
-  isSample: SampleFlagSchema,
 });
 export type Project = z.infer<typeof ProjectSchema>;
 
@@ -74,7 +71,6 @@ export const CompanySchema = z.object({
   summary: z.string().max(120),
   tags: z.array(z.string().max(24)).max(6),
   body: z.array(BlockSchema),
-  isSample: SampleFlagSchema,
 });
 export type Company = z.infer<typeof CompanySchema>;
 
@@ -93,7 +89,6 @@ export const AchievementSchema = z.object({
   description: z.string().max(200),
   companyId: IdSchema.optional(),
   projectId: IdSchema.optional(),
-  isSample: SampleFlagSchema,
 });
 export type Achievement = z.infer<typeof AchievementSchema>;
 

@@ -3,7 +3,6 @@ import { ArrowRight } from "lucide-react";
 import { BlockContent } from "../block-content";
 import { formatPeriod } from "../format";
 import { ModuleLink } from "../module-link";
-import { SampleBadge } from "../sample-badge";
 import type { RenderOptions } from "../types";
 import { EmptyList } from "./page-header";
 
@@ -30,7 +29,6 @@ export function CompanyListView({
             <div className="flex min-w-0 flex-col gap-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-title font-bold tracking-tight">{company.name}</h2>
-                <SampleBadge show={company.isSample} />
               </div>
               <p className="text-body-sm text-muted-foreground">
                 {[company.role, formatPeriod(company.period)].filter(Boolean).join(" · ")}
@@ -71,7 +69,6 @@ export function CompanyDetailView({
       <div className="flex flex-col gap-2 rounded-xl bg-card p-6 shadow-card lg:p-8">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-display-sm font-extrabold tracking-tight">{company.name}</h1>
-          <SampleBadge show={company.isSample} />
         </div>
         <p className="text-body-lg text-muted-foreground">
           {[company.role, formatPeriod(company.period)].filter(Boolean).join(" · ")}
@@ -98,7 +95,6 @@ export function CompanyDetailView({
               <li key={a.id} className="flex flex-col gap-2 rounded-xl bg-card p-5 shadow-card">
                 <div className="flex items-center gap-2">
                   <h3 className="text-title font-bold tracking-tight">{a.title}</h3>
-                  <SampleBadge show={a.isSample} />
                 </div>
                 {a.metric ? (
                   <p className="w-fit rounded-md bg-primary-soft px-2.5 py-1 text-body-sm font-semibold text-primary-text">

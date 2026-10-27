@@ -1,7 +1,6 @@
 import { buttonVariants } from "@resume/ui/components/button";
 import { cn } from "@resume/ui/lib/utils";
 import { ModuleLink } from "../module-link";
-import { SampleBadge } from "../sample-badge";
 import type { ModuleRenderProps } from "../types";
 
 export function IntroModule({ module, content, options }: ModuleRenderProps<"intro">) {
@@ -39,7 +38,6 @@ export function IntroModule({ module, content, options }: ModuleRenderProps<"int
           {profile.roleEyebrow ? (
             <p className="rs-accent-text rs-type-eyebrow">{profile.roleEyebrow}</p>
           ) : null}
-          <SampleBadge show={profile.isSample} />
         </div>
         <h1 className="rs-type-display whitespace-pre-line">{profile.headline}</h1>
         <div className="flex flex-col gap-2">

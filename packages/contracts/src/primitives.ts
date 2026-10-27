@@ -77,6 +77,3 @@ export const MediaSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 export type Media = z.infer<typeof MediaSchema>;
-
-/** 샘플 콘텐츠 표시 플래그. 화면에서 "샘플" 표기를 붙이는 데 사용한다. */
-export const SampleFlagSchema = z.boolean().optional();

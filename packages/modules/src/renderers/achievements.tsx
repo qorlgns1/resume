@@ -1,7 +1,6 @@
 import type { Achievement } from "@resume/contracts";
 import { cn } from "@resume/ui/lib/utils";
 import { ArrowRight } from "lucide-react";
-import { SampleBadge } from "../sample-badge";
 import type { ModuleRenderProps } from "../types";
 import { SectionHeader } from "./section-header";
 
@@ -24,7 +23,6 @@ export function AchievementsModule({
             <article className="flex h-full flex-col gap-3 rounded-xl bg-card p-5 text-card-foreground shadow-card @3xl:p-6">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-caption text-subtle-foreground">{item.context.join(" · ")}</p>
-                <SampleBadge show={item.isSample} />
               </div>
               <h3 className="text-title font-bold tracking-tight">{item.title}</h3>
               {item.metric ? (

@@ -1,6 +1,6 @@
 import { Info } from "lucide-react";
 
-/** 샘플 데이터로 렌더링 중임을 알린다. API 모드의 게시 데이터에는 표시하지 않는다. */
+/** CONTENT_SOURCE=sample로 렌더링 중임을 알린다. */
 export function SampleNotice() {
   return (
     <p

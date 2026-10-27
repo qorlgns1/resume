@@ -5,7 +5,6 @@ import { Clock, Code, House, Leaf, PenLine, Sparkles } from "lucide-react";
 import { projectStatusLabel } from "../format";
 import { CoverMedia } from "../media-image";
 import { ModuleLink } from "../module-link";
-import { SampleBadge } from "../sample-badge";
 import type { RenderOptions } from "../types";
 
 const icons = {
@@ -82,7 +81,6 @@ export function ProjectCard({
             <div className="flex flex-wrap items-center gap-1.5">
               <h3 className="text-title font-bold tracking-tight">{project.title}</h3>
               <ProjectStatusBadge project={project} />
-              <SampleBadge show={project.isSample} />
             </div>
             <p className="text-body-sm text-muted-foreground">{project.tagline}</p>
           </div>

@@ -2,7 +2,6 @@ import type { Project } from "@resume/contracts";
 import { cn } from "@resume/ui/lib/utils";
 import { CoverMedia } from "../media-image";
 import { ModuleLink } from "../module-link";
-import { SampleBadge } from "../sample-badge";
 import type { ModuleRenderProps, RenderOptions } from "../types";
 import { ProjectCard } from "../views/project-card";
 import { SectionHeader } from "./section-header";
@@ -77,7 +76,6 @@ function ProjectSpotlight({
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <p className="rs-fg-muted rs-type-body-sm">{eyebrow}</p>
-          <SampleBadge show={project.isSample} />
         </div>
         <h2 className="rs-type-headline">{project.title}</h2>
         <p className="rs-fg-muted rs-type-body-lg">{project.tagline}</p>
