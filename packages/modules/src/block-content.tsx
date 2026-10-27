@@ -39,11 +39,30 @@ function Inline({ text }: { text: RichText }) {
   );
 }
 
+/** 서식 없는 글자만. 목차처럼 제목을 다른 곳에 보여줄 때 쓴다. */
+export function plainText(text: RichText): string {
+  return text.map((span) => span.text).join("");
+}
+
+/** 본문의 큰 제목(H2) 목록. 블록 ID가 제목의 앵커가 된다. */
+export function blockHeadings(blocks: readonly Block[]): { id: string; text: string }[] {
+  return blocks.flatMap((block) =>
+    block.type === "heading" && block.level === 2
+      ? [{ id: block.id, text: plainText(block.text) }]
+      : [],
+  );
+}
+
 const bulletStyles = ["list-disc", "list-[circle]", "list-[square]"];
 
 function BulletedList({ items, depth }: { items: readonly ListItem[]; depth: number }) {
   return (
-    <ul className={cn("flex flex-col gap-1 pl-6", bulletStyles[(depth - 1) % bulletStyles.length])}>
+    <ul
+      className={cn(
+        "flex flex-col gap-1.5 pl-6 marker:text-subtle-foreground",
+        bulletStyles[(depth - 1) % bulletStyles.length],
+      )}
+    >
       {items.map((item, index) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: 목록 항목에는 별도 ID가 없다
         <li key={index}>
@@ -69,11 +88,15 @@ function BlockView({ block, options }: { block: Block; options: RenderOptions })
       );
     case "heading":
       return block.level === 2 ? (
-        <h2 className="mt-4 text-heading font-extrabold tracking-tight">
+        // 섹션마다 위에 선을 그어 나눈다. 첫 제목은 카드 맨 위라 선을 두지 않는다.
+        <h2
+          id={block.id}
+          className="mt-6 scroll-mt-6 border-t border-border pt-8 text-heading font-extrabold tracking-tight first:mt-0 first:border-t-0 first:pt-0"
+        >
           <Inline text={block.text} />
         </h2>
       ) : (
-        <h3 className="mt-2 text-title font-bold tracking-tight">
+        <h3 className="mt-3 text-title font-bold tracking-tight">
           <Inline text={block.text} />
         </h3>
       );
@@ -81,7 +104,7 @@ function BlockView({ block, options }: { block: Block; options: RenderOptions })
       return <BulletedList items={block.items} depth={1} />;
     case "quote":
       return (
-        <blockquote className="border-l-4 border-border-strong pl-4 text-muted-foreground">
+        <blockquote className="border-l-4 border-primary py-1 pl-5 text-body-lg font-semibold">
           <Inline text={block.text} />
         </blockquote>
       );
