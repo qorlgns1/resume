@@ -1,6 +1,6 @@
 import type { NavItem } from "@resume/contracts";
 import Link from "next/link";
-import { SiteMenu } from "./site-menu";
+import { SiteMenu, SiteNav } from "./site-menu";
 
 interface SiteHeaderProps {
   name: string;
@@ -15,7 +15,12 @@ export function SiteHeader({ name, role, navigation }: SiteHeaderProps) {
         <span className="text-title font-extrabold tracking-tight">{name}</span>
         <span className="truncate text-body-sm text-muted-foreground">{role}</span>
       </Link>
-      {navigation ? <SiteMenu items={navigation} /> : null}
+      {navigation ? (
+        <>
+          <SiteNav items={navigation} />
+          <SiteMenu items={navigation} />
+        </>
+      ) : null}
     </header>
   );
 }

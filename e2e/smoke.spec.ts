@@ -117,6 +117,30 @@ test.describe("햄버거 메뉴", () => {
   });
 });
 
+test.describe("데스크톱 메뉴", () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test("메뉴가 펼쳐져 있고 햄버거는 숨는다. 하위 페이지에서도 현재 메뉴가 표시된다", async ({
+    page,
+  }) => {
+    await page.goto(`${web}/projects/timecard`);
+    await expect(page.getByRole("button", { name: "메뉴 열기" })).toBeHidden();
+    const nav = page.getByRole("navigation", { name: "주 메뉴" });
+    await expect(nav.getByRole("link", { name: "개인 프로젝트" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await expect(nav.getByRole("link", { name: "홈" })).not.toHaveAttribute("aria-current");
+
+    await nav.getByRole("link", { name: "히스토리" }).click();
+    await expect(page).toHaveURL(`${web}/history`);
+    await expect(nav.getByRole("link", { name: "히스토리" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+});
+
 test.describe("목록·상세·히스토리 페이지", () => {
   test("개인 프로젝트 목록에서 상세로 이동하고 돌아온다", async ({ page }) => {
     await page.goto(`${web}/projects`);

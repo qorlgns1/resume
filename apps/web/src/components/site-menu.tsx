@@ -21,6 +21,41 @@ import { usePathname } from "next/navigation";
  * Radix Dialog 기반 Sheet가 포커스 가두기, Escape 닫기, 트리거로 포커스 복원, 배경 스크롤 잠금을 처리한다.
  * 애니메이션은 prefers-reduced-motion에서 토큰의 전역 규칙으로 사실상 꺼진다.
  */
+/** 홈은 정확히 일치할 때만, 나머지는 하위 경로까지 현재 메뉴로 본다. */
+function isActive(href: string, pathname: string) {
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
+/** 넓은 화면에서 머리글 오른쪽에 펼쳐 두는 메뉴. 좁은 화면에서는 SiteMenu가 대신한다. */
+export function SiteNav({ items }: { items: NavItem[] }) {
+  const pathname = usePathname();
+
+  return (
+    <nav aria-label="주 메뉴" className="hidden lg:block">
+      <ul className="flex items-center gap-1">
+        {items.map((item) => {
+          const active = isActive(item.href, pathname);
+          return (
+            <li key={item.id}>
+              <Link
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "relative flex h-10 items-center rounded-md px-3 text-body-sm font-semibold text-muted-foreground transition-colors hover:text-foreground",
+                  active &&
+                    "text-foreground after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:rounded-full after:bg-primary",
+                )}
+              >
+                {item.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
 export function SiteMenu({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
 
@@ -30,7 +65,7 @@ export function SiteMenu({ items }: { items: NavItem[] }) {
         <Button
           variant="outline"
           size="icon-lg"
-          className="border-border bg-card"
+          className="border-border bg-card lg:hidden"
           aria-label="메뉴 열기"
         >
           <Menu aria-hidden="true" className="size-5" />
@@ -44,7 +79,7 @@ export function SiteMenu({ items }: { items: NavItem[] }) {
         <nav aria-label="주 메뉴" className="px-3">
           <ul className="flex flex-col gap-1">
             {items.map((item) => {
-              const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+              const active = isActive(item.href, pathname);
               return (
                 <li key={item.id}>
                   <SheetClose asChild>

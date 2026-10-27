@@ -1,6 +1,11 @@
 "use client";
 
-import { ADMIN_MEDIA_BASE, type ModuleInstance } from "@resume/contracts";
+import {
+  ADMIN_MEDIA_BASE,
+  type ModuleInstance,
+  type NavItem,
+  publicPaths,
+} from "@resume/contracts";
 import { BentoGrid, type RenderOptions, SystemPageView } from "@resume/modules";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@resume/ui/components/empty";
 import { cn } from "@resume/ui/lib/utils";
@@ -74,6 +79,8 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
           <PreviewHeader
             name={content.profile.name}
             role={content.profile.role}
+            navigation={viewport === "desktop" ? document.site.navigation : null}
+            activeHref={page.kind === "system" ? publicPaths[page.systemKey] : null}
             onSelect={() => select({ kind: "content", section: "profile" })}
           />
           {page.kind === "system" && page.systemKey !== "home" ? (
@@ -104,14 +111,21 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
   );
 }
 
-/** 공개 사이트 머리글(SiteHeader)과 같은 모양. 누르면 프로필 편집으로 간다. */
+/**
+ * 공개 사이트 머리글(SiteHeader)과 같은 모양. 누르면 프로필 편집으로 간다.
+ * 공개 사이트는 화면 폭으로 메뉴 형태를 고르지만, 미리보기는 고른 화면(navigation 유무)으로 고른다.
+ */
 function PreviewHeader({
   name,
   role,
+  navigation,
+  activeHref,
   onSelect,
 }: {
   name: string;
   role: string;
+  navigation: NavItem[] | null;
+  activeHref: string | null;
   onSelect: () => void;
 }) {
   return (
@@ -121,9 +135,26 @@ function PreviewHeader({
         <span className="text-title font-extrabold tracking-tight">{name}</span>
         <span className="truncate text-body-sm text-muted-foreground">{role}</span>
       </div>
-      <span className="inline-flex size-10 items-center justify-center rounded-md border border-border bg-card">
-        <Menu aria-hidden="true" className="size-5" />
-      </span>
+      {navigation ? (
+        <ul className="flex items-center gap-1">
+          {navigation.map((item) => (
+            <li
+              key={item.id}
+              className={cn(
+                "relative flex h-10 items-center px-3 text-body-sm font-semibold text-muted-foreground",
+                item.href === activeHref &&
+                  "text-foreground after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:rounded-full after:bg-primary",
+              )}
+            >
+              {item.label}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <span className="inline-flex size-10 items-center justify-center rounded-md border border-border bg-card">
+          <Menu aria-hidden="true" className="size-5" />
+        </span>
+      )}
       <button
         type="button"
         aria-label="머리글: 프로필 편집으로 이동"
