@@ -1,6 +1,6 @@
 import { createReadStream } from "node:fs";
 import { Readable } from "node:stream";
-import { openVariant } from "@/server/media-store";
+import { openVariant, renderIcon } from "@/server/media-store";
 
 export const dynamic = "force-dynamic";
 
@@ -8,12 +8,26 @@ export const dynamic = "force-dynamic";
  * 업로드 이미지 변환본 제공 (공개, 인증 없음).
  * 공개 사이트는 이 주소를 서버에서 받아 자신의 /media 주소로 전달한다.
  * 이미지 ID는 추측하기 어려운 무작위 값이지만, 초안에만 쓴 이미지도 ID를 알면 열 수 있다.
+ * icon.png는 파비콘용 정사각형 PNG다 (공개 사이트의 아이콘 생성기가 WebP를 읽지 못한다).
  */
 export async function GET(
   _request: Request,
   context: RouteContext<"/api/public/v1/media/[id]/[file]">,
 ) {
   const { id, file } = await context.params;
+  if (file === "icon.png") {
+    const icon = await renderIcon(id);
+    if (!icon) {
+      return new Response("Not Found", { status: 404, headers: { "Cache-Control": "no-store" } });
+    }
+    return new Response(new Uint8Array(icon), {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
+  }
   const match = /^(\d{1,5})\.webp$/.exec(file);
   const variant = match ? await openVariant(id, Number(match[1])) : null;
   if (!variant) {

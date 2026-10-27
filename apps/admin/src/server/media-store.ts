@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import {
   MEDIA_ACCEPTED_FORMATS,
+  MEDIA_ICON_SIZE,
   MEDIA_MAX_BYTES,
   MEDIA_MAX_WIDTH,
   MEDIA_WIDTHS,
@@ -200,4 +201,24 @@ export async function openVariant(
   } catch {
     return null;
   }
+}
+
+/** 파비콘용: 가장 작은 변환본을 정사각형 PNG로 줄인다. 남는 곳은 투명하게 둔다. */
+export async function renderIcon(id: string, db: AppDatabase = getDb()): Promise<Buffer | null> {
+  if (!ID_PATTERN.test(id)) return null;
+  const row = db
+    .select({ widths: mediaAssets.widths })
+    .from(mediaAssets)
+    .where(eq(mediaAssets.id, id))
+    .get();
+  const smallest = row ? Math.min(...row.widths) : undefined;
+  const variant = smallest === undefined ? null : await openVariant(id, smallest, db);
+  if (!variant) return null;
+  return sharp(variant.file)
+    .resize(MEDIA_ICON_SIZE, MEDIA_ICON_SIZE, {
+      fit: "contain",
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .png()
+    .toBuffer();
 }

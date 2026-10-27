@@ -6,7 +6,7 @@ import {
   type SystemPageKey,
 } from "@resume/contracts";
 import { ports, testAdmin } from "../playwright.config";
-import { gpsPhoto, imageInfo } from "./fixtures";
+import { centerPixel, gpsPhoto, imageInfo, redLogo } from "./fixtures";
 
 const web = `http://localhost:${ports.web}`;
 const admin = `http://localhost:${ports.admin}`;
@@ -603,7 +603,7 @@ test.describe("어드민", () => {
     ).toBe(404);
   });
 
-  test("머리글 로고: 업로드하면 이미지, 지우면 이름 첫 글자, 끄면 아무것도 보이지 않는다", async ({
+  test("머리글 로고: 업로드하면 이미지, 지우면 이름 첫 글자, 끄면 아무것도 보이지 않는다. 파비콘도 따른다", async ({
     browser,
   }) => {
     const publish = async () => {
@@ -615,10 +615,19 @@ test.describe("어드민", () => {
     };
     const visitor = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     const mark = visitor.locator('header a[href="/"] [aria-hidden="true"]');
+    /** 파비콘 가운데가 로고(빨강)인지 */
+    const iconIsLogo = async () => {
+      const href = await visitor.locator('link[rel="icon"]').getAttribute("href");
+      const res = await visitor.request.get(`http://localhost:${ports.webApi}${href}`);
+      expect(res.headers()["content-type"]).toBe("image/png");
+      const { r, b } = await centerPixel(await res.body());
+      return r > 200 && b < 80;
+    };
 
     // 처음에는 이름 첫 글자
     await visitor.goto(`http://localhost:${ports.webApi}/`);
     await expect(mark).toHaveText("홍");
+    expect(await iconIsLogo()).toBe(false);
 
     const sidebar = page.getByRole("complementary", { name: "페이지와 콘텐츠" });
     await sidebar.getByRole("tab", { name: "콘텐츠" }).click();
@@ -626,7 +635,7 @@ test.describe("어드민", () => {
     const settings = page.getByRole("complementary", { name: "설정" });
     await settings.getByRole("button", { name: "로고 이미지 고르기" }).click();
     const picker = page.getByRole("dialog", { name: "이미지 고르기" });
-    await picker.locator("input[type=file]").setInputFiles(await gpsPhoto());
+    await picker.locator("input[type=file]").setInputFiles(await redLogo());
     await expect(picker).toBeHidden();
     await expect(
       page.getByRole("region", { name: "미리보기" }).locator("header img"),
@@ -638,6 +647,7 @@ test.describe("어드민", () => {
       "src",
       /^\/media\/med_[a-f0-9]{16}\/\d+\.webp$/,
     );
+    expect(await iconIsLogo()).toBe(true);
     // 로고는 읽지 않으므로 링크 이름은 이름과 직무 그대로다
     await expect(
       visitor.getByRole("link", { name: "홍길동 프론트엔드 개발자", exact: true }),
@@ -651,6 +661,8 @@ test.describe("어드민", () => {
       visitor.getByRole("link", { name: "홍길동 프론트엔드 개발자", exact: true }),
     ).toBeVisible();
     await expect(mark).toHaveCount(0);
+    // 머리글에서 숨겨도 탭 아이콘은 첫 글자로 남는다
+    expect(await iconIsLogo()).toBe(false);
     await visitor.close();
   });
 

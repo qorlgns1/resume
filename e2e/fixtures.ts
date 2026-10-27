@@ -38,3 +38,22 @@ export async function imageInfo(bytes: Buffer) {
     xmp: Boolean(meta.xmp),
   };
 }
+
+/** 로고로 쓸 가로로 긴 빨간 PNG (머리글·파비콘 확인용) */
+export async function redLogo(): Promise<string> {
+  await fs.mkdir(dir, { recursive: true });
+  const file = path.join(dir, "logo.png");
+  await sharp({
+    create: { width: 240, height: 80, channels: 4, background: { r: 230, g: 30, b: 30, alpha: 1 } },
+  })
+    .png()
+    .toFile(file);
+  return file;
+}
+
+/** PNG 한가운데 픽셀의 색 */
+export async function centerPixel(bytes: Buffer) {
+  const { data, info } = await sharp(bytes).raw().toBuffer({ resolveWithObject: true });
+  const i = (Math.floor(info.height / 2) * info.width + Math.floor(info.width / 2)) * info.channels;
+  return { r: data[i] ?? 0, g: data[i + 1] ?? 0, b: data[i + 2] ?? 0 };
+}

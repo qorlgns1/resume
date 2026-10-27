@@ -42,5 +42,13 @@ export function mediaUrl(base: string, assetId: string, width: number): string {
   return `${base.replace(/\/$/, "")}/${encodeURIComponent(assetId)}/${width}.webp`;
 }
 
+/** 파비콘용 정사각형 PNG 크기. 아이콘 생성기가 WebP를 읽지 못해 어드민이 PNG로 만들어 준다. */
+export const MEDIA_ICON_SIZE = 64;
+
+/** 파비콘용 정사각형 PNG 주소 (가로세로 비율을 지키고 남는 곳은 투명) */
+export function mediaIconUrl(base: string, assetId: string): string {
+  return `${base.replace(/\/$/, "")}/${encodeURIComponent(assetId)}/icon.png`;
+}
+
 export const ADMIN_MEDIA_BASE = "/api/public/v1/media";
 export const PUBLIC_MEDIA_BASE = "/media";

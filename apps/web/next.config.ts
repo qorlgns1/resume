@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   // 모노레포 루트까지 추적해야 packages/*의 파일이 standalone 출력에 포함된다.
   outputFileTracingRoot: monorepoRoot,
+  // 파비콘(app/icon.tsx)이 실행 중에 읽는 글꼴 파일
+  outputFileTracingIncludes: {
+    "/icon": ["./node_modules/pretendard/dist/public/static/alternative/Pretendard-Bold.ttf"],
+  },
   turbopack: { root: monorepoRoot },
   // 공통 패키지는 빌드 없이 TypeScript 소스로 배포하고 앱이 함께 컴파일한다.
   transpilePackages: ["@resume/contracts", "@resume/modules", "@resume/tokens", "@resume/ui"],
