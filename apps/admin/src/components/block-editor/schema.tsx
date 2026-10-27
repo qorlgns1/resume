@@ -10,7 +10,7 @@ import { createReactBlockSpec } from "@blocknote/react";
 
 /*
  * 편집기에서 쓸 수 있는 블록을 우리가 저장하는 블록 종류(@resume/contracts BlockSchema)로만 제한한다.
- * 색·밑줄·표·코드 블록 등 저장 형식에 없는 기능은 처음부터 고를 수 없게 한다.
+ * 색·밑줄·코드 블록 등 저장 형식에 없는 기능은 처음부터 고를 수 없게 한다.
  */
 
 const calloutBlock = createReactBlockSpec(
@@ -44,6 +44,7 @@ export const editorSchema = BlockNoteSchema.create({
     quote: defaultBlockSpecs.quote,
     divider: defaultBlockSpecs.divider,
     image: defaultBlockSpecs.image,
+    table: defaultBlockSpecs.table,
     callout: calloutBlock(),
   },
   styleSpecs: {

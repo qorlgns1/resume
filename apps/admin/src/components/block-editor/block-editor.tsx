@@ -71,6 +71,8 @@ export function BlockEditor({
     dictionary: ko,
     initialContent: initialContent.length > 0 ? initialContent : undefined,
     domAttributes: { editor: { "aria-label": label } },
+    // 표는 머리글 행만 고를 수 있다. 칸 병합·색은 저장 형식에 없다.
+    tables: { headers: true },
     uploadFile: async (file: File) => {
       const asset = await uploadRef.current(file);
       return mediaUrl(ADMIN_MEDIA_BASE, asset.id, asset.widths.at(-1) ?? asset.width);

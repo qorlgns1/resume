@@ -3,6 +3,8 @@ import {
   type Block,
   type ListItem,
   MAX_LIST_DEPTH,
+  MAX_TABLE_COLUMNS,
+  MAX_TABLE_ROWS,
   type MediaAsset,
   mediaUrl,
   type RichText,
@@ -69,6 +71,39 @@ function hasNonDefaultProps(block: EditorBlock): boolean {
     (props.textColor !== undefined && props.textColor !== "default") ||
     (props.backgroundColor !== undefined && props.backgroundColor !== "default")
   );
+}
+
+type EditorTableContent = Extract<EditorBlock, { type: "table" }>["content"];
+
+/** 편집기의 표 칸을 서식 텍스트로. 칸은 서식 텍스트 배열이거나 tableCell 객체다. */
+function tableCellText(cell: unknown, warn: (message: string) => void): RichText {
+  if (Array.isArray(cell)) return toRichText(cell);
+  const { props, content } = cell as { props: Record<string, unknown>; content: unknown };
+  if (
+    (props.colspan ?? 1) !== 1 ||
+    (props.rowspan ?? 1) !== 1 ||
+    (props.textAlignment !== undefined && props.textAlignment !== "left") ||
+    (props.textColor !== undefined && props.textColor !== "default") ||
+    (props.backgroundColor !== undefined && props.backgroundColor !== "default")
+  ) {
+    warn("표 칸의 병합·정렬·색 설정은 저장되지 않습니다.");
+  }
+  return toRichText(content);
+}
+
+function tableRows(content: EditorTableContent, warn: (message: string) => void): RichText[][] {
+  let rows = content.rows.map((row) =>
+    (row.cells as unknown[]).map((cell) => tableCellText(cell, warn)),
+  );
+  if (rows.length > MAX_TABLE_ROWS) {
+    warn(`표는 ${MAX_TABLE_ROWS}행까지 저장됩니다.`);
+    rows = rows.slice(0, MAX_TABLE_ROWS);
+  }
+  const columns = Math.max(...rows.map((row) => row.length));
+  if (columns > MAX_TABLE_COLUMNS) warn(`표는 ${MAX_TABLE_COLUMNS}열까지 저장됩니다.`);
+  const width = Math.min(columns, MAX_TABLE_COLUMNS);
+  // 칸 수가 다른 행은 빈 칸으로 채워 모든 행을 같은 너비로 맞춘다.
+  return rows.map((row) => Array.from({ length: width }, (_, index) => row[index] ?? []));
 }
 
 /** 편집기의 이미지 주소에서 업로드 이미지 ID를 꺼낸다. 우리 미디어 주소가 아니면 null */
@@ -150,6 +185,20 @@ export function editorToBlocks(
             text: toRichText(block.content),
           });
           break;
+        case "table": {
+          const warn = (message: string) => warnings.add(message);
+          if ((block.content.headerCols ?? 0) > 0)
+            warn("머리글 열은 저장되지 않습니다. 머리글은 첫 행에만 쓸 수 있습니다.");
+          const rows = tableRows(block.content, warn);
+          if (rows.length === 0 || rows[0]?.length === 0) break;
+          blocks.push({
+            id: block.id,
+            type: "table",
+            headerRow: (block.content.headerRows ?? 0) > 0,
+            rows,
+          });
+          break;
+        }
         case "image": {
           const url = block.props.url;
           if (!url) break; // 아직 이미지를 고르지 않은 빈 블록
@@ -255,6 +304,17 @@ export function blocksToEditor(blocks: readonly Block[]): EditorPartialBlock[] {
         break;
       case "divider":
         result.push({ id: block.id, type: "divider" } as EditorPartialBlock);
+        break;
+      case "table":
+        result.push({
+          id: block.id,
+          type: "table",
+          content: {
+            type: "tableContent",
+            headerRows: block.headerRow ? 1 : undefined,
+            rows: block.rows.map((row) => ({ cells: row.map((cell) => fromRichText(cell)) })),
+          },
+        } as EditorPartialBlock);
         break;
       case "image":
         if (block.media.kind !== "image") break;

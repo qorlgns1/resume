@@ -78,6 +78,50 @@ function BulletedList({ items, depth }: { items: readonly ListItem[]; depth: num
   );
 }
 
+function Table({ block }: { block: Extract<Block, { type: "table" }> }) {
+  const head = block.headerRow ? block.rows[0] : undefined;
+  const body = block.headerRow ? block.rows.slice(1) : block.rows;
+  return (
+    // 좁은 화면에서는 표만 가로로 스크롤한다.
+    <div className="overflow-x-auto rounded-lg border border-border">
+      <table className="w-full border-collapse text-body-sm">
+        {head ? (
+          <thead className="bg-muted">
+            <tr>
+              {head.map((cell, index) => (
+                <th
+                  // biome-ignore lint/suspicious/noArrayIndexKey: 표 칸에는 별도 ID가 없다
+                  key={index}
+                  scope="col"
+                  className="border-border border-b px-3 py-2 text-start font-semibold not-first:border-l"
+                >
+                  <Inline text={cell} />
+                </th>
+              ))}
+            </tr>
+          </thead>
+        ) : null}
+        <tbody>
+          {body.map((row, rowIndex) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: 표 행에는 별도 ID가 없다
+            <tr key={rowIndex} className="border-border not-last:border-b">
+              {row.map((cell, index) => (
+                <td
+                  // biome-ignore lint/suspicious/noArrayIndexKey: 표 칸에는 별도 ID가 없다
+                  key={index}
+                  className="border-border px-3 py-2 align-top not-first:border-l"
+                >
+                  <Inline text={cell} />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function BlockView({ block, options }: { block: Block; options: RenderOptions }) {
   switch (block.type) {
     case "paragraph":
@@ -123,6 +167,8 @@ function BlockView({ block, options }: { block: Block; options: RenderOptions })
       );
     case "divider":
       return <hr className="border-border" />;
+    case "table":
+      return <Table block={block} />;
     case "image":
       if (block.media.kind !== "image") return null;
       return (

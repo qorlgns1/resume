@@ -34,6 +34,10 @@ export const ListItemSchema: z.ZodType<ListItem> = z.preprocess(
   ListItemObjectSchema,
 ) as z.ZodType<ListItem>;
 
+/** 표 최대 크기 */
+export const MAX_TABLE_ROWS = 50;
+export const MAX_TABLE_COLUMNS = 8;
+
 function listDepth(items: readonly ListItem[]): number {
   return items.reduce((max, item) => Math.max(max, 1 + listDepth(item.children ?? [])), 0);
 }
@@ -70,5 +74,21 @@ export const BlockSchema = z.discriminatedUnion("type", [
     caption: z.string().optional(),
   }),
   z.object({ id: IdSchema, type: z.literal("divider") }),
+  z
+    .object({
+      id: IdSchema,
+      type: z.literal("table"),
+      /** 첫 행을 머리글로 표시할지 */
+      headerRow: z.boolean(),
+      /** 행마다 칸의 서식 텍스트 */
+      rows: z
+        .array(z.array(RichTextSchema).min(1).max(MAX_TABLE_COLUMNS))
+        .min(1)
+        .max(MAX_TABLE_ROWS),
+    })
+    .refine((block) => block.rows.every((row) => row.length === block.rows[0]?.length), {
+      message: "표의 모든 행은 칸 수가 같아야 합니다.",
+      path: ["rows"],
+    }),
 ]);
 export type Block = z.infer<typeof BlockSchema>;

@@ -32,6 +32,16 @@ const blocks: Block[] = [
   { id: "c1", type: "callout", tone: "info", text: [{ text: "샘플 본문입니다." }] },
   { id: "c2", type: "callout", tone: "warning", text: [{ text: "주의가 필요한 안내입니다." }] },
   { id: "d", type: "divider" },
+  {
+    id: "t",
+    type: "table",
+    headerRow: true,
+    rows: [
+      [[{ text: "항목" }], [{ text: "이전" }], [{ text: "이후" }]],
+      [[{ text: "초기 로딩" }], [{ text: "3.2초" }], [{ text: "1.1초", marks: ["bold"] }]],
+      [[{ text: "오류율" }], [{ text: "2.4%" }], [{ text: "0.3%", marks: ["bold"] }]],
+    ],
+  },
   { id: "h3", type: "heading", level: 3, text: [{ text: "결과" }] },
 ];
 
