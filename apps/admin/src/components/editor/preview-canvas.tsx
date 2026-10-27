@@ -18,6 +18,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@resume/ui/com
 import { cn } from "@resume/ui/lib/utils";
 import { Menu, Plus } from "lucide-react";
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ChapterSortProvider, SortableChapter } from "./chapter-sortable";
 import { newHistoryChapter } from "./content-settings";
 import type { PreviewViewport } from "./editor";
 import { useCurrentPage, useEditor } from "./editor-context";
@@ -112,28 +113,45 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
             onSelect={() => select({ kind: "content", section: "profile" })}
           />
           {page.kind === "system" && page.systemKey !== "home" ? (
-            <SystemPageView
-              page={page}
-              content={content}
-              options={previewOptions}
-              wrapModule={wrapModule}
-              wrapContent={wrapContent}
-              listFooter={
-                page.systemKey === "history" ? (
-                  <AddButton
-                    onClick={() => {
-                      const chapter = newHistoryChapter();
-                      edit((d) => {
-                        d.content.history.chapters.push(chapter);
-                      });
-                      select({ kind: "content", section: "history", itemId: chapter.id });
-                    }}
-                  >
-                    챕터 추가
-                  </AddButton>
-                ) : null
-              }
-            />
+            <ChapterSortProvider
+              chapters={content.history.chapters}
+              scale={scale}
+              onMove={(from, to) => {
+                edit((d) => {
+                  const list = d.content.history.chapters;
+                  const [moved] = list.splice(from, 1);
+                  if (moved) list.splice(to, 0, moved);
+                });
+              }}
+            >
+              <SystemPageView
+                page={page}
+                content={content}
+                options={previewOptions}
+                wrapModule={wrapModule}
+                wrapContent={wrapContent}
+                wrapChapter={(target, node) => (
+                  <SortableChapter id={target.itemId} label={target.label}>
+                    {node}
+                  </SortableChapter>
+                )}
+                listFooter={
+                  page.systemKey === "history" ? (
+                    <AddButton
+                      onClick={() => {
+                        const chapter = newHistoryChapter();
+                        edit((d) => {
+                          d.content.history.chapters.push(chapter);
+                        });
+                        select({ kind: "content", section: "history", itemId: chapter.id });
+                      }}
+                    >
+                      챕터 추가
+                    </AddButton>
+                  ) : null
+                }
+              />
+            </ChapterSortProvider>
           ) : page.modules.length === 0 ? (
             <Empty className="rounded-xl bg-card">
               <EmptyHeader>

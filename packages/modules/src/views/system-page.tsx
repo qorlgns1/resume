@@ -18,6 +18,7 @@ export function SystemPageView({
   options = {},
   wrapModule,
   wrapContent,
+  wrapChapter,
   listFooter,
 }: {
   page: Page;
@@ -27,6 +28,8 @@ export function SystemPageView({
   wrapModule?: (module: ModuleInstance, node: ReactNode) => ReactNode;
   /** 어드민 미리보기에서 목록의 원본 콘텐츠에 선택 영역을 덧씌울 때 사용 */
   wrapContent?: WrapContent;
+  /** 어드민 미리보기에서 히스토리 챕터 카드 전체를 감쌀 때 사용 (순서 바꾸기) */
+  wrapChapter?: WrapContent;
   /** 목록·타임라인 바로 아래에 붙일 내용. 어드민 미리보기의 추가 버튼에 쓴다. */
   listFooter?: ReactNode;
 }) {
@@ -41,7 +44,12 @@ export function SystemPageView({
         <CompanyListView content={content} options={options} wrapItem={wrapContent} />
       ) : null}
       {systemKey === "history" ? (
-        <HistoryTimelineView content={content} options={options} wrapItem={wrapContent} />
+        <HistoryTimelineView
+          content={content}
+          options={options}
+          wrapItem={wrapContent}
+          wrapChapter={wrapChapter}
+        />
       ) : null}
       {listFooter}
       {page.modules.length > 0 ? (
