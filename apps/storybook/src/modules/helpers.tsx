@@ -1,4 +1,4 @@
-import type { DesktopPlacement, ModuleInstance, Page } from "@resume/contracts";
+import type { ContentLibrary, DesktopPlacement, ModuleInstance, Page } from "@resume/contracts";
 import { sampleContent, sampleHomePage } from "@resume/contracts/samples";
 import { BentoGrid } from "@resume/modules";
 
@@ -12,9 +12,12 @@ export function sampleModule(id: string): ModuleInstance {
 export function SingleModule({
   module,
   colSpan = 12,
+  content = sampleContent,
 }: {
   module: ModuleInstance;
   colSpan?: number;
+  /** 샘플 콘텐츠를 바꿔 보고 싶을 때 */
+  content?: ContentLibrary;
 }) {
   const placement: DesktopPlacement = { moduleId: module.id, col: 1, colSpan, row: 1, rowSpan: 1 };
   const page: Page = {
@@ -28,5 +31,5 @@ export function SingleModule({
       mobile: { columns: 2, strategy: "auto", items: [] },
     },
   };
-  return <BentoGrid page={page} content={sampleContent} />;
+  return <BentoGrid page={page} content={content} />;
 }

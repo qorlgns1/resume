@@ -67,6 +67,18 @@ export function ProjectCard({
       }
     />
   );
+  // 카드가 넘치지 않게 링크는 앞의 두 개만 보여준다. 전체는 상세 페이지에 있다.
+  const links = project.links.slice(0, 2);
+  const detailLink = (
+    <ModuleLink
+      href={publicPaths.project(project.slug)}
+      options={options}
+      withIcon
+      className="ml-auto inline-flex items-center gap-1 text-body-sm font-semibold text-primary-text underline-offset-4 hover:underline"
+    >
+      <span className="sr-only">{project.title} </span>자세히 보기
+    </ModuleLink>
+  );
   return (
     <article
       className={cn(
@@ -74,7 +86,7 @@ export function ProjectCard({
         layout === "wide" && "@3xl:grid @3xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] @3xl:gap-8",
       )}
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-1 flex-col gap-4">
         <header className="flex items-center gap-3">
           <ProjectIcon project={project} />
           <div className="flex min-w-0 flex-col gap-0.5">
@@ -89,16 +101,31 @@ export function ProjectCard({
           <p className="text-body whitespace-pre-line text-muted-foreground">{project.summary}</p>
         ) : null}
         {layout === "stacked" ? media : null}
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-2">
+        {/*
+         * 카드 바닥에 붙는 줄: 태그 한 줄 + 링크·자세히 보기 한 줄.
+         * 링크가 없는 카드도 같은 높이를 두어, 나란한 카드끼리 줄이 맞는다.
+         */}
+        <div className="mt-auto flex flex-col gap-3">
           <p className="text-body-sm text-subtle-foreground">{project.tags.join(" · ")}</p>
-          <ModuleLink
-            href={publicPaths.project(project.slug)}
-            options={options}
-            withIcon
-            className="inline-flex items-center gap-1 text-body-sm font-semibold text-primary-text underline-offset-4 hover:underline"
-          >
-            <span className="sr-only">{project.title} </span>자세히 보기
-          </ModuleLink>
+          <div className="flex min-h-8 flex-wrap items-center gap-2">
+            {links.length > 0 ? (
+              <ul className="flex flex-wrap gap-2">
+                {links.map((link) => (
+                  <li key={link.id}>
+                    <ModuleLink
+                      href={link.href}
+                      options={options}
+                      withIcon
+                      className="inline-flex h-8 items-center gap-1 rounded-md border border-border px-2.5 text-body-sm font-semibold transition-colors hover:bg-accent"
+                    >
+                      {link.label}
+                    </ModuleLink>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {detailLink}
+          </div>
         </div>
       </div>
       {layout === "wide" ? media : null}
