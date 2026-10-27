@@ -1,5 +1,6 @@
 export { BentoGrid } from "./bento-grid";
 export { BlockContent } from "./block-content";
+export { BrandMark } from "./brand-mark";
 export {
   convertModuleVariant,
   createId,
@@ -11,7 +12,7 @@ export {
   moduleCatalog,
   moduleVariants,
 } from "./catalog";
-export { formatPeriod, formatYearMonth, projectStatusLabel } from "./format";
+export { formatPeriod, formatYearMonth, monogram, projectStatusLabel } from "./format";
 export { CoverMedia, MediaImage } from "./media-image";
 export { ModuleFrame } from "./module-frame";
 export { ModuleLink } from "./module-link";

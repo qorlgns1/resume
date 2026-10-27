@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { findDesktopOverlaps, PageLayoutSchema } from "./layout";
 import { ModuleInstanceSchema } from "./modules";
-import { HrefSchema, IdSchema, LinkSchema, SlugSchema } from "./primitives";
+import { HrefSchema, IdSchema, ImageMediaSchema, LinkSchema, SlugSchema } from "./primitives";
 
 /** 기본 제공 페이지. 사용자가 추가한 페이지는 kind "custom"으로 구분한다. */
 export const SystemPageKeySchema = z.enum(["home", "projects", "experience", "history"]);
@@ -90,6 +90,11 @@ export const SiteSettingsSchema = z.object({
   title: z.string().min(1).max(60),
   description: z.string().max(160),
   navigation: z.array(NavItemSchema).min(1).max(8),
+  /**
+   * 머리글 이름 앞의 표시. 없으면 이름 첫 글자를 보여준다(이전 문서와 호환).
+   * image가 있으면 로고 이미지를, 없으면 이름 첫 글자를 보여주고, hidden이면 아무것도 보여주지 않는다.
+   */
+  logo: z.object({ hidden: z.boolean(), image: ImageMediaSchema.optional() }).optional(),
   footer: z.object({
     links: z.array(LinkSchema).max(6),
     note: z.string().max(120).optional(),

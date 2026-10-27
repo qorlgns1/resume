@@ -50,6 +50,21 @@ export const LinkSchema = z.object({
 });
 export type Link = z.infer<typeof LinkSchema>;
 
+export const ImageMediaSchema = z.object({
+  id: IdSchema,
+  /** 어드민에서 업로드한 이미지. 파일은 어드민의 미디어 저장소에 있고 여기에는 참조만 둔다. */
+  kind: z.literal("image"),
+  assetId: IdSchema,
+  /** 대체 텍스트. 장식용이면 빈 문자열 */
+  alt: z.string().max(200),
+  /** 원본 비율을 지키기 위한 크기 (가장 큰 변환본 기준) */
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  /** 만들어 둔 변환본 너비 목록 (srcset) */
+  widths: z.array(z.number().int().positive()).min(1),
+});
+export type ImageMedia = z.infer<typeof ImageMediaSchema>;
+
 /**
  * 이미지 참조. 업로드한 이미지(image) 또는 실제 이미지가 없을 때의 자리 표시(placeholder).
  * 저장소에 들어 있는 샘플은 placeholder만 쓴다.
@@ -62,18 +77,6 @@ export const MediaSchema = z.discriminatedUnion("kind", [
     label: z.string().min(1).max(40),
     alt: z.string(),
   }),
-  z.object({
-    id: IdSchema,
-    /** 어드민에서 업로드한 이미지. 파일은 어드민의 미디어 저장소에 있고 여기에는 참조만 둔다. */
-    kind: z.literal("image"),
-    assetId: IdSchema,
-    /** 대체 텍스트. 장식용이면 빈 문자열 */
-    alt: z.string().max(200),
-    /** 원본 비율을 지키기 위한 크기 (가장 큰 변환본 기준) */
-    width: z.number().int().positive(),
-    height: z.number().int().positive(),
-    /** 만들어 둔 변환본 너비 목록 (srcset) */
-    widths: z.array(z.number().int().positive()).min(1),
-  }),
+  ImageMediaSchema,
 ]);
 export type Media = z.infer<typeof MediaSchema>;

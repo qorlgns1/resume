@@ -27,6 +27,7 @@ export function PageShell({
         name={content.profile.name}
         role={content.profile.role}
         navigation={site.navigation}
+        logo={site.logo}
       />
       {/* 샘플 모드에서만 */}
       {response.meta.source === "sample" ? <SampleNotice /> : null}

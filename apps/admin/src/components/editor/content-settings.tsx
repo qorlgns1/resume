@@ -27,6 +27,7 @@ import { BodyEditor } from "./body-editor";
 import { CoverField } from "./cover-field";
 import { type ContentSection, useEditor } from "./editor-context";
 import { CommaListField, Group, SelectField, TextField } from "./fields";
+import { LogoField } from "./logo-field";
 import { MediaLibraryPanel } from "./media-settings";
 
 /*
@@ -194,6 +195,15 @@ function SiteForm() {
         onChange={(v) =>
           edit((d) => {
             d.site.description = v;
+          })
+        }
+      />
+      <LogoField
+        logo={site.logo}
+        name={document.content.profile.name}
+        onChange={(logo) =>
+          edit((d) => {
+            d.site.logo = logo;
           })
         }
       />

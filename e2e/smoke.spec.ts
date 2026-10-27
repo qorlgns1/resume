@@ -603,6 +603,57 @@ test.describe("어드민", () => {
     ).toBe(404);
   });
 
+  test("머리글 로고: 업로드하면 이미지, 지우면 이름 첫 글자, 끄면 아무것도 보이지 않는다", async ({
+    browser,
+  }) => {
+    const publish = async () => {
+      await page.keyboard.press("ControlOrMeta+s");
+      await expect(page.getByRole("status")).toContainText("초안을 저장했습니다");
+      await page.getByRole("button", { name: "게시", exact: true }).click();
+      await page.getByRole("dialog").getByRole("button", { name: "게시" }).click();
+      await expect(page.getByRole("status")).toContainText("을 게시했습니다");
+    };
+    const visitor = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    const mark = visitor.locator('header a[href="/"] [aria-hidden="true"]');
+
+    // 처음에는 이름 첫 글자
+    await visitor.goto(`http://localhost:${ports.webApi}/`);
+    await expect(mark).toHaveText("홍");
+
+    const sidebar = page.getByRole("complementary", { name: "페이지와 콘텐츠" });
+    await sidebar.getByRole("tab", { name: "콘텐츠" }).click();
+    await sidebar.getByRole("button", { name: "사이트 정보" }).click();
+    const settings = page.getByRole("complementary", { name: "설정" });
+    await settings.getByRole("button", { name: "로고 이미지 고르기" }).click();
+    const picker = page.getByRole("dialog", { name: "이미지 고르기" });
+    await picker.locator("input[type=file]").setInputFiles(await gpsPhoto());
+    await expect(picker).toBeHidden();
+    await expect(
+      page.getByRole("region", { name: "미리보기" }).locator("header img"),
+    ).toBeVisible();
+    await publish();
+
+    await visitor.reload();
+    await expect(mark.locator("img")).toHaveAttribute(
+      "src",
+      /^\/media\/med_[a-f0-9]{16}\/\d+\.webp$/,
+    );
+    // 로고는 읽지 않으므로 링크 이름은 이름과 직무 그대로다
+    await expect(
+      visitor.getByRole("link", { name: "홍길동 프론트엔드 개발자", exact: true }),
+    ).toBeVisible();
+
+    await settings.getByRole("button", { name: "로고 지우고 첫 글자로" }).click();
+    await settings.getByLabel("머리글 로고 표시").click();
+    await publish();
+    await visitor.reload();
+    await expect(
+      visitor.getByRole("link", { name: "홍길동 프론트엔드 개발자", exact: true }),
+    ).toBeVisible();
+    await expect(mark).toHaveCount(0);
+    await visitor.close();
+  });
+
   test("관리자 API는 로그인과 같은 출처를 요구한다", async ({ playwright }) => {
     const anonymous = await playwright.request.newContext();
     expect((await anonymous.get(`${admin}/api/admin/draft`)).status()).toBe(401);

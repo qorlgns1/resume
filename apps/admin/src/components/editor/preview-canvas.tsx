@@ -5,8 +5,9 @@ import {
   type ModuleInstance,
   type NavItem,
   publicPaths,
+  type SiteSettings,
 } from "@resume/contracts";
-import { BentoGrid, type RenderOptions, SystemPageView } from "@resume/modules";
+import { BentoGrid, BrandMark, type RenderOptions, SystemPageView } from "@resume/modules";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@resume/ui/components/empty";
 import { cn } from "@resume/ui/lib/utils";
 import { Menu } from "lucide-react";
@@ -79,6 +80,7 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
           <PreviewHeader
             name={content.profile.name}
             role={content.profile.role}
+            logo={document.site.logo}
             navigation={viewport === "desktop" ? document.site.navigation : null}
             activeHref={page.kind === "system" ? publicPaths[page.systemKey] : null}
             onSelect={() => select({ kind: "content", section: "profile" })}
@@ -118,12 +120,14 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
 function PreviewHeader({
   name,
   role,
+  logo,
   navigation,
   activeHref,
   onSelect,
 }: {
   name: string;
   role: string;
+  logo: SiteSettings["logo"];
   navigation: NavItem[] | null;
   activeHref: string | null;
   onSelect: () => void;
@@ -131,9 +135,12 @@ function PreviewHeader({
   return (
     // 선택 테두리가 글자와 아래 카드에 붙지 않도록, 안쪽 여백을 두고 같은 만큼 바깥으로 넓힌다.
     <header className="relative -mx-3 mb-2.5 flex items-center justify-between gap-4 px-3 py-1.5">
-      <div className="flex min-w-0 items-baseline gap-3">
-        <span className="text-title font-extrabold tracking-tight">{name}</span>
-        <span className="truncate text-body-sm text-muted-foreground">{role}</span>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <BrandMark name={name} logo={logo} options={previewOptions} />
+        <span className="flex min-w-0 items-baseline gap-3">
+          <span className="text-title font-extrabold tracking-tight">{name}</span>
+          <span className="truncate text-body-sm text-muted-foreground">{role}</span>
+        </span>
       </div>
       {navigation ? (
         <ul className="flex items-center gap-1">
