@@ -2,3 +2,17 @@
 @import "@resume/modules/styles.css";
 
 @source "../";
+
+/*
+ * 페이지 안 이동(#모듈 링크)은 부드럽게 스크롤한다.
+ * 페이지 사이 이동에서는 Next가 html의 data-scroll-behavior="smooth"를 보고 잠시 끈다.
+ * 동작 줄이기 설정에서는 토큰의 전역 규칙이 auto로 되돌린다.
+ */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 이동한 모듈이 화면 맨 위에 붙지 않게 조금 띄운다 */
+[data-module-id] {
+  scroll-margin-top: 1.5rem;
+}
