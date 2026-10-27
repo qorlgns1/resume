@@ -4,6 +4,7 @@ import {
   type Achievement,
   type Company,
   collectModuleReferences,
+  type Link,
   type Project,
   type SiteDocument,
   type TechStackGroup,
@@ -27,6 +28,7 @@ import { BodyEditor } from "./body-editor";
 import { CoverField } from "./cover-field";
 import { type ContentSection, useEditor } from "./editor-context";
 import { CommaListField, Group, SelectField, TextField } from "./fields";
+import type { Path } from "./issues";
 import { LogoField } from "./logo-field";
 import { MediaLibraryPanel } from "./media-settings";
 
@@ -217,69 +219,101 @@ function SiteForm() {
           })
         }
       />
-      <Group
-        title={`푸터 링크 (${site.footer.links.length}/6)`}
-        action={
-          <Button
-            variant="outline"
-            size="xs"
-            disabled={site.footer.links.length >= 6}
-            onClick={() =>
-              edit((d) => {
-                d.site.footer.links.push({ id: createId("foot"), label: "링크", href: "https://" });
-              })
-            }
-          >
-            <Plus aria-hidden="true" /> 추가
-          </Button>
+      <LinksGroup
+        title="푸터 링크"
+        idPrefix="foot"
+        links={site.footer.links}
+        path={["site", "footer", "links"]}
+        onChange={(mutate) =>
+          edit((d) => {
+            mutate(d.site.footer.links);
+          })
         }
-      >
-        {site.footer.links.map((link, index) => (
-          <div key={link.id} className="flex items-end gap-2">
-            <TextField
-              className="w-28"
-              label="문구"
-              path={["site", "footer", "links", index, "label"]}
-              value={link.label}
-              onChange={(v) =>
-                edit((d) => {
-                  const t = d.site.footer.links[index];
-                  if (t) t.label = v;
-                })
-              }
-            />
-            <TextField
-              className="flex-1"
-              label="주소"
-              path={["site", "footer", "links", index, "href"]}
-              value={link.href}
-              onChange={(v) =>
-                edit((d) => {
-                  const t = d.site.footer.links[index];
-                  if (t) t.href = v;
-                })
-              }
-            />
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`${link.label} 링크 삭제`}
-              onClick={() =>
-                edit((d) => {
-                  d.site.footer.links.splice(index, 1);
-                })
-              }
-            >
-              <Trash2 aria-hidden="true" />
-            </Button>
-          </div>
-        ))}
-      </Group>
+      />
       <p className="text-caption text-muted-foreground">
         메뉴 구성은 기본 페이지로 고정되어 있습니다. 사용자 페이지를 추가하는 단계에서 편집할 수
         있게 됩니다.
       </p>
     </FieldGroup>
+  );
+}
+
+/** 문구 + 주소 링크 목록 (최대 6개). 푸터와 프로젝트가 함께 쓴다. */
+function LinksGroup({
+  title,
+  description,
+  idPrefix,
+  links,
+  path,
+  onChange,
+}: {
+  title: string;
+  description?: string;
+  idPrefix: string;
+  links: readonly Link[];
+  path: Path;
+  onChange: (mutate: (links: Link[]) => void) => void;
+}) {
+  return (
+    <Group
+      title={`${title} (${links.length}/6)`}
+      action={
+        <Button
+          variant="outline"
+          size="xs"
+          disabled={links.length >= 6}
+          onClick={() =>
+            onChange((list) => {
+              list.push({ id: createId(idPrefix), label: "링크", href: "https://" });
+            })
+          }
+        >
+          <Plus aria-hidden="true" /> 추가
+        </Button>
+      }
+    >
+      {description ? <p className="text-caption text-muted-foreground">{description}</p> : null}
+      {links.map((link, index) => (
+        <div key={link.id} className="flex items-end gap-2">
+          <TextField
+            className="w-28"
+            label="문구"
+            path={[...path, index, "label"]}
+            value={link.label}
+            onChange={(v) =>
+              onChange((list) => {
+                const t = list[index];
+                if (t) t.label = v;
+              })
+            }
+          />
+          <TextField
+            className="flex-1"
+            label="주소"
+            path={[...path, index, "href"]}
+            value={link.href}
+            onChange={(v) =>
+              onChange((list) => {
+                const t = list[index];
+                if (t) t.href = v;
+              })
+            }
+          />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`${link.label} 링크 삭제`}
+            onClick={() =>
+              onChange((list) => {
+                list.splice(index, 1);
+              })
+            }
+          >
+            <Trash2 aria-hidden="true" />
+          </Button>
+        </div>
+      ))}
+    </Group>
   );
 }
 
@@ -682,6 +716,18 @@ function ProjectFields({ index, project }: { index: number; project: Project }) 
         onChange={(v) =>
           set((p) => {
             p.tags = v;
+          })
+        }
+      />
+      <LinksGroup
+        title="링크"
+        description="App Store, GitHub처럼 바깥 주소는 새 탭에서 열립니다. 카드에는 앞의 두 개가 보입니다."
+        idPrefix="link"
+        links={project.links}
+        path={[...path, "links"]}
+        onChange={(mutate) =>
+          set((p) => {
+            mutate(p.links);
           })
         }
       />
