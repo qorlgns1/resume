@@ -1,7 +1,18 @@
-import type { Company } from "@resume/contracts";
+import { cn } from "@resume/ui/lib/utils";
 import { formatPeriod } from "../format";
 import { ModuleLink } from "../module-link";
 import type { ModuleRenderProps } from "../types";
+import { sortCompanies } from "../views/company-views";
+
+/** 넓은 화면에서는 표시하는 회사 수만큼 한 줄에 놓는다 */
+const WIDE_COLUMNS: Record<number, string> = {
+  1: "@3xl:grid-cols-1",
+  2: "@3xl:grid-cols-2",
+  3: "@3xl:grid-cols-3",
+  4: "@3xl:grid-cols-4",
+  5: "@3xl:grid-cols-5",
+  6: "@3xl:grid-cols-6",
+};
 
 export function HistoryEntryModule({
   module,
@@ -9,9 +20,7 @@ export function HistoryEntryModule({
   options,
 }: ModuleRenderProps<"history-entry">) {
   const { props } = module;
-  const companies = props.companyIds
-    .map((id) => content.companies.find((c) => c.id === id))
-    .filter((c): c is Company => Boolean(c));
+  const companies = sortCompanies(content.companies).slice(0, props.count);
 
   return (
     <div className="flex flex-col gap-5">
@@ -33,7 +42,12 @@ export function HistoryEntryModule({
           {props.link.label}
         </ModuleLink>
       </header>
-      <ol className="grid grid-cols-2 gap-x-4 gap-y-5 @3xl:grid-cols-4 @3xl:gap-0">
+      <ol
+        className={cn(
+          "grid grid-cols-2 gap-x-4 gap-y-5 @3xl:gap-0",
+          WIDE_COLUMNS[companies.length],
+        )}
+      >
         {companies.map((company) => (
           <li
             key={company.id}

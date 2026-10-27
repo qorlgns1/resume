@@ -1,12 +1,12 @@
 "use client";
 
-import { MAX_HOME_PROJECTS, type ModuleInstance } from "@resume/contracts";
+import { MAX_HISTORY_COMPANIES, MAX_HOME_PROJECTS, type ModuleInstance } from "@resume/contracts";
 import { convertModuleVariant, hasModuleVariants, moduleVariants } from "@resume/modules";
 import { Button } from "@resume/ui/components/button";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useEditor } from "./editor-context";
-import { Group, ReferencePicker, SelectField, SwitchField, TextField } from "./fields";
+import { Group, NumberField, ReferencePicker, SelectField, SwitchField, TextField } from "./fields";
 import type { Path } from "./issues";
 
 interface Props {
@@ -587,15 +587,16 @@ function ModuleFields({ module, path, update }: Props) {
               })
             }
           />
-          <ReferencePicker
-            legend="표시할 회사"
-            path={[...props, "companyIds"]}
-            options={content.companies.map((c) => ({ id: c.id, label: c.name }))}
-            value={p.companyIds}
-            max={6}
-            onChange={(ids) =>
+          <NumberField
+            label="표시할 회사 수"
+            description="시작일이 최근인 회사부터 순서대로 표시합니다."
+            path={[...props, "count"]}
+            value={p.count}
+            min={1}
+            max={MAX_HISTORY_COMPANIES}
+            onChange={(v) =>
               update((m) => {
-                if (m.type === "history-entry") m.props.companyIds = ids;
+                if (m.type === "history-entry") m.props.count = v;
               })
             }
           />

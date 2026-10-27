@@ -86,12 +86,25 @@ export const StatusPropsSchema = z.object({
   link: LinkSchema.optional(),
 });
 
-export const HistoryEntryPropsSchema = z.object({
+/** 홈 경험 섹션에 표시할 회사 최대 개수 */
+export const MAX_HISTORY_COMPANIES = 6;
+
+const HistoryEntryPropsObjectSchema = z.object({
   heading: z.string().max(40),
   description: z.string().max(120).optional(),
-  companyIds: z.array(IdSchema).min(1).max(6),
+  /** 시작일이 최근인 회사부터 몇 곳을 표시할지 */
+  count: z.number().int().min(1).max(MAX_HISTORY_COMPANIES),
   link: z.object({ label: z.string().max(30), href: HrefSchema }),
 });
+
+/** 예전 형식(companyIds로 회사를 직접 고르던 설정)도 읽어서 고른 개수를 count로 바꾼다. */
+export const HistoryEntryPropsSchema = z.preprocess((value) => {
+  if (typeof value !== "object" || value === null || !("companyIds" in value)) return value;
+  const { companyIds, ...rest } = value as { companyIds: unknown };
+  return "count" in rest || !Array.isArray(companyIds)
+    ? rest
+    : { ...rest, count: companyIds.length };
+}, HistoryEntryPropsObjectSchema);
 
 const base = {
   id: IdSchema,

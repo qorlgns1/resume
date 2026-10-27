@@ -209,8 +209,7 @@ export function createModuleDraft(type: ModuleType, content: ContentLibrary): Mo
         },
       };
     case "history-entry": {
-      const companyIds = content.companies.slice(0, 4).map((c) => c.id);
-      if (companyIds.length === 0)
+      if (content.companies.length === 0)
         return { ok: false, reason: "먼저 콘텐츠에서 회사를 추가하세요." };
       return {
         ok: true,
@@ -221,7 +220,7 @@ export function createModuleDraft(type: ModuleType, content: ContentLibrary): Mo
           style,
           props: {
             heading: "지나온 경험",
-            companyIds,
+            count: Math.min(content.companies.length, 4),
             link: { label: "경력과 히스토리 보기", href: "/history" },
           },
         },

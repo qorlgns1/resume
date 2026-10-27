@@ -7,7 +7,7 @@ import type { RenderOptions } from "../types";
 import { EmptyList } from "./page-header";
 
 /** 최근 경험이 위로 오도록 시작일 역순 */
-function sortCompanies(companies: readonly Company[]): Company[] {
+export function sortCompanies(companies: readonly Company[]): Company[] {
   return [...companies].sort((a, b) => b.period.start.localeCompare(a.period.start));
 }
 

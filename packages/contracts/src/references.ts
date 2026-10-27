@@ -21,10 +21,9 @@ export function collectModuleReferences(
       return module.props.achievementIds.map((id) => ({ kind: "achievement" as const, id }));
     case "tech-stack":
       return module.props.groupIds.map((id) => ({ kind: "tech-stack" as const, id }));
-    case "history-entry":
-      return module.props.companyIds.map((id) => ({ kind: "company" as const, id }));
     case "intro":
     case "status":
+    case "history-entry":
       return [];
   }
 }

@@ -120,7 +120,7 @@ export const sampleHomePage: Page = {
       props: {
         heading: "지나온 경험",
         description: "회사에서의 경험과 개인 작업의 흐름을 함께 기록합니다.",
-        companyIds: ["co_a", "co_b", "co_c", "co_d"],
+        count: 4,
         link: { label: "경력과 히스토리 보기", href: "/history" },
       },
     },
