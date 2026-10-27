@@ -115,7 +115,8 @@ function PreviewHeader({
   onSelect: () => void;
 }) {
   return (
-    <header className="relative flex items-center justify-between gap-4 pb-4">
+    // 선택 테두리가 글자와 아래 카드에 붙지 않도록, 안쪽 여백을 두고 같은 만큼 바깥으로 넓힌다.
+    <header className="relative -mx-3 mb-2.5 flex items-center justify-between gap-4 px-3 py-1.5">
       <div className="flex min-w-0 items-baseline gap-3">
         <span className="text-title font-extrabold tracking-tight">{name}</span>
         <span className="truncate text-body-sm text-muted-foreground">{role}</span>
@@ -127,7 +128,7 @@ function PreviewHeader({
         type="button"
         aria-label="머리글: 프로필 편집으로 이동"
         onClick={onSelect}
-        className="absolute -inset-1 rounded-md border-[3px] border-transparent transition-colors hover:border-primary/40 focus-visible:border-primary focus-visible:outline-none"
+        className="absolute inset-0 rounded-lg border-[3px] border-transparent transition-colors hover:border-primary/40 focus-visible:border-primary focus-visible:outline-none"
       />
     </header>
   );
