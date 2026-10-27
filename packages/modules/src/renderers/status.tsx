@@ -1,5 +1,4 @@
 import { Badge } from "@resume/ui/components/badge";
-import { ChevronRight } from "lucide-react";
 import { ModuleLink } from "../module-link";
 import type { ModuleRenderProps } from "../types";
 
@@ -37,17 +36,15 @@ export function StatusModule({ module, options }: ModuleRenderProps<"status">) {
         ) : null}
       </div>
       {props.items.length > 0 ? (
-        <ul className="rs-raised rs-line flex flex-col rounded-lg border p-1.5 text-start">
+        // 이름 칸은 가장 긴 이름에 맞춰 모든 행이 같은 너비를 쓴다.
+        <ul className="rs-raised rs-line grid grid-cols-[max-content_minmax(0,1fr)] rounded-lg border p-1.5 text-start">
           {props.items.map((item) => (
             <li
               key={item.id}
-              className="rs-line flex items-center gap-3 border-b px-3 py-2.5 last:border-b-0"
+              className="rs-line col-span-2 grid grid-cols-subgrid items-center gap-x-4 border-b px-3 py-2.5 last:border-b-0"
             >
-              <span className="w-16 shrink-0 rs-type-body-sm font-semibold">{item.label}</span>
-              <span className="rs-fg-subtle min-w-0 flex-1 rs-type-caption">
-                {item.description}
-              </span>
-              <ChevronRight aria-hidden="true" className="rs-fg-subtle size-4 shrink-0" />
+              <span className="rs-type-body-sm font-semibold">{item.label}</span>
+              <span className="rs-fg-subtle rs-type-caption">{item.description}</span>
             </li>
           ))}
         </ul>

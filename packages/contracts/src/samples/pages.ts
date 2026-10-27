@@ -100,16 +100,30 @@ export const sampleHomePage: Page = {
         eyebrow: "오픈소스 프로젝트",
         title: "이 포트폴리오도 하나의 제품입니다.",
         description: "콘텐츠를 직접 관리할 수 있는 포트폴리오를 만들고 있습니다.",
-        badge: { label: "설계 중", tone: "neutral" },
+        badge: { label: "개발 중", tone: "primary" },
         items: [
-          { id: "st_intro", label: "소개", description: "소개글, 프로필 이미지를 관리합니다." },
           {
-            id: "st_projects",
-            label: "프로젝트",
-            description: "프로젝트 정보를 추가하고 수정합니다.",
+            id: "st_editor",
+            label: "블록 편집기",
+            description: "노션처럼 쓰는 본문 편집, 표·이미지 지원",
           },
-          { id: "st_history", label: "히스토리", description: "경력과 경험을 관리합니다." },
+          {
+            id: "st_layout",
+            label: "벤토 레이아웃",
+            description: "화면별로 카드 배치와 스타일을 따로 설정",
+          },
+          {
+            id: "st_versions",
+            label: "버전 관리",
+            description: "게시 이력을 남기고 이전 버전으로 되돌리기",
+          },
+          {
+            id: "st_media",
+            label: "이미지 최적화",
+            description: "업로드한 이미지를 화면 크기별로 변환",
+          },
         ],
+        link: { id: "lnk_status", label: "GitHub에서 보기", href: "https://github.com" },
       },
     },
     {
