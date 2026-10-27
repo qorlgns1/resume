@@ -3,6 +3,7 @@ import {
   DEFAULT_MODULE_STYLE,
   MAX_HOME_PROJECTS,
   type ModuleInstance,
+  type ModuleStyle,
   type ModuleType,
 } from "@resume/contracts";
 
@@ -29,6 +30,97 @@ export const moduleCatalog: readonly ModuleCatalogEntry[] = [
     description: "회사 경험 요약과 히스토리 링크",
   },
 ];
+
+/** 형태를 고를 수 있는 모듈과 그 형태 목록 */
+export const moduleVariants = {
+  intro: [
+    { value: "hero", label: "자기소개" },
+    { value: "principles", label: "일하는 방식" },
+  ],
+  projects: [
+    { value: "grid", label: "목록 (1~3개)" },
+    { value: "spotlight", label: "1개 강조" },
+  ],
+} as const satisfies Partial<Record<ModuleType, readonly { value: string; label: string }[]>>;
+
+export type VariantModuleType = keyof typeof moduleVariants;
+
+export function hasModuleVariants(type: ModuleType): type is VariantModuleType {
+  return type in moduleVariants;
+}
+
+/** 목록은 카드 없이 펼쳐 놓고, 1개 강조는 진한 카드로 보여주는 기본 스타일 */
+const GRID_STYLE = { background: "transparent", padding: "none" } as const;
+const SPOTLIGHT_STYLE = { background: "inverse", padding: "lg" } as const;
+
+/** 스타일이 이전 형태의 기본값 그대로일 때만 새 형태의 기본값으로 바꾼다. 직접 고친 값은 둔다. */
+type VariantStyle = Pick<ModuleStyle, "background" | "padding">;
+
+function swapStyle(style: ModuleStyle, from: VariantStyle, to: VariantStyle): ModuleStyle {
+  return {
+    ...style,
+    background: style.background === from.background ? to.background : style.background,
+    padding: style.padding === from.padding ? to.padding : style.padding,
+  };
+}
+
+/**
+ * 모듈 형태를 바꾼 props를 만든다.
+ * 이어지는 값(프로젝트, 링크)은 옮기고, 나머지는 새 형태의 기본값을 쓴다.
+ */
+export function convertModuleVariant(
+  module: ModuleInstance,
+  variant: string,
+  content: ContentLibrary,
+): ModuleDraftResult {
+  if (module.type === "intro") {
+    if (variant === module.props.variant) return { ok: true, module };
+    if (variant === "principles")
+      return { ok: true, module: { ...module, props: { variant: "principles" } } };
+    if (variant === "hero")
+      return {
+        ok: true,
+        module: { ...module, props: { variant: "hero", showName: true, actions: [] } },
+      };
+  }
+  if (module.type === "projects") {
+    const p = module.props;
+    if (variant === p.variant) return { ok: true, module };
+    if (variant === "spotlight" && p.variant === "grid") {
+      const id = p.projectIds[0] ?? content.projects[0]?.id;
+      if (!id) return { ok: false, reason: "먼저 콘텐츠에서 프로젝트를 추가하세요." };
+      return {
+        ok: true,
+        module: {
+          ...module,
+          style: swapStyle(module.style, GRID_STYLE, SPOTLIGHT_STYLE),
+          props: {
+            variant: "spotlight",
+            eyebrow: "대표 프로젝트",
+            projectId: id,
+            link: p.viewAll,
+          },
+        },
+      };
+    }
+    if (variant === "grid" && p.variant === "spotlight") {
+      return {
+        ok: true,
+        module: {
+          ...module,
+          style: swapStyle(module.style, SPOTLIGHT_STYLE, GRID_STYLE),
+          props: {
+            variant: "grid",
+            heading: "개인 프로젝트",
+            projectIds: [p.projectId],
+            viewAll: p.link,
+          },
+        },
+      };
+    }
+  }
+  return { ok: false, reason: "이 모듈은 형태를 바꿀 수 없습니다." };
+}
 
 export function getModuleCatalogEntry(type: ModuleType): ModuleCatalogEntry {
   const entry = moduleCatalog.find((item) => item.type === type);
@@ -71,7 +163,7 @@ export function createModuleDraft(type: ModuleType, content: ContentLibrary): Mo
           id,
           type,
           label,
-          style: { ...style, background: "transparent", padding: "none" },
+          style: { ...style, ...GRID_STYLE },
           props: { variant: "grid", heading: "개인 프로젝트", projectIds },
         },
       };

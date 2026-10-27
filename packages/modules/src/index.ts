@@ -1,12 +1,15 @@
 export { BentoGrid } from "./bento-grid";
 export { BlockContent } from "./block-content";
 export {
+  convertModuleVariant,
   createId,
   createModuleDraft,
   getModuleCatalogEntry,
+  hasModuleVariants,
   type ModuleCatalogEntry,
   type ModuleDraftResult,
   moduleCatalog,
+  moduleVariants,
 } from "./catalog";
 export { formatPeriod, formatYearMonth, projectStatusLabel } from "./format";
 export { CoverMedia, MediaImage } from "./media-image";

@@ -1,8 +1,10 @@
 "use client";
 
 import { MAX_HOME_PROJECTS, type ModuleInstance } from "@resume/contracts";
+import { convertModuleVariant, hasModuleVariants, moduleVariants } from "@resume/modules";
 import { Button } from "@resume/ui/components/button";
 import { Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { useEditor } from "./editor-context";
 import { Group, ReferencePicker, SelectField, SwitchField, TextField } from "./fields";
 import type { Path } from "./issues";
@@ -52,7 +54,51 @@ function LinkFields({
   );
 }
 
-export function ModuleContentForm({ module, path, update }: Props) {
+export function ModuleContentForm(props: Props) {
+  return (
+    <>
+      <VariantField {...props} />
+      <ModuleFields {...props} />
+    </>
+  );
+}
+
+/** 형태를 고를 수 있는 모듈이면 형태 선택을 보여준다. 바꾸면 새 형태의 기본값으로 바뀐다. */
+function VariantField({ module, path, update }: Props) {
+  const { document } = useEditor();
+  const [error, setError] = useState<string | null>(null);
+  if (!hasModuleVariants(module.type) || !("variant" in module.props)) return null;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <SelectField
+        label="형태"
+        description="형태를 바꾸면 콘텐츠 설정과 기본 배경·여백이 새 형태에 맞게 바뀝니다."
+        path={[...path, "props", "variant"]}
+        value={module.props.variant}
+        options={moduleVariants[module.type]}
+        onChange={(variant) => {
+          const result = convertModuleVariant(module, variant, document.content);
+          if (!result.ok) {
+            setError(result.reason);
+            return;
+          }
+          setError(null);
+          update((m) => {
+            m.props = result.module.props;
+            m.style = result.module.style;
+          });
+        }}
+      />
+      {error ? (
+        <p role="alert" className="text-caption text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function ModuleFields({ module, path, update }: Props) {
   const { document, select } = useEditor();
   const { content } = document;
   const props = [...path, "props"] as const;
