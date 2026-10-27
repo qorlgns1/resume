@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { BlockSchema } from "./blocks";
 import {
+  HrefSchema,
   IdSchema,
   LinkSchema,
   MediaSchema,
@@ -150,14 +151,21 @@ export const TechStackGroupSchema = z.object({
 });
 export type TechStackGroup = z.infer<typeof TechStackGroupSchema>;
 
-/** 히스토리 항목은 기존 회사·프로젝트를 참조하거나 직접 작성한다. */
-export const HistoryEntrySchema = z.object({
-  id: IdSchema,
-  date: YearMonthSchema,
-  title: z.string().min(1).max(60),
-  description: z.string().max(200).optional(),
-  ref: z.object({ kind: z.enum(["project", "company"]), id: IdSchema }).optional(),
-});
+/** 히스토리 항목은 기존 회사·프로젝트를 참조하거나, 외부 링크를 달거나, 직접 작성한다. */
+export const HistoryEntrySchema = z
+  .object({
+    id: IdSchema,
+    date: YearMonthSchema,
+    title: z.string().min(1).max(60),
+    description: z.string().max(200).optional(),
+    ref: z.object({ kind: z.enum(["project", "company"]), id: IdSchema }).optional(),
+    /** 저장소·수료증·글처럼 사이트 밖에 있는 자료 */
+    link: z.object({ label: z.string().min(1).max(30), href: HrefSchema }).optional(),
+  })
+  .refine((entry) => !(entry.ref && entry.link), {
+    message: "회사·프로젝트 연결과 외부 링크는 함께 쓸 수 없습니다.",
+    path: ["link"],
+  });
 export type HistoryEntry = z.infer<typeof HistoryEntrySchema>;
 
 export const HistoryChapterSchema = z.object({

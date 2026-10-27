@@ -1,5 +1,5 @@
 import { type ContentLibrary, type HistoryEntry, publicPaths } from "@resume/contracts";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Fragment } from "react";
 import { formatPeriod, formatYearMonth } from "../format";
 import { ModuleLink } from "../module-link";
@@ -10,6 +10,7 @@ function refLink(
   entry: HistoryEntry,
   content: ContentLibrary,
 ): { label: string; href: string } | null {
+  if (entry.link) return entry.link;
   if (!entry.ref) return null;
   if (entry.ref.kind === "project") {
     const project = content.projects.find((p) => p.id === entry.ref?.id);
@@ -101,7 +102,11 @@ export function HistoryTimelineView({
                                   className="inline-flex w-fit items-center gap-1 text-body-sm font-semibold text-primary-text underline-offset-4 hover:underline"
                                 >
                                   {link.label}
-                                  <ArrowRight aria-hidden="true" className="size-4" />
+                                  {/^https?:\/\//.test(link.href) ? (
+                                    <ArrowUpRight aria-hidden="true" className="size-4" />
+                                  ) : (
+                                    <ArrowRight aria-hidden="true" className="size-4" />
+                                  )}
                                 </ModuleLink>
                               ) : null}
                             </div>,

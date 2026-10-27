@@ -981,6 +981,7 @@ function TechStackFields({ index, group }: { index: number; group: TechStackGrou
 }
 
 const NO_REF = "__none";
+const EXTERNAL_LINK = "__link";
 
 function currentYearMonth(): string {
   const now = new Date();
@@ -1013,6 +1014,7 @@ function HistoryForm({ itemId }: { itemId?: string }) {
   }, [itemId]);
   const refOptions = [
     { value: NO_REF, label: "연결 없음 (직접 작성)" },
+    { value: EXTERNAL_LINK, label: "외부 링크 (GitHub, 수료증, 글 등)" },
     ...document.content.projects.map((p) => ({
       value: `project:${p.id}`,
       label: `프로젝트 · ${p.title}`,
@@ -1197,12 +1199,21 @@ function HistoryForm({ itemId }: { itemId?: string }) {
                     <SelectField
                       label="연결"
                       path={[...entryPath, "ref"]}
-                      value={entry.ref ? `${entry.ref.kind}:${entry.ref.id}` : NO_REF}
+                      value={
+                        entry.ref
+                          ? `${entry.ref.kind}:${entry.ref.id}`
+                          : entry.link
+                            ? EXTERNAL_LINK
+                            : NO_REF
+                      }
                       options={refOptions}
                       onChange={(v) =>
                         setEntry((e) => {
-                          if (v === NO_REF) {
-                            delete e.ref;
+                          delete e.ref;
+                          if (v !== EXTERNAL_LINK) delete e.link;
+                          if (v === NO_REF) return;
+                          if (v === EXTERNAL_LINK) {
+                            e.link ??= { label: "GitHub", href: "https://" };
                             return;
                           }
                           const [kind, id] = v.split(":") as ["project" | "company", string];
@@ -1210,6 +1221,31 @@ function HistoryForm({ itemId }: { itemId?: string }) {
                         })
                       }
                     />
+                    {entry.link ? (
+                      <div className="grid grid-cols-[8.5rem_minmax(0,1fr)] gap-2">
+                        <TextField
+                          label="링크 문구"
+                          path={[...entryPath, "link", "label"]}
+                          value={entry.link.label}
+                          onChange={(v) =>
+                            setEntry((e) => {
+                              if (e.link) e.link.label = v;
+                            })
+                          }
+                        />
+                        <TextField
+                          label="주소"
+                          path={[...entryPath, "link", "href"]}
+                          value={entry.link.href}
+                          placeholder="https://github.com/..."
+                          onChange={(v) =>
+                            setEntry((e) => {
+                              if (e.link) e.link.href = v;
+                            })
+                          }
+                        />
+                      </div>
+                    ) : null}
                   </div>
                 );
               })}
