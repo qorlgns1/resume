@@ -54,5 +54,5 @@ export function getAdminUrl(): string {
       "ADMIN_URL이 설정되지 않았습니다. 브라우저가 접속하는 어드민 주소를 지정하세요 (예: https://admin.example.com).",
     );
   }
-  return `http://localhost:${process.env.PORT?.trim() || "3001"}`;
+  return `http://localhost:${process.env.PORT?.trim() || "3201"}`;
 }

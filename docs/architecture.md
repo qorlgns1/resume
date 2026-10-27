@@ -191,7 +191,7 @@ SiteDocument (버전 관리 단위: 콘텐츠 + 배치를 함께 저장)
 
 | 실행 방식      | web → admin (서버 간)               | 브라우저 → web                 | 브라우저 → admin                 |
 | -------------- | ----------------------------------- | ------------------------------ | -------------------------------- |
-| 로컬 dev       | `http://localhost:3001`             | `http://localhost:3000`        | `http://localhost:3001`          |
+| 로컬 dev       | `http://localhost:3201`             | `http://localhost:3200`        | `http://localhost:3201`          |
 | Docker Compose | `http://admin:3001` (내부 네트워크) | `http://localhost:${WEB_PORT}` | `http://localhost:${ADMIN_PORT}` |
 
 `ADMIN_URL`은 마지막 열(브라우저 → admin) 주소여야 합니다.

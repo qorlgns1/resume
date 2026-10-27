@@ -38,8 +38,8 @@ pnpm install
 
 | 앱          | 명령                 | 주소                  |
 | ----------- | -------------------- | --------------------- |
-| 공개 사이트 | `pnpm dev:web`       | http://localhost:3000 |
-| 어드민      | `pnpm dev:admin`     | http://localhost:3001 |
+| 공개 사이트 | `pnpm dev:web`       | http://localhost:3200 |
+| 어드민      | `pnpm dev:admin`     | http://localhost:3201 |
 | Storybook   | `pnpm dev:storybook` | http://localhost:6006 |
 | 전부        | `pnpm dev`           | 위 주소 모두          |
 
@@ -57,7 +57,7 @@ pnpm --filter @resume/admin admin:reset-password  # 비밀번호를 잊었을 �
 
 | 어드민 환경 변수  | 설명                                                            | 개발 기본값                                |
 | ----------------- | --------------------------------------------------------------- | ------------------------------------------ |
-| `ADMIN_URL`       | 브라우저가 접속하는 어드민 주소. 로그인 요청의 출처 검사에 사용 | `http://localhost:3001` (운영 필수)        |
+| `ADMIN_URL`       | 브라우저가 접속하는 어드민 주소. 로그인 요청의 출처 검사에 사용 | `http://localhost:3201` (운영 필수)        |
 | `AUTH_SECRET`     | 세션 서명 키, 32자 이상. `openssl rand -base64 32`              | 개발용 고정값 (운영 필수)                  |
 | `DATABASE_PATH`   | SQLite 파일 경로                                                | `./data/resume.db`                         |
 | `MEDIA_DIR`       | 업로드 이미지 폴더                                              | DB 파일 옆 `media/` (Docker `/data/media`) |
@@ -85,7 +85,7 @@ pnpm build:storybook  # Storybook만 → apps/storybook/storybook-static
 | 모드        | 설정                                                            | 동작                                                                                           |
 | ----------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | 샘플 (기본) | `CONTENT_SOURCE=sample`                                         | 저장소의 샘플 데이터를 계약 스키마로 검증해 렌더링합니다. 어드민 없이 실행·빌드할 수 있습니다. |
-| API         | `CONTENT_SOURCE=api`<br>`CONTENT_API_URL=http://localhost:3001` | 서버에서 어드민의 `GET /api/public/v1/pages/{key}`를 호출하고 응답을 검증합니다.               |
+| API         | `CONTENT_SOURCE=api`<br>`CONTENT_API_URL=http://localhost:3201` | 서버에서 어드민의 `GET /api/public/v1/pages/{key}`를 호출하고 응답을 검증합니다.               |
 - API 호출이 실패하면 샘플로 몰래 바꾸지 않고 **오류 화면**을 보여줍니다 (연결 실패, 시간 초과, HTTP 오류, 계약 불일치를 구분).
 - 모든 설정은 서버에서만 읽습니다 (`NEXT_PUBLIC_` 없음). 브라우저에 API 주소가 노출되지 않습니다.
 - 페이지는 요청 시점에 렌더링합니다. 그래서 빌드 단계는 어드민 API에 의존하지 않고, 같은 빌드 결과를 어느 모드로든 실행할 수 있습니다.
@@ -95,7 +95,7 @@ pnpm build:storybook  # Storybook만 → apps/storybook/storybook-static
 ```bash
 # 예: API 모드로 로컬 실행
 pnpm dev:admin
-CONTENT_SOURCE=api CONTENT_API_URL=http://localhost:3001 pnpm dev:web
+CONTENT_SOURCE=api CONTENT_API_URL=http://localhost:3201 pnpm dev:web
 ```
 
 ## Storybook

@@ -5,9 +5,9 @@
   "description": "어드민 화면과 콘텐츠 API (현재 로컬 검토용)",
   "license": "MIT",
   "scripts": {
-    "dev": "next dev --port 3001",
+    "dev": "next dev --port 3201",
     "build": "next build && node scripts/build-cli.mjs",
-    "start": "next start --port 3001",
+    "start": "next start --port 3201",
     "typecheck": "next typegen && tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "admin:create": "tsx scripts/cli.ts create",

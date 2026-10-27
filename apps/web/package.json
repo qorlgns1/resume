@@ -5,9 +5,9 @@
   "description": "공개 포트폴리오 사이트",
   "license": "MIT",
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "next dev --port 3200",
     "build": "next build",
-    "start": "next start --port 3000",
+    "start": "next start --port 3200",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
