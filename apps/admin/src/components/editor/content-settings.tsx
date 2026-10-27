@@ -6,10 +6,12 @@ import {
   collectModuleReferences,
   type Link,
   type Project,
+  type ProjectIconKey,
+  type ProjectTone,
   type SiteDocument,
   type TechStackGroup,
 } from "@resume/contracts";
-import { createId } from "@resume/modules";
+import { createId, projectIconLabel, projectToneLabel } from "@resume/modules";
 import { Button } from "@resume/ui/components/button";
 import {
   Dialog,
@@ -237,6 +239,15 @@ function SiteForm() {
     </FieldGroup>
   );
 }
+
+const iconOptions = (Object.keys(projectIconLabel) as ProjectIconKey[]).map((value) => ({
+  value,
+  label: projectIconLabel[value],
+}));
+const toneOptions = (Object.keys(projectToneLabel) as ProjectTone[]).map((value) => ({
+  value,
+  label: projectToneLabel[value],
+}));
 
 /** 문구 + 주소 링크 목록 (최대 6개). 푸터와 프로젝트가 함께 쓴다. */
 function LinksGroup({
@@ -677,14 +688,7 @@ function ProjectFields({ index, project }: { index: number; project: Project }) 
           label="아이콘"
           path={[...path, "icon"]}
           value={project.icon}
-          options={[
-            { value: "home", label: "집" },
-            { value: "pen", label: "펜" },
-            { value: "leaf", label: "잎" },
-            { value: "clock", label: "시계" },
-            { value: "code", label: "코드" },
-            { value: "sparkles", label: "반짝임" },
-          ]}
+          options={iconOptions}
           onChange={(v) =>
             set((p) => {
               p.icon = v;
@@ -695,12 +699,7 @@ function ProjectFields({ index, project }: { index: number; project: Project }) 
           label="색"
           path={[...path, "tone"]}
           value={project.tone}
-          options={[
-            { value: "blue", label: "파랑" },
-            { value: "violet", label: "보라" },
-            { value: "green", label: "초록" },
-            { value: "slate", label: "회색" },
-          ]}
+          options={toneOptions}
           onChange={(v) =>
             set((p) => {
               p.tone = v;

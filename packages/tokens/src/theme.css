@@ -57,6 +57,16 @@
   --color-tone-violet: var(--rs-tone-violet);
   --color-tone-green: var(--rs-tone-green);
   --color-tone-slate: var(--rs-tone-slate);
+  --color-tone-red: var(--rs-tone-red);
+  --color-tone-orange: var(--rs-tone-orange);
+  --color-tone-amber: var(--rs-tone-amber);
+  --color-tone-brown: var(--rs-tone-brown);
+  --color-tone-lime: var(--rs-tone-lime);
+  --color-tone-teal: var(--rs-tone-teal);
+  --color-tone-cyan: var(--rs-tone-cyan);
+  --color-tone-indigo: var(--rs-tone-indigo);
+  --color-tone-purple: var(--rs-tone-purple);
+  --color-tone-pink: var(--rs-tone-pink);
 
   --font-sans: var(--rs-font-sans);
   --font-mono: var(--rs-font-mono);

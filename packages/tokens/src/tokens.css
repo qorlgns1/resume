@@ -79,6 +79,16 @@
   --rs-tone-violet: #6e56e8;
   --rs-tone-green: #16875a;
   --rs-tone-slate: var(--rs-gray-600);
+  --rs-tone-red: #dc2626;
+  --rs-tone-orange: #c2410c;
+  --rs-tone-amber: #b45309;
+  --rs-tone-brown: #8a5a3b;
+  --rs-tone-lime: #4d7c0f;
+  --rs-tone-teal: #0f766e;
+  --rs-tone-cyan: #0e7490;
+  --rs-tone-indigo: #4f46e5;
+  --rs-tone-purple: #9333ea;
+  --rs-tone-pink: #db2777;
 
   /* ── Typography ───────────────────────────────────── */
   --rs-font-sans:

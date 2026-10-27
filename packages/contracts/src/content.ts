@@ -37,8 +37,59 @@ export const ProfileSchema = z.object({
 export type Profile = z.infer<typeof ProfileSchema>;
 
 /** 프로젝트 카드의 아이콘. 임의 SVG 대신 정해진 키만 저장한다. */
-export const ProjectIconSchema = z.enum(["home", "pen", "leaf", "clock", "code", "sparkles"]);
-export const ProjectToneSchema = z.enum(["blue", "violet", "green", "slate"]);
+export const ProjectIconSchema = z.enum([
+  "home",
+  "pen",
+  "leaf",
+  "clock",
+  "code",
+  "sparkles",
+  "coins",
+  "wallet",
+  "piggy-bank",
+  "chart",
+  "calendar",
+  "bell",
+  "book",
+  "graduation",
+  "message",
+  "heart",
+  "globe",
+  "map-pin",
+  "plane",
+  "smartphone",
+  "camera",
+  "music",
+  "game",
+  "cart",
+  "utensils",
+  "coffee",
+  "dumbbell",
+  "palette",
+  "terminal",
+  "bot",
+  "rocket",
+  "zap",
+]);
+export type ProjectIconKey = z.infer<typeof ProjectIconSchema>;
+/** 아이콘 타일 배경색. 값마다 `--rs-tone-*` 토큰이 있다. */
+export const ProjectToneSchema = z.enum([
+  "blue",
+  "violet",
+  "green",
+  "slate",
+  "red",
+  "orange",
+  "amber",
+  "brown",
+  "lime",
+  "teal",
+  "cyan",
+  "indigo",
+  "purple",
+  "pink",
+]);
+export type ProjectTone = z.infer<typeof ProjectToneSchema>;
 export const ProjectStatusSchema = z.enum(["live", "in-development", "paused", "archived"]);
 export type ProjectStatus = z.infer<typeof ProjectStatusSchema>;
 

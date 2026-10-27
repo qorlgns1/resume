@@ -1,4 +1,4 @@
-import type { ContentLibrary, Project } from "@resume/contracts";
+import type { ContentLibrary, Project, ProjectTone } from "@resume/contracts";
 import { Badge } from "@resume/ui/components/badge";
 import { cn } from "@resume/ui/lib/utils";
 import { BlockContent, blockHeadings } from "../block-content";
@@ -39,11 +39,21 @@ function Meta({ label, children }: { label: string; children: React.ReactNode })
 }
 
 /** 커버 이미지를 올려 두는 무대. 프로젝트 색을 옅게 깐다. */
-const stageTones = {
+const stageTones: Record<ProjectTone, string> = {
   blue: "bg-tone-blue/8",
   violet: "bg-tone-violet/8",
   green: "bg-tone-green/8",
   slate: "bg-tone-slate/8",
+  red: "bg-tone-red/8",
+  orange: "bg-tone-orange/8",
+  amber: "bg-tone-amber/8",
+  brown: "bg-tone-brown/8",
+  lime: "bg-tone-lime/8",
+  teal: "bg-tone-teal/8",
+  cyan: "bg-tone-cyan/8",
+  indigo: "bg-tone-indigo/8",
+  purple: "bg-tone-purple/8",
+  pink: "bg-tone-pink/8",
 };
 
 /** 프로젝트 상세: 고정 메타데이터 + 노션형 본문 */

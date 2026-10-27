@@ -1,25 +1,101 @@
-import { type Project, publicPaths } from "@resume/contracts";
+import {
+  type Project,
+  type ProjectIconKey,
+  type ProjectTone,
+  publicPaths,
+} from "@resume/contracts";
 import { Badge } from "@resume/ui/components/badge";
 import { cn } from "@resume/ui/lib/utils";
-import { Clock, Code, House, Leaf, PenLine, Sparkles } from "lucide-react";
+import {
+  Bell,
+  BookOpen,
+  Bot,
+  Calendar,
+  Camera,
+  ChartLine,
+  Clock,
+  Code,
+  Coffee,
+  Coins,
+  Dumbbell,
+  Gamepad2,
+  Globe,
+  GraduationCap,
+  Heart,
+  House,
+  Leaf,
+  type LucideIcon,
+  MapPin,
+  MessageCircle,
+  Music,
+  Palette,
+  PenLine,
+  PiggyBank,
+  Plane,
+  Rocket,
+  ShoppingCart,
+  Smartphone,
+  Sparkles,
+  Terminal,
+  Utensils,
+  Wallet,
+  Zap,
+} from "lucide-react";
 import { projectStatusLabel } from "../format";
 import { CoverMedia } from "../media-image";
 import { ModuleLink } from "../module-link";
 import type { RenderOptions } from "../types";
 
-const icons = {
+const icons: Record<ProjectIconKey, LucideIcon> = {
   home: House,
   pen: PenLine,
   leaf: Leaf,
   clock: Clock,
   code: Code,
   sparkles: Sparkles,
+  coins: Coins,
+  wallet: Wallet,
+  "piggy-bank": PiggyBank,
+  chart: ChartLine,
+  calendar: Calendar,
+  bell: Bell,
+  book: BookOpen,
+  graduation: GraduationCap,
+  message: MessageCircle,
+  heart: Heart,
+  globe: Globe,
+  "map-pin": MapPin,
+  plane: Plane,
+  smartphone: Smartphone,
+  camera: Camera,
+  music: Music,
+  game: Gamepad2,
+  cart: ShoppingCart,
+  utensils: Utensils,
+  coffee: Coffee,
+  dumbbell: Dumbbell,
+  palette: Palette,
+  terminal: Terminal,
+  bot: Bot,
+  rocket: Rocket,
+  zap: Zap,
 };
-const tones = {
+// Tailwind가 찾을 수 있게 클래스 이름을 그대로 적는다.
+const tones: Record<ProjectTone, string> = {
   blue: "bg-tone-blue",
   violet: "bg-tone-violet",
   green: "bg-tone-green",
   slate: "bg-tone-slate",
+  red: "bg-tone-red",
+  orange: "bg-tone-orange",
+  amber: "bg-tone-amber",
+  brown: "bg-tone-brown",
+  lime: "bg-tone-lime",
+  teal: "bg-tone-teal",
+  cyan: "bg-tone-cyan",
+  indigo: "bg-tone-indigo",
+  purple: "bg-tone-purple",
+  pink: "bg-tone-pink",
 };
 
 export function ProjectIcon({ project, size = "md" }: { project: Project; size?: "md" | "lg" }) {
