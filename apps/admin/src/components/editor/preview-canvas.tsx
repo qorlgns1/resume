@@ -7,11 +7,18 @@ import {
   publicPaths,
   type SiteSettings,
 } from "@resume/contracts";
-import { BentoGrid, BrandMark, type RenderOptions, SystemPageView } from "@resume/modules";
+import {
+  BentoGrid,
+  BrandMark,
+  type ContentTarget,
+  type RenderOptions,
+  SystemPageView,
+} from "@resume/modules";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@resume/ui/components/empty";
 import { cn } from "@resume/ui/lib/utils";
-import { Menu } from "lucide-react";
+import { Menu, Plus } from "lucide-react";
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { newHistoryChapter } from "./content-settings";
 import type { PreviewViewport } from "./editor";
 import { useCurrentPage, useEditor } from "./editor-context";
 
@@ -24,10 +31,11 @@ const previewOptions: RenderOptions = { inert: true, mediaBase: ADMIN_MEDIA_BASE
  * 데스크톱 프레임은 가운데 영역에 맞게 축소해서 보여준다.
  */
 export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
-  const { document, selection, select } = useEditor();
+  const { document, selection, select, edit } = useEditor();
   const { page } = useCurrentPage();
   const content = document.content;
   const selectedModuleId = selection?.kind === "module" ? selection.moduleId : null;
+  const selectedItemId = selection?.kind === "content" ? selection.itemId : null;
   const onSelectModule = (moduleId: string) => select({ kind: "module", moduleId });
   const width = FRAME_WIDTH[viewport];
   const { outerRef, innerRef, scale, height } = useFitScale(width);
@@ -41,19 +49,37 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
   }, [selectedModuleId, innerRef]);
 
   function wrapModule(module: ModuleInstance, node: ReactNode) {
-    const selected = module.id === selectedModuleId;
     return (
       <div className="relative h-full">
         {node}
-        <button
-          type="button"
-          aria-pressed={selected}
-          aria-label={`${module.label} 모듈 선택`}
-          onClick={() => onSelectModule(module.id)}
-          className={cn(
-            "absolute -inset-1 rounded-[calc(var(--rs-radius-xl)+4px)] border-[3px] border-transparent transition-colors hover:border-primary/40 focus-visible:border-primary focus-visible:outline-none",
-            selected && "border-primary hover:border-primary",
-          )}
+        <SelectOverlay
+          label={`${module.label} 모듈 선택`}
+          selected={module.id === selectedModuleId}
+          onSelect={() => onSelectModule(module.id)}
+          className="-inset-1 rounded-[calc(var(--rs-radius-xl)+4px)]"
+        />
+      </div>
+    );
+  }
+
+  /** 기본 페이지 목록의 프로젝트·회사·히스토리를 누르면 그 원본 콘텐츠 편집으로 간다. */
+  function wrapContent(target: ContentTarget, node: ReactNode) {
+    // 카드(프로젝트·회사)는 카드 모서리를, 히스토리 글은 글 주변에 여백을 두고 테두리를 그린다.
+    const card = target.section !== "history";
+    return (
+      <div className={cn("relative", card && "h-full")}>
+        {node}
+        <SelectOverlay
+          label={`${target.label} 편집`}
+          selected={target.itemId === selectedItemId}
+          onSelect={() =>
+            select({ kind: "content", section: target.section, itemId: target.itemId })
+          }
+          className={
+            card
+              ? "-inset-1 rounded-[calc(var(--rs-radius-xl)+4px)]"
+              : "-inset-x-3 -inset-y-2 rounded-lg"
+          }
         />
       </div>
     );
@@ -91,6 +117,22 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
               content={content}
               options={previewOptions}
               wrapModule={wrapModule}
+              wrapContent={wrapContent}
+              listFooter={
+                page.systemKey === "history" ? (
+                  <AddButton
+                    onClick={() => {
+                      const chapter = newHistoryChapter();
+                      edit((d) => {
+                        d.content.history.chapters.push(chapter);
+                      });
+                      select({ kind: "content", section: "history", itemId: chapter.id });
+                    }}
+                  >
+                    챕터 추가
+                  </AddButton>
+                ) : null
+              }
             />
           ) : page.modules.length === 0 ? (
             <Empty className="rounded-xl bg-card">
@@ -110,6 +152,47 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
         </div>
       </div>
     </section>
+  );
+}
+
+/** 미리보기 목록 끝에 놓는 추가 버튼. 공개 사이트에는 없다. */
+function AddButton({ onClick, children }: { onClick: () => void; children: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border-strong py-6 text-body font-semibold text-muted-foreground transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary-text focus-visible:border-primary focus-visible:outline-none"
+    >
+      <Plus aria-hidden="true" className="size-5" />
+      {children}
+    </button>
+  );
+}
+
+/** 미리보기 위에 덧씌우는 선택 영역. 누르면 오른쪽 설정 패널이 바뀐다. */
+function SelectOverlay({
+  label,
+  selected,
+  onSelect,
+  className,
+}: {
+  label: string;
+  selected: boolean;
+  onSelect: () => void;
+  className: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      aria-label={label}
+      onClick={onSelect}
+      className={cn(
+        "absolute border-[3px] border-transparent transition-colors hover:border-primary/40 focus-visible:border-primary focus-visible:outline-none",
+        className,
+        selected && "border-primary hover:border-primary",
+      )}
+    />
   );
 }
 

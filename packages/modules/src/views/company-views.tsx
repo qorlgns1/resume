@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { BlockContent } from "../block-content";
 import { formatPeriod } from "../format";
 import { ModuleLink } from "../module-link";
-import type { RenderOptions } from "../types";
+import { keepNode, type RenderOptions, type WrapContent } from "../types";
 import { EmptyList } from "./page-header";
 
 /** 최근 경험이 위로 오도록 시작일 역순 */
@@ -15,9 +15,11 @@ export function sortCompanies(companies: readonly Company[]): Company[] {
 export function CompanyListView({
   content,
   options,
+  wrapItem = keepNode,
 }: {
   content: ContentLibrary;
   options: RenderOptions;
+  wrapItem?: WrapContent;
 }) {
   if (content.companies.length === 0)
     return <EmptyList>아직 등록한 회사 경험이 없습니다.</EmptyList>;
@@ -25,28 +27,31 @@ export function CompanyListView({
     <ol className="flex flex-col gap-3">
       {sortCompanies(content.companies).map((company) => (
         <li key={company.id}>
-          <article className="flex flex-col gap-3 rounded-xl bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between lg:p-6">
-            <div className="flex min-w-0 flex-col gap-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-title font-bold tracking-tight">{company.name}</h2>
+          {wrapItem(
+            { section: "companies", itemId: company.id, label: company.name },
+            <article className="flex flex-col gap-3 rounded-xl bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between lg:p-6">
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-title font-bold tracking-tight">{company.name}</h2>
+                </div>
+                <p className="text-body-sm text-muted-foreground">
+                  {[company.role, formatPeriod(company.period)].filter(Boolean).join(" · ")}
+                </p>
+                {company.summary ? <p className="text-body">{company.summary}</p> : null}
+                {company.tags.length > 0 ? (
+                  <p className="text-body-sm text-subtle-foreground">{company.tags.join(" · ")}</p>
+                ) : null}
               </div>
-              <p className="text-body-sm text-muted-foreground">
-                {[company.role, formatPeriod(company.period)].filter(Boolean).join(" · ")}
-              </p>
-              {company.summary ? <p className="text-body">{company.summary}</p> : null}
-              {company.tags.length > 0 ? (
-                <p className="text-body-sm text-subtle-foreground">{company.tags.join(" · ")}</p>
-              ) : null}
-            </div>
-            <ModuleLink
-              href={publicPaths.company(company.slug)}
-              options={options}
-              className="inline-flex shrink-0 items-center gap-1 text-body-sm font-semibold text-primary-text underline-offset-4 hover:underline"
-            >
-              <span className="sr-only">{company.name} </span>자세히 보기
-              <ArrowRight aria-hidden="true" className="size-4" />
-            </ModuleLink>
-          </article>
+              <ModuleLink
+                href={publicPaths.company(company.slug)}
+                options={options}
+                className="inline-flex shrink-0 items-center gap-1 text-body-sm font-semibold text-primary-text underline-offset-4 hover:underline"
+              >
+                <span className="sr-only">{company.name} </span>자세히 보기
+                <ArrowRight aria-hidden="true" className="size-4" />
+              </ModuleLink>
+            </article>,
+          )}
         </li>
       ))}
     </ol>

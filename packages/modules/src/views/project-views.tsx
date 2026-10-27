@@ -5,7 +5,7 @@ import { BlockContent, blockHeadings } from "../block-content";
 import { formatPeriod } from "../format";
 import { CoverMedia } from "../media-image";
 import { ModuleLink } from "../module-link";
-import type { RenderOptions } from "../types";
+import { keepNode, type RenderOptions, type WrapContent } from "../types";
 import { EmptyList } from "./page-header";
 import { ProjectCard, ProjectIcon, ProjectStatusBadge } from "./project-card";
 
@@ -13,16 +13,21 @@ import { ProjectCard, ProjectIcon, ProjectStatusBadge } from "./project-card";
 export function ProjectListView({
   content,
   options,
+  wrapItem = keepNode,
 }: {
   content: ContentLibrary;
   options: RenderOptions;
+  wrapItem?: WrapContent;
 }) {
   if (content.projects.length === 0) return <EmptyList>아직 등록한 프로젝트가 없습니다.</EmptyList>;
   return (
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
       {content.projects.map((project) => (
         <li key={project.id} className="min-w-0">
-          <ProjectCard project={project} layout="stacked" options={options} />
+          {wrapItem(
+            { section: "projects", itemId: project.id, label: project.title },
+            <ProjectCard project={project} layout="stacked" options={options} />,
+          )}
         </li>
       ))}
     </ul>

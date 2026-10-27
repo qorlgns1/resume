@@ -4,6 +4,7 @@ import {
   type Achievement,
   type Company,
   collectModuleReferences,
+  type HistoryChapter,
   type Link,
   type Project,
   type ProjectIconKey,
@@ -24,8 +25,9 @@ import {
   DialogTrigger,
 } from "@resume/ui/components/dialog";
 import { FieldGroup } from "@resume/ui/components/field";
+import { cn } from "@resume/ui/lib/utils";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { BodyEditor } from "./body-editor";
 import { CoverField } from "./cover-field";
 import { type ContentSection, useEditor } from "./editor-context";
@@ -163,7 +165,7 @@ export function ContentSettings({ section, itemId }: { section: ContentSection; 
       </header>
       {section === "site" ? <SiteForm /> : null}
       {section === "profile" ? <ProfileForm /> : null}
-      {section === "history" ? <HistoryForm /> : null}
+      {section === "history" ? <HistoryForm itemId={itemId} /> : null}
       {section === "media" ? <MediaLibraryPanel /> : null}
       {section !== "site" &&
       section !== "profile" &&
@@ -985,10 +987,30 @@ function currentYearMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
+/** 이번 달에 시작하는 빈 챕터 */
+export function newHistoryChapter(): HistoryChapter {
+  return {
+    id: createId("ch"),
+    title: "새 챕터",
+    summary: "",
+    period: { start: currentYearMonth(), end: null },
+    entries: [],
+  };
+}
+
 /** 히스토리: 챕터 + 타임라인. 항목은 회사·프로젝트를 연결하거나 직접 쓴다. 공개 화면은 날짜순으로 정렬한다. */
-function HistoryForm() {
+function HistoryForm({ itemId }: { itemId?: string }) {
   const { document, edit } = useEditor();
   const { chapters } = document.content.history;
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // 미리보기에서 고른 챕터·항목이 보이도록 설정 패널을 옮긴다.
+  useEffect(() => {
+    if (!itemId) return;
+    formRef.current
+      ?.querySelector(`[data-item-id="${CSS.escape(itemId)}"]`)
+      ?.scrollIntoView({ block: "start" });
+  }, [itemId]);
   const refOptions = [
     { value: NO_REF, label: "연결 없음 (직접 작성)" },
     ...document.content.projects.map((p) => ({
@@ -1015,7 +1037,7 @@ function HistoryForm() {
     });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={formRef} className="flex flex-col gap-4">
       <p className="text-caption text-muted-foreground">
         챕터는 이 순서대로, 각 챕터의 항목은 날짜순으로 공개 사이트에 표시됩니다.
       </p>
@@ -1025,6 +1047,8 @@ function HistoryForm() {
           <Group
             key={chapter.id}
             title={`챕터 ${ci + 1}`}
+            itemKey={chapter.id}
+            className={cn("scroll-mt-4", chapter.id === itemId && "border-primary")}
             action={
               <span className="flex items-center gap-1">
                 <Button
@@ -1117,7 +1141,14 @@ function HistoryForm() {
                     if (target) mutate(target);
                   });
                 return (
-                  <div key={entry.id} className="flex flex-col gap-2 rounded-md bg-muted p-2.5">
+                  <div
+                    key={entry.id}
+                    data-item-id={entry.id}
+                    className={cn(
+                      "flex scroll-mt-4 flex-col gap-2 rounded-md bg-muted p-2.5",
+                      entry.id === itemId && "ring-2 ring-primary",
+                    )}
+                  >
                     <div className="grid grid-cols-[8.5rem_minmax(0,1fr)_auto] items-end gap-2">
                       <TextField
                         label="날짜"
@@ -1192,13 +1223,7 @@ function HistoryForm() {
         className="self-start"
         onClick={() =>
           edit((d) => {
-            d.content.history.chapters.push({
-              id: createId("ch"),
-              title: "새 챕터",
-              summary: "",
-              period: { start: currentYearMonth(), end: null },
-              entries: [],
-            });
+            d.content.history.chapters.push(newHistoryChapter());
           })
         }
       >

@@ -25,7 +25,13 @@ export { ModuleFrame } from "./module-frame";
 export { ModuleLink } from "./module-link";
 export { ModuleContent } from "./module-renderer";
 export { moduleStyleVars } from "./style-vars";
-export type { LinkComponent, ModuleRenderProps, RenderOptions } from "./types";
+export type {
+  ContentTarget,
+  LinkComponent,
+  ModuleRenderProps,
+  RenderOptions,
+  WrapContent,
+} from "./types";
 export { CompanyDetailView, CompanyListView, findCompanyBySlug } from "./views/company-views";
 export { HistoryTimelineView } from "./views/history-views";
 export { BackLink, PageHeader } from "./views/page-header";

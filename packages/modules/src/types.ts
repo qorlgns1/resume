@@ -23,6 +23,20 @@ export interface RenderOptions {
   mediaBase?: string;
 }
 
+/** 기본 페이지 목록에서 고를 수 있는 원본 콘텐츠 하나 (어드민 미리보기에서 편집 대상으로 고른다) */
+export interface ContentTarget {
+  section: "projects" | "companies" | "history";
+  itemId: string;
+  /** 선택 버튼의 접근성 이름에 쓴다 */
+  label: string;
+}
+
+/** 목록의 원본 콘텐츠를 감싸는 함수. 어드민 미리보기에서 선택 영역을 덧씌울 때 사용한다. */
+export type WrapContent = (target: ContentTarget, node: ReactNode) => ReactNode;
+
+/** 감싸지 않고 그대로 둔다 (WrapContent 기본값) */
+export const keepNode: WrapContent = (_target, node) => node;
+
 export interface ModuleRenderProps<T extends ModuleType = ModuleType> {
   module: Extract<ModuleInstance, { type: T }>;
   content: ContentLibrary;

@@ -330,13 +330,21 @@ export function Group({
   title,
   action,
   children,
+  className,
+  itemKey,
 }: {
   title: string;
   action?: ReactNode;
   children: ReactNode;
+  className?: string;
+  /** 설정 패널에서 이 묶음을 찾아 스크롤할 때 쓰는 원본 콘텐츠 ID */
+  itemKey?: string;
 }) {
   return (
-    <section className="flex flex-col gap-3 rounded-lg border border-border p-3">
+    <section
+      data-item-id={itemKey}
+      className={cn("flex flex-col gap-3 rounded-lg border border-border p-3", className)}
+    >
       <div className="flex items-center justify-between gap-2">
         <h4 className="text-caption font-semibold text-muted-foreground">{title}</h4>
         {action}

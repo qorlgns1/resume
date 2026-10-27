@@ -2,7 +2,7 @@ import { type ContentLibrary, type HistoryEntry, publicPaths } from "@resume/con
 import { ArrowRight } from "lucide-react";
 import { formatPeriod, formatYearMonth } from "../format";
 import { ModuleLink } from "../module-link";
-import type { RenderOptions } from "../types";
+import { keepNode, type RenderOptions, type WrapContent } from "../types";
 import { EmptyList } from "./page-header";
 
 function refLink(
@@ -26,9 +26,11 @@ function refLink(
 export function HistoryTimelineView({
   content,
   options,
+  wrapItem = keepNode,
 }: {
   content: ContentLibrary;
   options: RenderOptions;
+  wrapItem?: WrapContent;
 }) {
   const { chapters } = content.history;
   if (chapters.length === 0) return <EmptyList>아직 작성한 히스토리가 없습니다.</EmptyList>;
@@ -43,19 +45,22 @@ export function HistoryTimelineView({
             aria-labelledby={headingId}
             className="grid gap-5 rounded-xl bg-card p-6 shadow-card lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10 lg:p-8"
           >
-            <header className="flex flex-col gap-2">
-              <p className="text-caption font-semibold text-primary-text tabular-nums">
-                챕터 {String(index + 1).padStart(2, "0")} · {formatPeriod(chapter.period)}
-              </p>
-              <h2 id={headingId} className="text-heading font-extrabold tracking-tight">
-                {chapter.title}
-              </h2>
-              {chapter.summary ? (
-                <p className="text-body-sm whitespace-pre-line text-muted-foreground">
-                  {chapter.summary}
+            {wrapItem(
+              { section: "history", itemId: chapter.id, label: chapter.title },
+              <header className="flex flex-col gap-2">
+                <p className="text-caption font-semibold text-primary-text tabular-nums">
+                  챕터 {String(index + 1).padStart(2, "0")} · {formatPeriod(chapter.period)}
                 </p>
-              ) : null}
-            </header>
+                <h2 id={headingId} className="text-heading font-extrabold tracking-tight">
+                  {chapter.title}
+                </h2>
+                {chapter.summary ? (
+                  <p className="text-body-sm whitespace-pre-line text-muted-foreground">
+                    {chapter.summary}
+                  </p>
+                ) : null}
+              </header>,
+            )}
             {entries.length === 0 ? (
               <p className="text-body-sm text-muted-foreground">아직 항목이 없습니다.</p>
             ) : (
@@ -68,26 +73,33 @@ export function HistoryTimelineView({
                         aria-hidden="true"
                         className="absolute top-1.5 -left-[1.95rem] size-3 rounded-full border-2 border-card bg-primary"
                       />
-                      <time
-                        dateTime={entry.date}
-                        className="text-caption font-semibold text-subtle-foreground tabular-nums"
-                      >
-                        {formatYearMonth(entry.date)}
-                      </time>
-                      <h3 className="text-title font-bold tracking-tight">{entry.title}</h3>
-                      {entry.description ? (
-                        <p className="text-body-sm text-muted-foreground">{entry.description}</p>
-                      ) : null}
-                      {link ? (
-                        <ModuleLink
-                          href={link.href}
-                          options={options}
-                          className="inline-flex w-fit items-center gap-1 text-body-sm font-semibold text-primary-text underline-offset-4 hover:underline"
-                        >
-                          {link.label}
-                          <ArrowRight aria-hidden="true" className="size-4" />
-                        </ModuleLink>
-                      ) : null}
+                      {wrapItem(
+                        { section: "history", itemId: entry.id, label: entry.title },
+                        <div className="flex flex-col gap-1">
+                          <time
+                            dateTime={entry.date}
+                            className="text-caption font-semibold text-subtle-foreground tabular-nums"
+                          >
+                            {formatYearMonth(entry.date)}
+                          </time>
+                          <h3 className="text-title font-bold tracking-tight">{entry.title}</h3>
+                          {entry.description ? (
+                            <p className="text-body-sm text-muted-foreground">
+                              {entry.description}
+                            </p>
+                          ) : null}
+                          {link ? (
+                            <ModuleLink
+                              href={link.href}
+                              options={options}
+                              className="inline-flex w-fit items-center gap-1 text-body-sm font-semibold text-primary-text underline-offset-4 hover:underline"
+                            >
+                              {link.label}
+                              <ArrowRight aria-hidden="true" className="size-4" />
+                            </ModuleLink>
+                          ) : null}
+                        </div>,
+                      )}
                     </li>
                   );
                 })}

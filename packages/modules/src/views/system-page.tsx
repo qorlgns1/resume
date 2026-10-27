@@ -1,7 +1,7 @@
 import type { ContentLibrary, ModuleInstance, Page } from "@resume/contracts";
 import type { ReactNode } from "react";
 import { BentoGrid } from "../bento-grid";
-import type { RenderOptions } from "../types";
+import type { RenderOptions, WrapContent } from "../types";
 import { CompanyListView } from "./company-views";
 import { HistoryTimelineView } from "./history-views";
 import { PageHeader } from "./page-header";
@@ -17,20 +17,33 @@ export function SystemPageView({
   content,
   options = {},
   wrapModule,
+  wrapContent,
+  listFooter,
 }: {
   page: Page;
   content: ContentLibrary;
   options?: RenderOptions;
   /** 어드민 미리보기에서 모듈 선택 영역을 덧씌울 때 사용 */
   wrapModule?: (module: ModuleInstance, node: ReactNode) => ReactNode;
+  /** 어드민 미리보기에서 목록의 원본 콘텐츠에 선택 영역을 덧씌울 때 사용 */
+  wrapContent?: WrapContent;
+  /** 목록·타임라인 바로 아래에 붙일 내용. 어드민 미리보기의 추가 버튼에 쓴다. */
+  listFooter?: ReactNode;
 }) {
   const systemKey = page.kind === "system" ? page.systemKey : null;
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={page.title} description={page.description} options={options} />
-      {systemKey === "projects" ? <ProjectListView content={content} options={options} /> : null}
-      {systemKey === "experience" ? <CompanyListView content={content} options={options} /> : null}
-      {systemKey === "history" ? <HistoryTimelineView content={content} options={options} /> : null}
+      {systemKey === "projects" ? (
+        <ProjectListView content={content} options={options} wrapItem={wrapContent} />
+      ) : null}
+      {systemKey === "experience" ? (
+        <CompanyListView content={content} options={options} wrapItem={wrapContent} />
+      ) : null}
+      {systemKey === "history" ? (
+        <HistoryTimelineView content={content} options={options} wrapItem={wrapContent} />
+      ) : null}
+      {listFooter}
       {page.modules.length > 0 ? (
         <BentoGrid page={page} content={content} options={options} wrapModule={wrapModule} />
       ) : null}
