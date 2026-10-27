@@ -34,7 +34,9 @@ export function AchievementsModule({
                   <span>{item.metric.after}</span>
                 </p>
               ) : null}
-              <p className="text-body-sm text-muted-foreground">{item.description}</p>
+              <p className="text-body-sm whitespace-pre-line text-muted-foreground">
+                {item.description}
+              </p>
             </article>
           </li>
         ))}

@@ -79,7 +79,7 @@ export function ProjectDetailView({
           ) : null}
         </dl>
         {project.summary ? (
-          <p className="text-body text-muted-foreground">{project.summary}</p>
+          <p className="text-body whitespace-pre-line text-muted-foreground">{project.summary}</p>
         ) : null}
         <CoverMedia
           media={project.cover}

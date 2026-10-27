@@ -41,7 +41,7 @@ export function IntroModule({ module, content, options }: ModuleRenderProps<"int
         </div>
         <h1 className="rs-type-display whitespace-pre-line">{profile.headline}</h1>
         <div className="flex flex-col gap-2">
-          <p className="rs-fg-muted rs-type-body-lg">{profile.summary}</p>
+          <p className="rs-fg-muted rs-type-body-lg whitespace-pre-line">{profile.summary}</p>
           {props.showName ? (
             <p className="rs-fg-muted rs-type-body-sm font-medium">{profile.name}</p>
           ) : null}

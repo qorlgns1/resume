@@ -51,7 +51,9 @@ export function HistoryTimelineView({
                 {chapter.title}
               </h2>
               {chapter.summary ? (
-                <p className="text-body-sm text-muted-foreground">{chapter.summary}</p>
+                <p className="text-body-sm whitespace-pre-line text-muted-foreground">
+                  {chapter.summary}
+                </p>
               ) : null}
             </header>
             {entries.length === 0 ? (

@@ -86,7 +86,7 @@ export function ProjectCard({
           </div>
         </header>
         {layout === "wide" ? (
-          <p className="text-body text-muted-foreground">{project.summary}</p>
+          <p className="text-body whitespace-pre-line text-muted-foreground">{project.summary}</p>
         ) : null}
         {layout === "stacked" ? media : null}
         <div className="mt-auto flex flex-wrap items-center justify-between gap-2">

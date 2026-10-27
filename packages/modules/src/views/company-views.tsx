@@ -101,7 +101,9 @@ export function CompanyDetailView({
                     {a.metric.label} {a.metric.before} → {a.metric.after}
                   </p>
                 ) : null}
-                <p className="text-body-sm text-muted-foreground">{a.description}</p>
+                <p className="text-body-sm whitespace-pre-line text-muted-foreground">
+                  {a.description}
+                </p>
               </li>
             ))}
           </ul>

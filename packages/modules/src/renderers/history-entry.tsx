@@ -21,7 +21,7 @@ export function HistoryEntryModule({
             <h2 className="rs-type-title">{props.heading}</h2>
           </div>
           {props.description ? (
-            <p className="rs-fg-muted rs-type-body-sm">{props.description}</p>
+            <p className="rs-fg-muted rs-type-body-sm whitespace-pre-line">{props.description}</p>
           ) : null}
         </div>
         <ModuleLink

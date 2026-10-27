@@ -18,7 +18,7 @@ export function StatusModule({ module, options }: ModuleRenderProps<"status">) {
         <p className="rs-fg-subtle rs-type-body-sm font-medium">{props.eyebrow}</p>
         <h2 className="rs-type-title">{props.title}</h2>
         <div className="rs-justify flex flex-wrap items-center gap-2">
-          <p className="rs-fg-muted rs-type-body-sm">{props.description}</p>
+          <p className="rs-fg-muted rs-type-body-sm whitespace-pre-line">{props.description}</p>
           {props.badge ? (
             <Badge variant={badgeVariant[props.badge.tone]} className="rounded-sm">
               {props.badge.label}
