@@ -15,7 +15,7 @@ export function AchievementsModule({
     .filter((a): a is Achievement => Boolean(a));
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="rs-section flex flex-col gap-5">
       <SectionHeader heading={props.heading} description={props.description} options={options} />
       <ul className={cn("grid gap-3 @3xl:gap-4", items.length > 1 && "@2xl:grid-cols-2")}>
         {items.map((item) => (

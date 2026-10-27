@@ -30,7 +30,7 @@ export function ProjectsModule({ module, content, options }: ModuleRenderProps<"
   const count = projects.length;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="rs-section flex flex-col gap-5">
       <SectionHeader
         heading={props.heading}
         description={props.description}
