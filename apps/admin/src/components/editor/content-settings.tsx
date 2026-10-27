@@ -6,6 +6,7 @@ import {
   collectModuleReferences,
   type HistoryChapter,
   type Link,
+  MAX_HISTORY_ENTRY_LINKS,
   type Project,
   type ProjectIconKey,
   type ProjectTone,
@@ -1202,7 +1203,7 @@ function HistoryForm({ itemId }: { itemId?: string }) {
                       value={
                         entry.ref
                           ? `${entry.ref.kind}:${entry.ref.id}`
-                          : entry.link
+                          : entry.links
                             ? EXTERNAL_LINK
                             : NO_REF
                       }
@@ -1210,10 +1211,10 @@ function HistoryForm({ itemId }: { itemId?: string }) {
                       onChange={(v) =>
                         setEntry((e) => {
                           delete e.ref;
-                          if (v !== EXTERNAL_LINK) delete e.link;
+                          if (v !== EXTERNAL_LINK) delete e.links;
                           if (v === NO_REF) return;
                           if (v === EXTERNAL_LINK) {
-                            e.link ??= { label: "GitHub", href: "https://" };
+                            e.links ??= [{ label: "GitHub", href: "https://" }];
                             return;
                           }
                           const [kind, id] = v.split(":") as ["project" | "company", string];
@@ -1221,29 +1222,66 @@ function HistoryForm({ itemId }: { itemId?: string }) {
                         })
                       }
                     />
-                    {entry.link ? (
-                      <div className="grid grid-cols-[8.5rem_minmax(0,1fr)] gap-2">
-                        <TextField
-                          label="링크 문구"
-                          path={[...entryPath, "link", "label"]}
-                          value={entry.link.label}
-                          onChange={(v) =>
-                            setEntry((e) => {
-                              if (e.link) e.link.label = v;
-                            })
-                          }
-                        />
-                        <TextField
-                          label="주소"
-                          path={[...entryPath, "link", "href"]}
-                          value={entry.link.href}
-                          placeholder="https://github.com/..."
-                          onChange={(v) =>
-                            setEntry((e) => {
-                              if (e.link) e.link.href = v;
-                            })
-                          }
-                        />
+                    {entry.links ? (
+                      <div className="flex flex-col gap-2">
+                        {entry.links.map((link, li) => (
+                          <div
+                            // biome-ignore lint/suspicious/noArrayIndexKey: 링크에는 별도 ID가 없다
+                            key={li}
+                            className="grid grid-cols-[8.5rem_minmax(0,1fr)_auto] items-end gap-2"
+                          >
+                            <TextField
+                              label="링크 문구"
+                              path={[...entryPath, "links", li, "label"]}
+                              value={link.label}
+                              onChange={(v) =>
+                                setEntry((e) => {
+                                  const target = e.links?.[li];
+                                  if (target) target.label = v;
+                                })
+                              }
+                            />
+                            <TextField
+                              label="주소"
+                              path={[...entryPath, "links", li, "href"]}
+                              value={link.href}
+                              placeholder="https://github.com/..."
+                              onChange={(v) =>
+                                setEntry((e) => {
+                                  const target = e.links?.[li];
+                                  if (target) target.href = v;
+                                })
+                              }
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={`${link.label} 링크 삭제`}
+                              onClick={() =>
+                                setEntry((e) => {
+                                  e.links?.splice(li, 1);
+                                  if (e.links?.length === 0) delete e.links;
+                                })
+                              }
+                            >
+                              <Trash2 aria-hidden="true" />
+                            </Button>
+                          </div>
+                        ))}
+                        {entry.links.length < MAX_HISTORY_ENTRY_LINKS ? (
+                          <Button
+                            variant="outline"
+                            size="xs"
+                            className="self-start"
+                            onClick={() =>
+                              setEntry((e) => {
+                                e.links?.push({ label: "GitHub", href: "https://" });
+                              })
+                            }
+                          >
+                            <Plus aria-hidden="true" /> 링크 추가
+                          </Button>
+                        ) : null}
                       </div>
                     ) : null}
                   </div>

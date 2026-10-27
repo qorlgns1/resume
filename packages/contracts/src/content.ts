@@ -151,21 +151,36 @@ export const TechStackGroupSchema = z.object({
 });
 export type TechStackGroup = z.infer<typeof TechStackGroupSchema>;
 
+/** 히스토리 항목 하나에 달 수 있는 외부 링크 최대 개수 */
+export const MAX_HISTORY_ENTRY_LINKS = 3;
+
 /** 히스토리 항목은 기존 회사·프로젝트를 참조하거나, 외부 링크를 달거나, 직접 작성한다. */
-export const HistoryEntrySchema = z
-  .object({
-    id: IdSchema,
-    date: YearMonthSchema,
-    title: z.string().min(1).max(60),
-    description: z.string().max(200).optional(),
-    ref: z.object({ kind: z.enum(["project", "company"]), id: IdSchema }).optional(),
-    /** 저장소·수료증·글처럼 사이트 밖에 있는 자료 */
-    link: z.object({ label: z.string().min(1).max(30), href: HrefSchema }).optional(),
-  })
-  .refine((entry) => !(entry.ref && entry.link), {
-    message: "회사·프로젝트 연결과 외부 링크는 함께 쓸 수 없습니다.",
-    path: ["link"],
-  });
+export const HistoryEntrySchema = z.preprocess(
+  // 예전 형식(외부 링크 하나만 있던 link)도 읽어서 links로 바꾼다.
+  (value) => {
+    if (typeof value !== "object" || value === null || !("link" in value)) return value;
+    const { link, ...rest } = value as { link: unknown };
+    return "links" in rest || !link ? rest : { ...rest, links: [link] };
+  },
+  z
+    .object({
+      id: IdSchema,
+      date: YearMonthSchema,
+      title: z.string().min(1).max(60),
+      description: z.string().max(200).optional(),
+      ref: z.object({ kind: z.enum(["project", "company"]), id: IdSchema }).optional(),
+      /** 저장소·수료증·글처럼 사이트 밖에 있는 자료 */
+      links: z
+        .array(z.object({ label: z.string().min(1).max(30), href: HrefSchema }))
+        .min(1)
+        .max(MAX_HISTORY_ENTRY_LINKS)
+        .optional(),
+    })
+    .refine((entry) => !(entry.ref && entry.links), {
+      message: "회사·프로젝트 연결과 외부 링크는 함께 쓸 수 없습니다.",
+      path: ["links"],
+    }),
+);
 export type HistoryEntry = z.infer<typeof HistoryEntrySchema>;
 
 export const HistoryChapterSchema = z.object({

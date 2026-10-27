@@ -6,22 +6,23 @@ import { ModuleLink } from "../module-link";
 import { keepNode, type RenderOptions, type WrapContent } from "../types";
 import { EmptyList } from "./page-header";
 
-function refLink(
+/** 항목 아래에 놓을 링크: 외부 링크들, 또는 연결한 회사·프로젝트 페이지 */
+function entryLinks(
   entry: HistoryEntry,
   content: ContentLibrary,
-): { label: string; href: string } | null {
-  if (entry.link) return entry.link;
-  if (!entry.ref) return null;
+): { label: string; href: string }[] {
+  if (entry.links) return entry.links;
+  if (!entry.ref) return [];
   if (entry.ref.kind === "project") {
     const project = content.projects.find((p) => p.id === entry.ref?.id);
     return project
-      ? { label: `프로젝트 · ${project.title}`, href: publicPaths.project(project.slug) }
-      : null;
+      ? [{ label: `프로젝트 · ${project.title}`, href: publicPaths.project(project.slug) }]
+      : [];
   }
   const company = content.companies.find((c) => c.id === entry.ref?.id);
   return company
-    ? { label: `회사 경험 · ${company.name}`, href: publicPaths.company(company.slug) }
-    : null;
+    ? [{ label: `회사 경험 · ${company.name}`, href: publicPaths.company(company.slug) }]
+    : [];
 }
 
 /** 히스토리: 챕터별 타임라인 (챕터는 저장된 순서, 항목은 날짜순) */
@@ -73,7 +74,7 @@ export function HistoryTimelineView({
                 ) : (
                   <ol className="relative flex flex-col gap-5 border-l-2 border-border pl-6">
                     {entries.map((entry) => {
-                      const link = refLink(entry, content);
+                      const links = entryLinks(entry, content);
                       return (
                         <li key={entry.id} className="relative flex flex-col gap-1">
                           <span
@@ -95,19 +96,25 @@ export function HistoryTimelineView({
                                   {entry.description}
                                 </p>
                               ) : null}
-                              {link ? (
-                                <ModuleLink
-                                  href={link.href}
-                                  options={options}
-                                  className="inline-flex w-fit items-center gap-1 text-body-sm font-semibold text-primary-text underline-offset-4 hover:underline"
-                                >
-                                  {link.label}
-                                  {/^https?:\/\//.test(link.href) ? (
-                                    <ArrowUpRight aria-hidden="true" className="size-4" />
-                                  ) : (
-                                    <ArrowRight aria-hidden="true" className="size-4" />
-                                  )}
-                                </ModuleLink>
+                              {links.length > 0 ? (
+                                <ul className="flex flex-wrap gap-x-4 gap-y-1">
+                                  {links.map((link) => (
+                                    <li key={link.href}>
+                                      <ModuleLink
+                                        href={link.href}
+                                        options={options}
+                                        className="inline-flex w-fit items-center gap-1 text-body-sm font-semibold text-primary-text underline-offset-4 hover:underline"
+                                      >
+                                        {link.label}
+                                        {/^https?:\/\//.test(link.href) ? (
+                                          <ArrowUpRight aria-hidden="true" className="size-4" />
+                                        ) : (
+                                          <ArrowRight aria-hidden="true" className="size-4" />
+                                        )}
+                                      </ModuleLink>
+                                    </li>
+                                  ))}
+                                </ul>
                               ) : null}
                             </div>,
                           )}
