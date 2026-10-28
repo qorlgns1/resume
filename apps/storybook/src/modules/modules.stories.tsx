@@ -1,4 +1,4 @@
-import type { ModuleInstance } from "@resume/contracts";
+import { DEFAULT_MODULE_STYLE, type ModuleInstance } from "@resume/contracts";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { SingleModule, sampleModule } from "./helpers";
 
@@ -44,6 +44,20 @@ export const Status: Story = {
 export const HistoryEntry: Story = {
   name: "히스토리 진입부",
   args: { module: sampleModule("mod_home_history") },
+};
+
+export const Credentials: Story = {
+  name: "학력·자격증",
+  args: {
+    module: {
+      id: "mod_credentials",
+      type: "credentials",
+      label: "학력·자격증",
+      style: DEFAULT_MODULE_STYLE,
+      props: { heading: "학력·자격증" },
+    },
+    colSpan: 4,
+  },
 };
 
 const intro = sampleModule("mod_home_intro");

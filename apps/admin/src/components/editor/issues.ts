@@ -67,6 +67,8 @@ export function describeIssuePath(document: SiteDocument, path: Path): string {
       achievements: "성과",
       techStack: "기술 스택",
       history: "히스토리",
+      education: "학력",
+      certifications: "자격증",
     };
     const list = document.content[section as keyof SiteDocument["content"]];
     const item = Array.isArray(list) && typeof child === "number" ? list[child] : undefined;

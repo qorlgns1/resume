@@ -24,6 +24,7 @@ export function collectModuleReferences(
     case "intro":
     case "status":
     case "history-entry":
+    case "credentials":
       return [];
   }
 }

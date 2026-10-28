@@ -29,6 +29,7 @@ export const moduleCatalog: readonly ModuleCatalogEntry[] = [
     label: "히스토리 진입부",
     description: "회사 경험 요약과 히스토리 링크",
   },
+  { type: "credentials", label: "학력·자격증", description: "학력과 자격증 목록 (최신순)" },
 ];
 
 /** 형태를 고를 수 있는 모듈과 그 형태 목록 */
@@ -226,5 +227,12 @@ export function createModuleDraft(type: ModuleType, content: ContentLibrary): Mo
         },
       };
     }
+    case "credentials":
+      if (content.education.length === 0 && content.certifications.length === 0)
+        return { ok: false, reason: "먼저 콘텐츠에서 학력이나 자격증을 추가하세요." };
+      return {
+        ok: true,
+        module: { id, type, label, style, props: { heading: "학력·자격증" } },
+      };
   }
 }

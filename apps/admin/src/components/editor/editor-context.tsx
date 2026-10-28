@@ -12,6 +12,7 @@ export type ContentSection =
   | "achievements"
   | "techStack"
   | "history"
+  | "credentials"
   | "media";
 
 export type Selection =

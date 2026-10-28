@@ -281,4 +281,17 @@ export const sampleContent: ContentLibrary = {
       },
     ],
   },
+  education: [
+    {
+      id: "edu_sample",
+      school: "샘플 대학교",
+      major: "컴퓨터공학",
+      degree: "학사",
+      period: { start: "2015-03", end: "2019-02" },
+      note: "샘플 덧붙임",
+    },
+  ],
+  certifications: [
+    { id: "cert_sample", name: "정보처리기사", issuer: "한국산업인력공단", date: "2019-08" },
+  ],
 };

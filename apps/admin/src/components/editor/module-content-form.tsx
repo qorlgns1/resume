@@ -613,15 +613,58 @@ function ModuleFields({ module, path, update }: Props) {
         </>
       );
     }
+
+    case "credentials": {
+      const p = module.props;
+      return (
+        <>
+          <TextField
+            label="제목"
+            path={[...props, "heading"]}
+            value={p.heading}
+            onChange={(v) =>
+              update((m) => {
+                if (m.type === "credentials") m.props.heading = v;
+              })
+            }
+          />
+          <TextField
+            label="설명"
+            path={[...props, "description"]}
+            value={p.description ?? ""}
+            onChange={(v) =>
+              update((m) => {
+                if (m.type === "credentials") m.props.description = optional(v);
+              })
+            }
+          />
+          <ContentNote
+            target="학력·자격증"
+            onOpen={() => select({ kind: "content", section: "credentials" })}
+          >
+            콘텐츠의 학력·자격증을 모두 최신순으로 보여줍니다.
+          </ContentNote>
+        </>
+      );
+    }
   }
 }
 
-function ContentNote({ children, onOpen }: { children: string; onOpen: () => void }) {
+function ContentNote({
+  children,
+  target = "프로필",
+  onOpen,
+}: {
+  children: string;
+  /** 이동할 콘텐츠 이름 */
+  target?: string;
+  onOpen: () => void;
+}) {
   return (
     <p className="flex flex-col items-start gap-1 rounded-md bg-muted px-3 py-2 text-caption text-muted-foreground">
       {children}
       <Button variant="link" size="xs" className="h-auto px-0" onClick={onOpen}>
-        프로필 편집으로 이동
+        {target} 편집으로 이동
       </Button>
     </p>
   );

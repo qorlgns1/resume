@@ -151,6 +151,28 @@ export const TechStackGroupSchema = z.object({
 });
 export type TechStackGroup = z.infer<typeof TechStackGroupSchema>;
 
+export const EducationSchema = z.object({
+  id: IdSchema,
+  school: z.string().min(1).max(40),
+  /** 전공 (예: 컴퓨터공학) */
+  major: z.string().max(40),
+  /** 학위 (예: 학사, 전문학사) */
+  degree: z.string().max(24),
+  period: PeriodSchema,
+  /** 학점·과정 등 짧은 덧붙임 (예: 학점 3.97/4.5) */
+  note: z.string().max(60).optional(),
+});
+export type Education = z.infer<typeof EducationSchema>;
+
+export const CertificationSchema = z.object({
+  id: IdSchema,
+  name: z.string().min(1).max(40),
+  /** 발급 기관 */
+  issuer: z.string().max(40),
+  date: YearMonthSchema,
+});
+export type Certification = z.infer<typeof CertificationSchema>;
+
 /** 히스토리 항목 하나에 달 수 있는 외부 링크 최대 개수 */
 export const MAX_HISTORY_ENTRY_LINKS = 3;
 
@@ -199,5 +221,8 @@ export const ContentLibrarySchema = z.object({
   achievements: z.array(AchievementSchema),
   techStack: z.array(TechStackGroupSchema),
   history: z.object({ chapters: z.array(HistoryChapterSchema) }),
+  // 학력·자격증이 생기기 전에 저장한 문서도 읽을 수 있게 비어 있는 목록으로 채운다.
+  education: z.array(EducationSchema).default([]),
+  certifications: z.array(CertificationSchema).default([]),
 });
 export type ContentLibrary = z.infer<typeof ContentLibrarySchema>;

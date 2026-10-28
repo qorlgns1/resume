@@ -1,6 +1,7 @@
 import type { ModuleType } from "@resume/contracts";
 import type { ComponentType } from "react";
 import { AchievementsModule } from "./renderers/achievements";
+import { CredentialsModule } from "./renderers/credentials";
 import { HistoryEntryModule } from "./renderers/history-entry";
 import { IntroModule } from "./renderers/intro";
 import { ProjectsModule } from "./renderers/projects";
@@ -16,6 +17,7 @@ const renderers: { [T in ModuleType]: ComponentType<ModuleRenderProps<T>> } = {
   "tech-stack": TechStackModule,
   status: StatusModule,
   "history-entry": HistoryEntryModule,
+  credentials: CredentialsModule,
 };
 
 /** 모듈 내용만 렌더링한다. 카드 프레임은 ModuleFrame이 담당한다. */

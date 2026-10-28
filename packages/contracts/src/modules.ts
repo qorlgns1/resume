@@ -16,6 +16,7 @@ export const MODULE_TYPES = [
   "tech-stack",
   "status",
   "history-entry",
+  "credentials",
 ] as const;
 export const ModuleTypeSchema = z.enum(MODULE_TYPES);
 export type ModuleType = z.infer<typeof ModuleTypeSchema>;
@@ -106,6 +107,12 @@ export const HistoryEntryPropsSchema = z.preprocess((value) => {
     : { ...rest, count: companyIds.length };
 }, HistoryEntryPropsObjectSchema);
 
+/** 학력·자격증은 고르지 않고 콘텐츠에 있는 것을 모두 최신순으로 보여준다. */
+export const CredentialsPropsSchema = z.object({
+  heading: z.string().max(40),
+  description: z.string().max(120).optional(),
+});
+
 const base = {
   id: IdSchema,
   /** 어드민 목록에 표시할 인스턴스 이름 */
@@ -120,6 +127,7 @@ export const ModuleInstanceSchema = z.discriminatedUnion("type", [
   z.object({ ...base, type: z.literal("tech-stack"), props: TechStackPropsSchema }),
   z.object({ ...base, type: z.literal("status"), props: StatusPropsSchema }),
   z.object({ ...base, type: z.literal("history-entry"), props: HistoryEntryPropsSchema }),
+  z.object({ ...base, type: z.literal("credentials"), props: CredentialsPropsSchema }),
 ]);
 export type ModuleInstance = z.infer<typeof ModuleInstanceSchema>;
 export type ModuleInstanceOf<T extends ModuleType> = Extract<ModuleInstance, { type: T }>;
