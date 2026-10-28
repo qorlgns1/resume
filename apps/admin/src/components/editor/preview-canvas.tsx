@@ -18,8 +18,8 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@resume/ui/com
 import { cn } from "@resume/ui/lib/utils";
 import { Menu, Plus } from "lucide-react";
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ChapterSortProvider, SortableChapter } from "./chapter-sortable";
 import { newHistoryChapter } from "./content-settings";
+import { ContentSortProvider, SortableItem } from "./content-sortable";
 import type { PreviewViewport } from "./editor";
 import { useCurrentPage, useEditor } from "./editor-context";
 
@@ -67,7 +67,7 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
   function wrapContent(target: ContentTarget, node: ReactNode) {
     // 카드(프로젝트·회사)는 카드 모서리를, 히스토리 글은 글 주변에 여백을 두고 테두리를 그린다.
     const card = target.section !== "history";
-    return (
+    const selectable = (
       <div className={cn("relative", card && "h-full")}>
         {node}
         <SelectOverlay
@@ -84,7 +84,31 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
         />
       </div>
     );
+    // 개인 프로젝트 카드는 끌어서 목록 순서를 바꿀 수 있다.
+    return target.section === "projects" ? (
+      <SortableItem id={target.itemId} label={target.label} className="h-full">
+        {selectable}
+      </SortableItem>
+    ) : (
+      selectable
+    );
   }
+
+  // 기본 페이지에서 끌어서 순서를 바꿀 원본 콘텐츠: 개인 프로젝트 카드 또는 히스토리 챕터
+  const sortTarget =
+    page.kind === "system" && page.systemKey === "projects"
+      ? ({
+          items: content.projects.map((p) => ({ id: p.id, label: p.title })),
+          noun: "프로젝트",
+          layout: "grid",
+          list: (d: typeof document) => d.content.projects as unknown[],
+        } as const)
+      : ({
+          items: content.history.chapters.map((c) => ({ id: c.id, label: c.title })),
+          noun: "챕터",
+          layout: "list",
+          list: (d: typeof document) => d.content.history.chapters as unknown[],
+        } as const);
 
   return (
     <section
@@ -113,12 +137,14 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
             onSelect={() => select({ kind: "content", section: "profile" })}
           />
           {page.kind === "system" && page.systemKey !== "home" ? (
-            <ChapterSortProvider
-              chapters={content.history.chapters}
+            <ContentSortProvider
+              items={sortTarget.items}
+              noun={sortTarget.noun}
+              layout={sortTarget.layout}
               scale={scale}
               onMove={(from, to) => {
                 edit((d) => {
-                  const list = d.content.history.chapters;
+                  const list = sortTarget.list(d);
                   const [moved] = list.splice(from, 1);
                   if (moved) list.splice(to, 0, moved);
                 });
@@ -131,9 +157,9 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
                 wrapModule={wrapModule}
                 wrapContent={wrapContent}
                 wrapChapter={(target, node) => (
-                  <SortableChapter id={target.itemId} label={target.label}>
+                  <SortableItem id={target.itemId} label={target.label}>
                     {node}
-                  </SortableChapter>
+                  </SortableItem>
                 )}
                 listFooter={
                   page.systemKey === "history" ? (
@@ -151,7 +177,7 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
                   ) : null
                 }
               />
-            </ChapterSortProvider>
+            </ContentSortProvider>
           ) : page.modules.length === 0 ? (
             <Empty className="rounded-xl bg-card">
               <EmptyHeader>

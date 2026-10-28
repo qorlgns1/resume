@@ -11,6 +11,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import {
+  rectSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
@@ -21,43 +22,49 @@ import { GripVertical } from "lucide-react";
 import { createContext, type ReactNode, useContext } from "react";
 
 /*
- * 미리보기에서 히스토리 챕터 순서를 끌어서 바꾼다.
+ * 미리보기에서 히스토리 챕터·개인 프로젝트의 순서를 끌어서 바꾼다.
  * 미리보기는 transform: scale()로 축소되어 있어서, 화면 좌표로 계산된 이동 거리를 축소 비율로 나눠 적용한다.
  */
 
 const ScaleContext = createContext(1);
 
-interface ChapterSortProviderProps {
-  chapters: readonly { id: string; title: string }[];
+interface ContentSortProviderProps {
+  items: readonly { id: string; label: string }[];
+  /** 안내 문구에 쓰는 항목 이름 (예: 챕터, 프로젝트) */
+  noun: string;
+  /** 세로 목록이면 "list", 여러 칸 그리드면 "grid" */
+  layout: "list" | "grid";
   /** 미리보기 축소 비율 */
   scale: number;
   onMove: (fromIndex: number, toIndex: number) => void;
   children: ReactNode;
 }
 
-export function ChapterSortProvider({
-  chapters,
+export function ContentSortProvider({
+  items,
+  noun,
+  layout,
   scale,
   onMove,
   children,
-}: ChapterSortProviderProps) {
+}: ContentSortProviderProps) {
   const sensors = useSensors(
     // 조금 움직여야 끌기가 시작되어 손잡이 클릭과 겹치지 않는다.
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  const ids = chapters.map((c) => c.id);
-  const title = (id: string | number) => chapters.find((c) => c.id === id)?.title ?? "챕터";
+  const ids = items.map((item) => item.id);
+  const label = (id: string | number) => items.find((item) => item.id === id)?.label ?? noun;
   const position = (id: string | number) => ids.indexOf(String(id)) + 1;
 
   const announcements: Announcements = {
     onDragStart: ({ active }) =>
-      `${title(active.id)}을 잡았습니다. ${position(active.id)}번째입니다.`,
+      `${label(active.id)}을 잡았습니다. ${position(active.id)}번째입니다.`,
     onDragOver: ({ active, over }) =>
-      over ? `${title(active.id)}이 ${position(over.id)}번째 위치에 있습니다.` : undefined,
+      over ? `${label(active.id)}이 ${position(over.id)}번째 위치에 있습니다.` : undefined,
     onDragEnd: ({ active, over }) =>
-      over ? `${title(active.id)}을 ${position(over.id)}번째로 옮겼습니다.` : undefined,
-    onDragCancel: ({ active }) => `${title(active.id)} 옮기기를 취소했습니다.`,
+      over ? `${label(active.id)}을 ${position(over.id)}번째로 옮겼습니다.` : undefined,
+    onDragCancel: ({ active }) => `${label(active.id)} 옮기기를 취소했습니다.`,
   };
 
   function handleDragEnd({ active, over }: DragEndEvent) {
@@ -74,12 +81,14 @@ export function ChapterSortProvider({
         accessibility={{
           announcements,
           screenReaderInstructions: {
-            draggable:
-              "스페이스나 엔터로 챕터를 잡고, 위아래 방향키로 옮긴 뒤 다시 스페이스나 엔터로 놓습니다. Esc로 취소합니다.",
+            draggable: `스페이스나 엔터로 ${noun}를 잡고, 방향키로 옮긴 뒤 다시 스페이스나 엔터로 놓습니다. Esc로 취소합니다.`,
           },
         }}
       >
-        <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={ids}
+          strategy={layout === "grid" ? rectSortingStrategy : verticalListSortingStrategy}
+        >
           {children}
         </SortableContext>
       </DndContext>
@@ -87,14 +96,16 @@ export function ChapterSortProvider({
   );
 }
 
-/** 챕터 카드 하나. 오른쪽 위 손잡이를 잡고 끌어 순서를 바꾼다. */
-export function SortableChapter({
+/** 순서를 바꿀 수 있는 카드 하나. 오른쪽 위 손잡이를 잡고 끌어 옮긴다. */
+export function SortableItem({
   id,
   label,
+  className,
   children,
 }: {
   id: string;
   label: string;
+  className?: string;
   children: ReactNode;
 }) {
   const scale = useContext(ScaleContext);
@@ -111,7 +122,11 @@ export function SortableChapter({
   return (
     <div
       ref={setNodeRef}
-      className={cn("group/chapter relative", isDragging && "z-10 opacity-90 shadow-lg")}
+      className={cn(
+        "group/sortable relative",
+        isDragging && "z-10 opacity-90 shadow-lg",
+        className,
+      )}
       style={{
         transform: transform
           ? `translate3d(${transform.x / scale}px, ${transform.y / scale}px, 0)`
@@ -127,7 +142,7 @@ export function SortableChapter({
         {...attributes}
         {...listeners}
         className={cn(
-          "absolute top-3 right-3 z-10 flex size-8 cursor-grab touch-none items-center justify-center rounded-md border border-border bg-card text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover/chapter:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing",
+          "absolute top-3 right-3 z-10 flex size-8 cursor-grab touch-none items-center justify-center rounded-md border border-border bg-card text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover/sortable:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing",
           isDragging && "cursor-grabbing opacity-100",
         )}
       >
