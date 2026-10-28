@@ -98,6 +98,21 @@ pnpm dev:admin
 CONTENT_SOURCE=api CONTENT_API_URL=http://localhost:3201 pnpm dev:web
 ```
 
+## 방문 분석 (선택)
+
+공개 사이트에 [PostHog](https://posthog.com)를 연결해 방문자가 어떤 페이지를 어떤 순서로 보는지 확인할 수 있습니다. 기본으로 꺼져 있고, `apps/web` 실행 환경에 `POSTHOG_KEY`를 넣으면 켜집니다. 어드민은 추적하지 않습니다.
+
+| 공개 사이트 환경 변수 | 설명                                                     | 기본값                     |
+| --------------------- | -------------------------------------------------------- | -------------------------- |
+| `POSTHOG_KEY`         | PostHog 프로젝트 키 (`phc_...`, 공개용 값). 비우면 꺼짐  | 없음                       |
+| `POSTHOG_HOST`        | PostHog 주소. 유럽 클라우드는 `https://eu.i.posthog.com` | `https://us.i.posthog.com` |
+- 페이지 이동(`$pageview`), 떠남(`$pageleave`, 머문 시간·스크롤 깊이), 클릭(`$autocapture`, 링크 주소 포함)을 자동으로 기록합니다. 이동 순서는 PostHog의 **Paths**에서 봅니다.
+- 세션 녹화와 히트맵은 PostHog 프로젝트 설정에서 켭니다.
+- 내 방문 제외: 사이트를 `/?ph_internal=1`로 한 번 열면 그 브라우저의 이벤트에 `internal_visit`가 붙습니다. PostHog 프로젝트의 테스트 계정 필터에 `internal_visit` 이벤트 속성이 "is not set"인 조건을 넣어 두면 "Filter out internal and test users"를 켠 화면에서 빠집니다. 기기·브라우저마다 한 번씩 엽니다. `localhost` 방문은 자동으로 내부 사용자입니다.
+- 지원 경로 구분: 링크에 `?utm_source=wanted&utm_campaign=회사명`처럼 꼬리표를 붙이면 PostHog가 방문 전체를 그 꼬리표로 묶습니다.
+- 방문자 ID(무작위 값)를 브라우저 localStorage에 저장해 다시 찾아온 방문자를 알아봅니다. 쿠키는 쓰지 않습니다. 기기에 값을 저장하므로 운영 지역의 개인정보 규정에 따라 안내 문구가 필요할 수 있습니다.
+- 브라우저가 PostHog로 바로 보내므로, 광고 차단기를 쓰는 방문자는 기록되지 않습니다.
+
 ## Storybook
 
 ```bash
@@ -136,7 +151,7 @@ docker compose exec -it admin node cli.mjs create   # 관리자 계정 만들기
 1. 새 프로젝트에서 이 저장소를 고르고 **Root Directory = `apps/web`** 으로 지정합니다.
 2. Framework Preset은 Next.js, Install/Build 명령은 기본값을 사용합니다. Vercel이 pnpm 워크스페이스를 인식해 저장소 루트에서 설치합니다.
 3. "Include files outside the root directory in the Build Step" 옵션을 켜 둡니다 (기본값). `packages/*`를 함께 컴파일하기 위해 필요합니다.
-4. 환경 변수: `CONTENT_SOURCE=sample`. 어드민을 따로 배포한 뒤에는 `CONTENT_SOURCE=api`와 `CONTENT_API_URL`을 지정합니다.
+4. 환경 변수: `CONTENT_SOURCE=sample`. 어드민을 따로 배포한 뒤에는 `CONTENT_SOURCE=api`와 `CONTENT_API_URL`을 지정합니다. 방문 분석을 쓰려면 `POSTHOG_KEY`도 넣습니다.
 5. `NEXT_OUTPUT`은 설정하지 않습니다. standalone 출력은 Docker에서만 사용합니다.
 
 ## 검증
@@ -180,6 +195,7 @@ pnpm test:smoke    # 빌드 결과물로 스모크 검증 (31xx 포트 사용)
 - 관리자 로그인(Better Auth, 아이디 + 비밀번호, 웹 가입 차단, 시도 제한), 계정 생성·재설정 CLI
 - 공개 API가 DB 게시본 제공, 응답 계약 검증, 공개 사이트 샘플/API 모드 분리
 - 앱별 Dockerfile, 데이터 볼륨을 쓰는 로컬 Docker Compose, `.env.example`
+- 선택형 방문 분석(PostHog): 페이지 이동 경로, 클릭, 재방문 식별
 
 **아직 없음**
 - 드래그로 모듈 이동·크기 변경 (지금은 숫자와 버튼으로 조정)

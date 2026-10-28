@@ -37,6 +37,9 @@ services:
       CONTENT_SOURCE: ${CONTENT_SOURCE:-api}
       # web 서버가 컨테이너 네트워크 안에서 호출하는 주소 (브라우저용 주소가 아님)
       CONTENT_API_URL: http://admin:3001
+      # 방문 분석 (선택). POSTHOG_KEY가 비어 있으면 꺼진다.
+      POSTHOG_KEY: ${POSTHOG_KEY:-}
+      POSTHOG_HOST: ${POSTHOG_HOST:-https://us.i.posthog.com}
     ports:
       - "127.0.0.1:${WEB_PORT:-3000}:3000"
     depends_on:

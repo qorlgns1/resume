@@ -211,6 +211,20 @@ test.describe("콘텐츠 출처 모드", () => {
   });
 });
 
+test.describe("방문 분석", () => {
+  test("POSTHOG_KEY가 없으면 PostHog로 요청을 보내지 않는다", async ({ page }) => {
+    const analyticsRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("posthog")) analyticsRequests.push(req.url());
+    });
+    await page.goto(`${web}/projects`);
+    await page.getByRole("link", { name: "타임카드 자세히 보기" }).click();
+    await expect(page).toHaveURL(`${web}/projects/timecard`);
+    await page.waitForLoadState("networkidle");
+    expect(analyticsRequests).toEqual([]);
+  });
+});
+
 test.describe("어드민", () => {
   // 로그인 시도 제한(1분에 5번)을 넘지 않도록 한 페이지에서 순서대로 진행한다.
   test.describe.configure({ mode: "serial" });
