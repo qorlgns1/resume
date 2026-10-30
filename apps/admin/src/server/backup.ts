@@ -142,9 +142,16 @@ export async function createBackup({
 /** 백업 폴더에서 가장 최근 keep개만 남기고 지운다. 지운 파일 이름을 돌려준다. */
 export async function pruneBackups(outDir: string, keep: number): Promise<string[]> {
   if (!Number.isInteger(keep) || keep < 1) throw new Error("keep은 1 이상의 정수여야 합니다.");
+  // 같은 초의 -2, -3 접미사가 "-"와 "." 순서 때문에 문자열로는 앞에 오므로, 시각과 순번을 따로 비교한다.
+  const pattern = /^resume-backup-(\d{8}-\d{6})(?:-(\d+))?\.tar\.gz$/;
   const names = (await fs.readdir(outDir))
-    .filter((name) => /^resume-backup-\d{8}-\d{6}(-\d+)?\.tar\.gz$/.test(name))
-    .sort();
+    .map((name) => ({ name, match: pattern.exec(name) }))
+    .filter((e): e is { name: string; match: RegExpExecArray } => e.match !== null)
+    .sort(
+      (a, b) =>
+        a.match[1]!.localeCompare(b.match[1]!) || Number(a.match[2] ?? 1) - Number(b.match[2] ?? 1),
+    )
+    .map((e) => e.name);
   const stale = names.slice(0, Math.max(0, names.length - keep));
   for (const name of stale) await fs.rm(path.join(outDir, name));
   return stale;
