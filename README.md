@@ -196,7 +196,7 @@ networks:
     name: reverse-proxy_default # nginx 컨테이너가 속한 네트워크
 ```
 
-- nginx는 `resume-web:3000`, `resume-admin:3001`로 프록시하고 HTTPS 종료와 인증서 갱신을 맡습니다. `X-Forwarded-Proto https`를 넘겨야 로그인 쿠키가 정상 동작합니다.
+- nginx는 `resume-web:3000`, `resume-admin:3001`로 프록시하고 HTTPS 종료와 인증서 갱신을 맡습니다. `X-Forwarded-Proto https`를 넘겨야 로그인 쿠키가 정상 동작합니다. 서버 블록에 `http2 on;`을 두면 커버 이미지가 여러 장인 페이지가 눈에 띄게 빨라집니다.
 - 호스트 포트(`127.0.0.1:${WEB_PORT}` 등)는 그대로 두어도 됩니다. 외부 트래픽은 프록시 네트워크로만 들어옵니다.
 - 어드민 주소는 공개하지 않고 `robots` noindex를 유지합니다. 어드민 업로드 한도(10MB)보다 nginx `client_max_body_size`를 크게 잡습니다.
 - `.env`에 `SITE_URL=https://example.com`을 두면 sitemap·공유 미리보기 주소가 그 값으로 고정됩니다. 비워도 프록시가 넘긴 `Host`·`X-Forwarded-Proto`로 같은 주소를 만듭니다.
@@ -233,9 +233,9 @@ GitHub Actions([`.github/workflows/ci.yml`](.github/workflows/ci.yml))가 `main`
 | 홈 `/`        | 100  | 100    | 100      | 100 |
 | 소개 `/about` | 100  | 100    | 100      | 100 |
 | 프로젝트 상세 | 100  | 100    | 100      | 100 |
-| 프로젝트 목록 | 91   | 100    | 100      | 100 |
+| 프로젝트 목록 | 100  | 100    | 100      | 100 |
 
-목록 페이지의 남은 차이는 커버 이미지 여러 장을 HTTP/1.1로 받는 시간입니다. 리버스 프록시에서 HTTP/2를 켜면 줄어듭니다.
+커버 이미지가 여러 장인 목록 페이지는 리버스 프록시에서 HTTP/2를 켜야 100점이 나옵니다 (nginx `http2 on;`). HTTP/1.1에서는 91점이었습니다.
 
 단위 테스트는 외부 상태 없이 돌아가는 핵심 로직을 다룹니다.
 - `packages/contracts`: 샘플 문서와 공개 API 응답이 계약을 통과하는지, 참조 누락·중복 slug·목록 깊이·표 모양·허용 링크 규칙
