@@ -72,15 +72,17 @@ pnpm install
 ```bash
 pnpm --filter @resume/admin admin:create          # 아이디와 비밀번호 입력 (관리자는 1명)
 pnpm --filter @resume/admin admin:reset-password  # 비밀번호를 잊었을 때 (모든 로그인 세션도 끊음)
+pnpm --filter @resume/admin admin:backup          # 실행 중 백업 → data/backups/ (Docker 절 참고)
 ```
 
-| 어드민 환경 변수  | 설명                                                            | 개발 기본값                                |
-| ----------------- | --------------------------------------------------------------- | ------------------------------------------ |
-| `ADMIN_URL`       | 브라우저가 접속하는 어드민 주소. 로그인 요청의 출처 검사에 사용 | `http://localhost:3201` (운영 필수)        |
-| `AUTH_SECRET`     | 세션 서명 키, 32자 이상. `openssl rand -base64 32`              | 개발용 고정값 (운영 필수)                  |
-| `DATABASE_PATH`   | SQLite 파일 경로                                                | `./data/resume.db`                         |
-| `MEDIA_DIR`       | 업로드 이미지 폴더                                              | DB 파일 옆 `media/` (Docker `/data/media`) |
-| `PUBLIC_SITE_URL` | 상단 "공개 사이트" 링크 주소                                    | 없음                                       |
+| 어드민 환경 변수  | 설명                                                            | 개발 기본값                                    |
+| ----------------- | --------------------------------------------------------------- | ---------------------------------------------- |
+| `ADMIN_URL`       | 브라우저가 접속하는 어드민 주소. 로그인 요청의 출처 검사에 사용 | `http://localhost:3201` (운영 필수)            |
+| `AUTH_SECRET`     | 세션 서명 키, 32자 이상. `openssl rand -base64 32`              | 개발용 고정값 (운영 필수)                      |
+| `DATABASE_PATH`   | SQLite 파일 경로                                                | `./data/resume.db`                             |
+| `MEDIA_DIR`       | 업로드 이미지 폴더                                              | DB 파일 옆 `media/` (Docker `/data/media`)     |
+| `BACKUP_DIR`      | `cli backup`이 tar.gz를 두는 폴더                               | DB 파일 옆 `backups/` (Docker `/data/backups`) |
+| `PUBLIC_SITE_URL` | 상단 "공개 사이트" 링크 주소                                    | 없음                                           |
 
 운영 모드(`next start`, Docker)에서 `ADMIN_URL`이나 `AUTH_SECRET`이 없으면 어드민은 시작하지 않고 종료합니다.
 
@@ -156,7 +158,14 @@ docker compose exec -it admin node cli.mjs create   # 관리자 계정 만들기
 - 포트가 이미 쓰이고 있다면 `.env`의 `WEB_PORT`, `ADMIN_PORT`를 바꿉니다.
 - 비밀번호 재설정: `docker compose exec -it admin node cli.mjs reset-password`
 - 데이터(SQLite DB와 업로드 이미지)는 `admin-data` 볼륨의 `/data`에 있습니다. `docker compose down`으로 컨테이너를 지워도 남고, `down -v`를 하면 지워집니다.
-- 백업은 어드민을 멈춘 뒤(`docker compose stop admin`) `/data`를 복사합니다: `docker compose cp admin:/data ./backup`. 실행 중에 안전하게 백업하는 명령은 다음 단계에서 제공합니다.
+- 백업은 어드민을 켜 둔 채로 합니다. DB는 SQLite `VACUUM INTO`로 그 시점의 일관된 사본을 뜨고(WAL에만 있는 최근 변경 포함, 쓰기도 막지 않음), 업로드 이미지와 함께 tar.gz 하나로 묶습니다.
+
+  ```bash
+  docker compose exec admin node cli.mjs backup --keep 14   # /data/backups/resume-backup-YYYYMMDD-HHMMSS.tar.gz, 최근 14개만 유지
+  docker compose cp admin:/data/backups ./backups            # 서버 밖으로 꺼내기
+  ```
+
+  cron으로 매일 돌리려면 `0 4 * * * cd /path/to/resume && docker compose exec -T admin node cli.mjs backup --keep 14` 처럼 등록하고, 꺼낸 파일은 다른 서버나 오브젝트 스토리지에 옮겨 둡니다. 복원은 어드민을 멈춘 뒤 압축을 풀어 `resume.db`를 `/data/resume.db`에, `media/`를 `/data/media`에 넣고(기존 `resume.db-wal`, `resume.db-shm`은 지움) 다시 시작합니다. 백업 안의 `manifest.json`에 생성 시각과 게시 버전 수가 적혀 있습니다.
 - 컨테이너 안에서 web은 `http://admin:3001`로 어드민을 호출하고, 브라우저는 `localhost` 주소로 접속합니다. 두 주소를 섞지 마세요.
 - compose는 두 포트를 `127.0.0.1`에만 엽니다. 외부에 공개할 때는 아래처럼 리버스 프록시를 앞에 둡니다.
 - 이미지를 따로 빌드할 때는 저장소 루트를 컨텍스트로 사용합니다.
@@ -281,7 +290,7 @@ GitHub Actions([`.github/workflows/ci.yml`](.github/workflows/ci.yml))가 `main`
 **아직 없음**
 - 드래그로 모듈 이동·크기 변경 (지금은 숫자와 버튼으로 조정. 목록 항목·챕터·페이지 순서는 드래그 가능)
 - S3 호환 미디어 저장소 어댑터 (지금은 서버 디스크 `/data/media`)
-- 실행 중 백업 명령, 2단계 인증·패스키
+- 2단계 인증·패스키
 - 스크립트 출처까지 제한하는 CSP (지금은 `frame-ancestors`·`object-src`·`base-uri`·`form-action`만)
 - 사용자 페이지 추가
 

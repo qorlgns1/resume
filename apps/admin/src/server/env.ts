@@ -5,6 +5,7 @@ import path from "node:path";
  *
  * DATABASE_PATH  SQLite 파일 경로. 기본값 ./data/resume.db (Docker: /data/resume.db)
  * MEDIA_DIR      이미지 저장 폴더 (미디어 단계에서 사용). 기본값: DB 파일 옆 media/
+ * BACKUP_DIR     `cli backup`이 tar.gz를 두는 폴더. 기본값: DB 파일 옆 backups/
  * AUTH_SECRET    세션 서명 키. 운영(production)에서는 필수
  * ADMIN_URL      브라우저가 접속하는 어드민 주소. 로그인 요청의 출처(Origin) 검사에 쓴다
  */
@@ -30,6 +31,14 @@ export function getMediaDir(): string {
   return dir
     ? path.resolve(/*turbopackIgnore: true*/ dir)
     : path.join(path.dirname(getDatabasePath()), "media");
+}
+
+/** 백업 파일 폴더. 기본값은 DB 파일 옆의 backups/ (Docker: /data/backups, 데이터 볼륨 안) */
+export function getBackupDir(): string {
+  const dir = process.env.BACKUP_DIR?.trim();
+  return dir
+    ? path.resolve(/*turbopackIgnore: true*/ dir)
+    : path.join(path.dirname(getDatabasePath()), "backups");
 }
 
 export function getAuthSecret(): string {

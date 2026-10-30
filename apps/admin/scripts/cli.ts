@@ -1,11 +1,13 @@
 /**
- * 관리자 계정 CLI. 서버에 접근할 수 있는 사람만 계정을 만들고 비밀번호를 바꿀 수 있다.
+ * 어드민 서버 CLI. 서버에 접근할 수 있는 사람만 쓴다.
  *
- *   create          관리자 계정 만들기 (이미 있으면 거부)
- *   reset-password  비밀번호 재설정 (모든 로그인 세션도 끊는다)
+ *   create                       관리자 계정 만들기 (이미 있으면 거부)
+ *   reset-password               비밀번호 재설정 (모든 로그인 세션도 끊는다)
+ *   backup [--out DIR] [--keep N] 실행 중 백업 (DB 스냅샷 + 업로드 이미지 → tar.gz)
  *
  * 개발:   pnpm --filter @resume/admin admin:create
  * Docker: docker compose exec -it admin node cli.mjs create
+ *         docker compose exec admin node cli.mjs backup --keep 14
  *
  * 비밀번호는 화면에 표시하지 않고 두 번 입력받는다.
  * 자동화(테스트 등)에서는 ADMIN_USERNAME, ADMIN_PASSWORD 환경 변수로 넘길 수 있다.
@@ -13,8 +15,15 @@
 import { createInterface } from "node:readline";
 import { Writable } from "node:stream";
 import { createAuth, MIN_PASSWORD_LENGTH } from "../src/server/auth/config";
+import { createBackup, pruneBackups } from "../src/server/backup";
 import { openDatabase } from "../src/server/db/open";
-import { getAuthSecret, getDatabasePath, getMigrationsDir } from "../src/server/env";
+import {
+  getAuthSecret,
+  getBackupDir,
+  getDatabasePath,
+  getMediaDir,
+  getMigrationsDir,
+} from "../src/server/env";
 
 const USERNAME_PATTERN = /^[a-z0-9_.]{3,30}$/;
 
@@ -70,10 +79,45 @@ async function readNewPassword(): Promise<string> {
   return password;
 }
 
+/** `--이름 값` 형태의 선택 인자를 읽는다. */
+function option(args: readonly string[], name: string): string | undefined {
+  const index = args.indexOf(`--${name}`);
+  return index === -1 ? undefined : args[index + 1];
+}
+
+/** 어드민을 멈추지 않고 DB와 업로드 이미지를 tar.gz 하나로 묶는다. */
+async function backup(args: readonly string[]) {
+  const outDir = option(args, "out") ?? getBackupDir();
+  const keepRaw = option(args, "keep");
+  const keep = keepRaw === undefined ? undefined : Number(keepRaw);
+  if (keep !== undefined && (!Number.isInteger(keep) || keep < 1)) {
+    throw new CliError("--keep은 1 이상의 정수여야 합니다.");
+  }
+
+  const result = await createBackup({
+    databasePath: getDatabasePath(),
+    mediaDir: getMediaDir(),
+    outDir,
+  });
+  const mb = (result.bytes / 1024 / 1024).toFixed(2);
+  console.log(`백업을 만들었습니다: ${result.file} (${mb} MB)`);
+  console.log(
+    `  게시 버전 ${result.publishedVersions}개 (최신 ${result.latestVersion ?? "없음"}), 이미지 파일 ${result.mediaFiles}개`,
+  );
+  if (keep !== undefined) {
+    const removed = await pruneBackups(outDir, keep);
+    if (removed.length > 0) console.log(`  오래된 백업 ${removed.length}개를 지웠습니다.`);
+  }
+}
+
 async function main() {
-  const command = process.argv[2];
+  const [command, ...args] = process.argv.slice(2);
+  if (command === "backup") {
+    await backup(args);
+    return;
+  }
   if (command !== "create" && command !== "reset-password") {
-    console.log("사용법: cli <create | reset-password>");
+    console.log("사용법: cli <create | reset-password | backup [--out DIR] [--keep N]>");
     process.exitCode = command ? 1 : 0;
     return;
   }
