@@ -1,0 +1,1 @@
+# robots.txt와 sitemap.xml은 src/app의 robots.ts·sitemap.ts가 만든다. 이 폴더는 Dockerfile이 복사하므로 비워 두지 않는다.
