@@ -1,4 +1,4 @@
-# 로컬 확인용 구성. 운영 배포 설정이 아니다.
+# 기본 구성. 로컬에서는 그대로 쓰고, 운영에서는 docker-compose.override.yml로 주소와 프록시 네트워크를 덧붙인다 (README "운영 배포").
 #   cp .env.example .env   # AUTH_SECRET 채우기
 #   docker compose up --build
 #   docker compose exec -it admin node cli.mjs create   # 관리자 계정 만들기
@@ -21,7 +21,7 @@ services:
       # SQLite DB(/data/resume.db)와 업로드 파일. 백업은 이 볼륨을 복사한다.
       - admin-data:/data
     ports:
-      # 어드민은 인증 전까지 로컬 검토용이므로 이 컴퓨터에서만 접근하도록 127.0.0.1에 묶는다.
+      # 호스트 포트는 이 컴퓨터에서만 연다. 외부 공개는 리버스 프록시 네트워크를 통해서만 한다.
       - "127.0.0.1:${ADMIN_PORT:-3001}:3001"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/api/health"]

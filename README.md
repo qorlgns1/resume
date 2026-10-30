@@ -1,10 +1,26 @@
 # Resume — 셀프 호스팅 포트폴리오
 
 관리자 화면에서 페이지 콘텐츠와 모듈 배치를 편집하는 오픈소스 포트폴리오입니다.
-저장소를 복제해 자신의 서버에 설치하고, 공개 사이트와 어드민을 따로 배포하는 것을 목표로 합니다.
+저장소를 복제해 자신의 서버에 설치하고, 공개 사이트와 어드민을 따로 배포합니다.
 
-> **현재 단계: 편집·게시, 상세 페이지, 이미지.** 어드민에서 콘텐츠·모듈·배치·본문·히스토리·이미지를 편집하고, 초안 저장 → 게시 → 버전 복원까지 할 수 있습니다. 공개 사이트는 게시본으로 홈, 프로젝트·회사 목록과 상세, 히스토리, 소개를 보여줍니다.
-> HTTPS 구성 안내 전까지 어드민은 **로컬 검토용**으로만 실행하세요.
+**🌐 운영 중인 사이트: [resume.moodybeard.com](https://resume.moodybeard.com)** — 이 저장소를 그대로 Docker로 띄워 실제 이력서로 쓰고 있습니다. 어드민은 비공개입니다.
+
+[![공개 사이트 홈 (데스크톱)](docs/screenshots/home-desktop.png)](https://resume.moodybeard.com)
+
+| 어드민 편집 화면                                       | 프로젝트 상세                                         | 모바일                                         |
+| ------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------------- |
+| ![어드민 편집 화면](docs/screenshots/admin-editor.png) | ![프로젝트 상세](docs/screenshots/project-detail.png) | ![모바일 홈](docs/screenshots/home-mobile.png) |
+
+## 왜 만들었나
+
+이력서를 고칠 때마다 코드를 수정하고 다시 배포하는 일을 없애고 싶었습니다. 그래서 공개 사이트와 어드민을 분리하고, 어드민에서 콘텐츠·모듈·배치·본문·히스토리·이미지를 편집한 뒤 **초안 저장 → 게시 → 버전 복원**으로 관리합니다. 공개 사이트는 게시본만 보여주고, 초안은 절대 노출하지 않습니다.
+
+기술적으로 눈여겨볼 지점:
+- **문서 스냅샷 버전 모델**: 콘텐츠와 배치를 하나의 `SiteDocument`로 묶어 초안 1개와 게시 버전 목록으로 저장합니다. `revision` 비교로 동시 편집 충돌을 막고, 어떤 버전이든 초안으로 되돌릴 수 있습니다.
+- **계약(Zod) 중심 경계**: 어드민 ↔ DB ↔ 공개 API ↔ 공개 사이트 사이의 모든 JSON을 같은 스키마로 검증합니다. 앱끼리 소스를 공유하지 않고 `packages/contracts`만 공유합니다.
+- **미디어 파이프라인**: 업로드 시 EXIF(위치 정보) 제거, 회전 반영, 너비별 WebP 변환. SVG와 10MB 초과는 거부하고, 어떤 버전에서든 쓰이는 이미지는 삭제를 막습니다.
+- **보안 기본값**: 관리자 계정은 서버 CLI로만 생성(웹 가입 없음), 로그인 요청 출처 검사, 시도 제한, 운영 모드에서 필수 환경 변수가 없으면 기동 거부.
+- **검증 가능한 상태**: Playwright 스모크 테스트가 빌드 결과물로 로그인·편집·게시·복원·이미지·API 계약까지 실제 흐름을 돌립니다.
 
 ## 구성
 
@@ -136,7 +152,7 @@ docker compose exec -it admin node cli.mjs create   # 관리자 계정 만들기
 - 데이터(SQLite DB와 업로드 이미지)는 `admin-data` 볼륨의 `/data`에 있습니다. `docker compose down`으로 컨테이너를 지워도 남고, `down -v`를 하면 지워집니다.
 - 백업은 어드민을 멈춘 뒤(`docker compose stop admin`) `/data`를 복사합니다: `docker compose cp admin:/data ./backup`. 실행 중에 안전하게 백업하는 명령은 다음 단계에서 제공합니다.
 - 컨테이너 안에서 web은 `http://admin:3001`로 어드민을 호출하고, 브라우저는 `localhost` 주소로 접속합니다. 두 주소를 섞지 마세요.
-- compose는 두 포트를 `127.0.0.1`에만 엽니다 (어드민이 로컬 검토용이기 때문).
+- compose는 두 포트를 `127.0.0.1`에만 엽니다. 외부에 공개할 때는 아래처럼 리버스 프록시를 앞에 둡니다.
 - 이미지를 따로 빌드할 때는 저장소 루트를 컨텍스트로 사용합니다.
 
   ```bash
@@ -145,9 +161,43 @@ docker compose exec -it admin node cli.mjs create   # 관리자 계정 만들기
   ```
 - 비밀 정보는 이미지에 넣지 않습니다. `.dockerignore`가 `.env*` 파일을 제외하므로 실행할 때 환경 변수로 전달하세요.
 
-## Vercel (apps/web)
+## 운영 배포 (리버스 프록시 뒤에서 Docker Compose)
 
-실제 배포는 하지 않았습니다. 설정 방법만 정리합니다.
+[resume.moodybeard.com](https://resume.moodybeard.com)은 이 구성으로 운영합니다. 한 서버에서 여러 서비스를 함께 띄우는 공용 nginx 리버스 프록시(+ certbot) 뒤에 위 compose를 그대로 두고, 서버에만 있는 `docker-compose.override.yml`로 실제 주소와 프록시 네트워크를 덧붙입니다.
+
+```yaml
+# docker-compose.override.yml (서버 전용, 커밋하지 않음)
+services:
+  admin:
+    environment:
+      ADMIN_URL: https://admin.example.com # 브라우저가 접속하는 어드민 주소
+      PUBLIC_SITE_URL: https://example.com
+    restart: unless-stopped
+    networks:
+      default:
+      proxy:
+        aliases: [resume-admin]
+  web:
+    restart: unless-stopped
+    networks:
+      default:
+      proxy:
+        aliases: [resume-web]
+
+networks:
+  proxy:
+    external: true
+    name: reverse-proxy_default # nginx 컨테이너가 속한 네트워크
+```
+
+- nginx는 `resume-web:3000`, `resume-admin:3001`로 프록시하고 HTTPS 종료와 인증서 갱신을 맡습니다. `X-Forwarded-Proto https`를 넘겨야 로그인 쿠키가 정상 동작합니다.
+- 호스트 포트(`127.0.0.1:${WEB_PORT}` 등)는 그대로 두어도 됩니다. 외부 트래픽은 프록시 네트워크로만 들어옵니다.
+- 어드민 주소는 공개하지 않고 `robots` noindex를 유지합니다. 어드민 업로드 한도(10MB)보다 nginx `client_max_body_size`를 크게 잡습니다.
+- 갱신: `git pull && docker compose up --build -d`. 데이터는 `admin-data` 볼륨에 있어 이미지를 다시 빌드해도 유지됩니다.
+
+## Vercel (apps/web, 선택)
+
+공개 사이트만 Vercel에 올리고 싶을 때의 설정입니다. 운영 사이트는 이 방식을 쓰지 않습니다.
 1. 새 프로젝트에서 이 저장소를 고르고 **Root Directory = `apps/web`** 으로 지정합니다.
 2. Framework Preset은 Next.js, Install/Build 명령은 기본값을 사용합니다. Vercel이 pnpm 워크스페이스를 인식해 저장소 루트에서 설치합니다.
 3. "Include files outside the root directory in the Build Step" 옵션을 켜 둡니다 (기본값). `packages/*`를 함께 컴파일하기 위해 필요합니다.
@@ -198,9 +248,9 @@ pnpm test:smoke    # 빌드 결과물로 스모크 검증 (31xx 포트 사용)
 - 선택형 방문 분석(PostHog): 페이지 이동 경로, 클릭, 재방문 식별
 
 **아직 없음**
-- 드래그로 모듈 이동·크기 변경 (지금은 숫자와 버튼으로 조정)
-- 미디어 업로드·저장소
-- HTTPS·리버스 프록시 구성 안내, 2단계 인증·패스키
+- 드래그로 모듈 이동·크기 변경 (지금은 숫자와 버튼으로 조정. 목록 항목·챕터·페이지 순서는 드래그 가능)
+- S3 호환 미디어 저장소 어댑터 (지금은 서버 디스크 `/data/media`)
+- CI, 실행 중 백업 명령, 보안 응답 헤더, 2단계 인증·패스키
 - 사용자 페이지 추가
 
 다음 작업은 [docs/next-steps.md](docs/next-steps.md)에 정리했습니다.

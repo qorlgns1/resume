@@ -193,9 +193,11 @@ SiteDocument (버전 관리 단위: 콘텐츠 + 배치를 함께 저장)
 | -------------- | ----------------------------------- | ------------------------------ | -------------------------------- |
 | 로컬 dev       | `http://localhost:3201`             | `http://localhost:3200`        | `http://localhost:3201`          |
 | Docker Compose | `http://admin:3001` (내부 네트워크) | `http://localhost:${WEB_PORT}` | `http://localhost:${ADMIN_PORT}` |
+| 운영 (프록시)  | `http://admin:3001` (내부 네트워크) | `https://example.com`          | `https://admin.example.com`      |
 
 `ADMIN_URL`은 마지막 열(브라우저 → admin) 주소여야 합니다.
 - Docker: `turbo prune --docker`로 앱별 작업 공간을 만들고, `NEXT_OUTPUT=standalone`으로 빌드합니다. `outputFileTracingRoot`를 모노레포 루트로 지정해 `packages/*` 파일도 추적에 포함합니다. 실행 이미지에는 standalone 서버, static, public만 담고 비루트 사용자로 실행합니다.
 - Vercel: Root Directory를 `apps/web`로 지정합니다. standalone 출력은 사용하지 않습니다 (README 참고).
 - 어드민 이미지: `/data` 볼륨(DB·업로드), `MIGRATIONS_DIR`, 계정 CLI `cli.mjs`를 포함합니다. CLI가 standalone 안의 `better-sqlite3`를 찾도록 `apps/admin/node_modules`에 링크를 둡니다.
-- 어드민은 로그인으로 보호되지만, HTTPS 리버스 프록시 안내가 나오기 전까지는 외부에 노출하지 않습니다 (`robots` noindex, compose 포트는 127.0.0.1에만 바인딩).
+- 운영: 공용 nginx 리버스 프록시(+ certbot)가 HTTPS를 종료하고 컨테이너 네트워크 별칭(`resume-web`, `resume-admin`)으로 프록시합니다. 서버 전용 `docker-compose.override.yml`이 `ADMIN_URL`, `PUBLIC_SITE_URL`과 프록시 네트워크를 덧붙입니다 (README "운영 배포" 참고).
+- 어드민은 로그인으로 보호되며 주소를 공개하지 않습니다 (`robots` noindex). compose 포트는 127.0.0.1에만 바인딩하고 외부 트래픽은 프록시 네트워크로만 들어옵니다.
