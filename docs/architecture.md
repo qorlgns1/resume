@@ -187,6 +187,14 @@ SiteDocument (버전 관리 단위: 콘텐츠 + 배치를 함께 저장)
 - 삭제: 초안이나 어느 게시 버전의 JSON에 `"assetId":"<id>"`가 있으면 409(`in_use`). 어드민 화면은 저장하지 않은 작업본에서 쓰는 이미지도 삭제를 막습니다.
 - 본문 편집기의 이미지 블록은 우리 업로드 API로 올리고, 외부 이미지 주소는 저장하지 않습니다(경고). 캡션을 대체 텍스트로 씁니다.
 
+## 5-5. 검색·공유·보안 헤더 (공개 사이트)
+
+- `sitemap.ts`, `robots.ts`가 게시된 콘텐츠로 요청 시 만듭니다. 사이트맵에는 기본 페이지와 프로젝트·회사 상세 주소가 들어가고, robots는 `/media/`만 제외합니다.
+- 모든 페이지가 `pageMetadata()`로 정식 주소(canonical)와 Open Graph를 만듭니다. Next는 하위 페이지의 `openGraph`로 상위 값을 통째로 바꾸므로 페이지마다 전부 채웁니다.
+- 공유 미리보기 이미지는 `opengraph-image.tsx`(루트·프로젝트·회사)가 satori로 그립니다. 프로필 대표 문구, 프로젝트 제목·한 줄 소개, 회사 이름·역할·기간을 담고, Pretendard 글꼴 파일은 `outputFileTracingIncludes`로 standalone 출력에 포함합니다.
+- 절대 주소는 `SITE_URL`이 있으면 그 값, 없으면 요청의 `X-Forwarded-Host`·`X-Forwarded-Proto`로 만듭니다(`site-url.ts`). 리버스 프록시 뒤에서는 환경 변수 없이도 실제 도메인이 됩니다.
+- 두 앱의 `next.config.ts`가 같은 보안 헤더를 보냅니다: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, CSP(`frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'`), HSTS. 스크립트 출처를 제한하는 CSP는 Next 인라인 스크립트와 PostHog 때문에 nonce 작업이 필요해 아직 없습니다.
+
 ## 6. 배포와 실행 주소
 
 | 실행 방식      | web → admin (서버 간)               | 브라우저 → web                 | 브라우저 → admin                 |
@@ -201,3 +209,17 @@ SiteDocument (버전 관리 단위: 콘텐츠 + 배치를 함께 저장)
 - 어드민 이미지: `/data` 볼륨(DB·업로드), `MIGRATIONS_DIR`, 계정 CLI `cli.mjs`를 포함합니다. CLI가 standalone 안의 `better-sqlite3`를 찾도록 `apps/admin/node_modules`에 링크를 둡니다.
 - 운영: 공용 nginx 리버스 프록시(+ certbot)가 HTTPS를 종료하고 컨테이너 네트워크 별칭(`resume-web`, `resume-admin`)으로 프록시합니다. 서버 전용 `docker-compose.override.yml`이 `ADMIN_URL`, `PUBLIC_SITE_URL`과 프록시 네트워크를 덧붙입니다 (README "운영 배포" 참고).
 - 어드민은 로그인으로 보호되며 주소를 공개하지 않습니다 (`robots` noindex). compose 포트는 127.0.0.1에만 바인딩하고 외부 트래픽은 프록시 네트워크로만 들어옵니다.
+
+## 7. 백업 (`cli.mjs backup`)
+
+```
+cli backup ─> VACUUM INTO  staging/resume.db     (읽기 트랜잭션 하나로 그 시점의 완전한 사본, 쓰기를 막지 않음)
+           ─> cp -r        staging/media/        (업로드 이미지는 저장 후 바뀌지 않음)
+           ─> manifest.json                       (생성 시각, 게시 버전 수, 이미지 수, 복원 방법)
+           ─> tar -czf     BACKUP_DIR/resume-backup-YYYYMMDD-HHMMSS.tar.gz
+```
+
+- DB는 WAL 모드라 실행 중에 파일을 그냥 복사하면 WAL에만 있는 변경이 빠지거나 본 파일과 WAL이 다른 시점이 됩니다. `VACUUM INTO`는 스냅샷 격리된 읽기 트랜잭션 안에서 새 파일을 처음부터 쓰므로 어드민을 멈추지 않아도 됩니다. 결과는 WAL 없이 혼자 열립니다.
+- `--keep N`으로 최근 N개만 남깁니다. 같은 초에 두 번 실행하면 `-2`, `-3`을 붙여 덮어쓰지 않습니다. 구현과 테스트는 `apps/admin/src/server/backup.ts`.
+- 기본 위치는 DB 파일 옆 `backups/`(Docker `/data/backups`, 데이터 볼륨 안)입니다. 서버 밖으로 옮기는 일은 cron이나 별도 스크립트의 몫입니다 (README "Docker" 참고).
+- 복원: 어드민을 멈추고 `resume.db`를 `DATABASE_PATH`에, `media/`를 `MEDIA_DIR`에 넣은 뒤(기존 `-wal`, `-shm` 삭제) 다시 시작합니다.
