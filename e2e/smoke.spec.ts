@@ -486,6 +486,28 @@ test.describe("어드민", () => {
     await page.waitForTimeout(100);
   });
 
+  test("새로고침해도 편집하던 페이지에 머문다", async () => {
+    const sidebar = page.getByRole("complementary", { name: "페이지와 콘텐츠" });
+    await sidebar.getByRole("tab", { name: "페이지" }).click();
+    await sidebar.locator("button", { hasText: /^히스토리\d/ }).click();
+    await expect(page).toHaveURL(/[?&]page=page_history\b/);
+
+    await page.reload();
+    await expect(sidebar.locator("button[aria-current=page]")).toHaveText(/^히스토리/);
+    await expect(
+      page.locator("[data-viewport]").getByRole("heading", { level: 1, name: "히스토리" }),
+    ).toBeVisible();
+
+    // 첫 페이지로 돌아가면 주소에서 page를 지운다
+    await sidebar.locator("button", { hasText: /^홈/ }).click();
+    await expect(page).toHaveURL(`${admin}/`);
+
+    // 문서에 없는 페이지 주소면 첫 페이지를 연다
+    await page.goto(`${admin}/?page=page_missing`);
+    await expect(sidebar.locator("button[aria-current=page]")).toHaveText(/^홈/);
+    await expect(page).toHaveURL(`${admin}/`);
+  });
+
   test("다른 곳에서 먼저 저장하면 덮어쓰지 않고 알린다", async () => {
     const { draft } = (await (await page.request.get(`${admin}/api/admin/draft`)).json()) as {
       draft: { revision: number; document: unknown };

@@ -23,6 +23,8 @@ export type PreviewViewport = "desktop" | "mobile";
 
 interface EditorProps {
   initialDraft: DraftState;
+  /** 주소(?page=)로 고른 페이지. 없거나 문서에 없는 페이지면 첫 페이지를 연다. */
+  initialPageId: string | null;
   publicSiteUrl: string | null;
   userName: string;
 }
@@ -39,10 +41,15 @@ function sameJson(a: unknown, b: unknown) {
  * - 작업본이 바뀔 때마다 계약 스키마로 검사하고, 오류가 있으면 저장할 수 없다.
  * - 저장·게시·복원 결과는 서버 응답을 받은 뒤에만 알린다.
  */
-export function Editor({ initialDraft, publicSiteUrl, userName }: EditorProps) {
+export function Editor({ initialDraft, initialPageId, publicSiteUrl, userName }: EditorProps) {
   const [saved, setSaved] = useState(initialDraft);
   const [document, setDocument] = useState<SiteDocument>(initialDraft.document);
-  const [pageId, setPageId] = useState(initialDraft.document.pages[0]?.id ?? "");
+  const [pageId, setPageId] = useState(
+    () =>
+      initialDraft.document.pages.find((p) => p.id === initialPageId)?.id ??
+      initialDraft.document.pages[0]?.id ??
+      "",
+  );
   const [selection, setSelection] = useState<Selection>(null);
   const [viewport, setViewport] = useState<PreviewViewport>("desktop");
   const [busy, setBusy] = useState(false);
@@ -148,6 +155,18 @@ export function Editor({ initialDraft, publicSiteUrl, userName }: EditorProps) {
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [dirty]);
+
+  // 지금 편집 중인 페이지를 주소에 남겨, 새로고침해도 같은 페이지가 열리게 한다.
+  // 첫 페이지는 주소 없이도 열리므로 남기지 않는다.
+  const firstPageId = document.pages[0]?.id;
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const wanted = pageId === firstPageId ? null : pageId;
+    if (url.searchParams.get("page") === wanted) return;
+    if (wanted) url.searchParams.set("page", wanted);
+    else url.searchParams.delete("page");
+    window.history.replaceState(window.history.state, "", url);
+  }, [pageId, firstPageId]);
 
   // Ctrl/⌘+S로 저장
   const save = actions.save;
