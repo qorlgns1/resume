@@ -6,8 +6,8 @@
 관리자 화면에서 페이지 콘텐츠와 모듈 배치를 편집하는 오픈소스 포트폴리오입니다.
 저장소를 복제해 자신의 서버에 설치하고, 공개 사이트와 어드민을 따로 배포합니다.
 
-**🌐 운영 중인 사이트: [resume.moodybeard.com](https://resume.moodybeard.com)** — 이 저장소를 그대로 Docker로 띄워 실제 이력서로 쓰고 있습니다. 어드민은 비공개입니다.
-**📚 Storybook: [qorlgns1.github.io/resume](https://qorlgns1.github.io/resume/)** — 디자인 토큰, 공통 UI, 포트폴리오 모듈의 상태별 화면입니다.
+- 🌐 **운영 중인 사이트: [resume.moodybeard.com](https://resume.moodybeard.com)** — 이 저장소를 그대로 Docker로 띄워 실제 이력서로 쓰고 있습니다. 어드민은 비공개입니다.
+- 📚 **Storybook: [qorlgns1.github.io/resume](https://qorlgns1.github.io/resume/)** — 디자인 토큰, 공통 UI, 포트폴리오 모듈의 상태별 화면입니다.
 
 [![공개 사이트 홈 (데스크톱)](docs/screenshots/home-desktop.png)](https://resume.moodybeard.com)
 
