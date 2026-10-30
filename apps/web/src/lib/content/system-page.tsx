@@ -1,8 +1,9 @@
-import type { SystemPageKey } from "@resume/contracts";
+import { publicPaths, type SystemPageKey } from "@resume/contracts";
 import { SystemPageView } from "@resume/modules";
 import type { Metadata } from "next";
 import { ContentError } from "@/components/content-error";
 import { PageShell } from "@/components/page-shell";
+import { pageMetadata } from "../page-metadata";
 import { getPublicPage } from "./get-page";
 import { siteRenderOptions } from "./render-options";
 
@@ -12,10 +13,13 @@ export type ListPageKey = Exclude<SystemPageKey, "home">;
 export async function systemPageMetadata(key: ListPageKey): Promise<Metadata> {
   const result = await getPublicPage(key);
   if (!result.ok) return { title: "콘텐츠를 불러오지 못했습니다" };
-  return {
-    title: result.response.data.page.title,
-    description: result.response.data.page.description,
-  };
+  const { page, site } = result.response.data;
+  return pageMetadata({
+    title: page.title,
+    description: page.description,
+    path: publicPaths[key],
+    siteName: site.title,
+  });
 }
 
 /** 홈 외 기본 페이지. 목록·타임라인·소개 본문과 어드민에서 배치한 모듈을 보여준다. */

@@ -6,6 +6,7 @@ import { ContentError } from "@/components/content-error";
 import { PageShell } from "@/components/page-shell";
 import { getPublicPage } from "@/lib/content/get-page";
 import { siteRenderOptions } from "@/lib/content/render-options";
+import { pageMetadata } from "@/lib/page-metadata";
 
 export async function generateMetadata({
   params,
@@ -14,7 +15,13 @@ export async function generateMetadata({
   const result = await getPublicPage("projects");
   if (!result.ok) return { title: "콘텐츠를 불러오지 못했습니다" };
   const project = findProjectBySlug(result.response.data.content, slug);
-  return project ? { title: project.title, description: project.tagline } : {};
+  if (!project) return {};
+  return pageMetadata({
+    title: project.title,
+    description: project.tagline || project.summary,
+    path: publicPaths.project(project.slug),
+    siteName: result.response.data.site.title,
+  });
 }
 
 /** 개인 프로젝트 상세 */

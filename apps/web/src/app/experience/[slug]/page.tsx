@@ -6,6 +6,7 @@ import { ContentError } from "@/components/content-error";
 import { PageShell } from "@/components/page-shell";
 import { getPublicPage } from "@/lib/content/get-page";
 import { siteRenderOptions } from "@/lib/content/render-options";
+import { pageMetadata } from "@/lib/page-metadata";
 
 export async function generateMetadata({
   params,
@@ -14,7 +15,13 @@ export async function generateMetadata({
   const result = await getPublicPage("experience");
   if (!result.ok) return { title: "콘텐츠를 불러오지 못했습니다" };
   const company = findCompanyBySlug(result.response.data.content, slug);
-  return company ? { title: company.name, description: company.summary } : {};
+  if (!company) return {};
+  return pageMetadata({
+    title: company.name,
+    description: company.summary,
+    path: publicPaths.company(company.slug),
+    siteName: result.response.data.site.title,
+  });
 }
 
 /** 회사 경험 상세 */

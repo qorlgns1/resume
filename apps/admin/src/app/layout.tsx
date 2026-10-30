@@ -5,8 +5,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "포트폴리오 어드민 (로컬 검토용)",
-  // 인증 전까지는 운영 서비스로 공개하지 않는다.
+  title: "포트폴리오 어드민",
+  // 어드민은 검색 엔진에 노출하지 않는다.
   robots: { index: false, follow: false },
 };
 

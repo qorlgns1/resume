@@ -828,3 +828,70 @@ test.describe("어드민", () => {
     expect(statuses).toContain(429);
   });
 });
+
+test.describe("SEO · 공유 미리보기 · 보안 헤더", () => {
+  const project = sampleSiteDocument.content.projects[0];
+  const company = sampleSiteDocument.content.companies[0];
+  if (!project || !company) throw new Error("샘플에 프로젝트와 회사가 있어야 합니다.");
+
+  test("robots.txt와 sitemap.xml이 기본 페이지와 상세 주소를 담는다", async ({ request }) => {
+    const robots = await request.get(`${web}/robots.txt`);
+    expect(robots.status()).toBe(200);
+    const robotsText = await robots.text();
+    expect(robotsText).toContain("Allow: /");
+    expect(robotsText).toContain("Disallow: /media/");
+    expect(robotsText).toContain(`Sitemap: ${web}/sitemap.xml`);
+
+    const sitemap = await request.get(`${web}/sitemap.xml`);
+    expect(sitemap.status()).toBe(200);
+    const xml = await sitemap.text();
+    for (const path of ["/", "/about", "/projects", "/experience", "/history"]) {
+      expect(xml).toContain(`<loc>${web}${path}</loc>`);
+    }
+    expect(xml).toContain(`<loc>${web}/projects/${project.slug}</loc>`);
+    expect(xml).toContain(`<loc>${web}/experience/${company.slug}</loc>`);
+  });
+
+  test("공유 미리보기 이미지가 1200×630 PNG로 만들어진다", async ({ request }) => {
+    for (const path of [
+      "/opengraph-image",
+      `/projects/${project.slug}/opengraph-image`,
+      `/experience/${company.slug}/opengraph-image`,
+    ]) {
+      const res = await request.get(`${web}${path}`);
+      expect(res.status(), path).toBe(200);
+      expect(res.headers()["content-type"], path).toContain("image/png");
+      const info = await imageInfo(await res.body());
+      expect({ width: info.width, height: info.height }, path).toEqual({
+        width: 1200,
+        height: 630,
+      });
+    }
+  });
+
+  test("페이지에 Open Graph 메타와 정식 주소가 절대 주소로 들어간다", async ({ page }) => {
+    const url = `${web}/projects/${project.slug}`;
+    await page.goto(url);
+    const meta = (property: string) =>
+      page.locator(`meta[property="${property}"]`).getAttribute("content");
+    expect(await meta("og:title")).toBe(project.title);
+    expect(await meta("og:url")).toBe(url);
+    expect(await meta("og:site_name")).toBe(sampleSiteDocument.site.title);
+    expect(await meta("og:image")).toMatch(new RegExp(`^${url}/opengraph-image`));
+    expect(await page.locator('link[rel="canonical"]').getAttribute("href")).toBe(url);
+    expect(await page.locator('meta[name="twitter:card"]').getAttribute("content")).toBe(
+      "summary_large_image",
+    );
+  });
+
+  test("공개 사이트와 어드민이 보안 응답 헤더를 보낸다", async ({ request }) => {
+    for (const url of [web, `${web}/projects`, `${admin}/login`, `${admin}/api/health`]) {
+      const headers = (await request.get(url)).headers();
+      expect(headers["x-content-type-options"], url).toBe("nosniff");
+      expect(headers["x-frame-options"], url).toBe("DENY");
+      expect(headers["referrer-policy"], url).toBe("strict-origin-when-cross-origin");
+      expect(headers["content-security-policy"], url).toContain("frame-ancestors 'none'");
+      expect(headers["x-powered-by"], url).toBeUndefined();
+    }
+  });
+});

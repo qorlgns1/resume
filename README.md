@@ -120,10 +120,11 @@ CONTENT_SOURCE=api CONTENT_API_URL=http://localhost:3201 pnpm dev:web
 
 공개 사이트에 [PostHog](https://posthog.com)를 연결해 방문자가 어떤 페이지를 어떤 순서로 보는지 확인할 수 있습니다. 기본으로 꺼져 있고, `apps/web` 실행 환경에 `POSTHOG_KEY`를 넣으면 켜집니다. 어드민은 추적하지 않습니다.
 
-| 공개 사이트 환경 변수 | 설명                                                     | 기본값                     |
-| --------------------- | -------------------------------------------------------- | -------------------------- |
-| `POSTHOG_KEY`         | PostHog 프로젝트 키 (`phc_...`, 공개용 값). 비우면 꺼짐  | 없음                       |
-| `POSTHOG_HOST`        | PostHog 주소. 유럽 클라우드는 `https://eu.i.posthog.com` | `https://us.i.posthog.com` |
+| 공개 사이트 환경 변수 | 설명                                                                            | 기본값                                    |
+| --------------------- | ------------------------------------------------------------------------------- | ----------------------------------------- |
+| `POSTHOG_KEY`         | PostHog 프로젝트 키 (`phc_...`, 공개용 값). 비우면 꺼짐                         | 없음                                      |
+| `POSTHOG_HOST`        | PostHog 주소. 유럽 클라우드는 `https://eu.i.posthog.com`                        | `https://us.i.posthog.com`                |
+| `SITE_URL`            | 브라우저가 여는 공개 사이트 주소. sitemap·robots·공유 미리보기의 절대 주소에 씀 | 요청 헤더(Host, X-Forwarded-Proto)로 추정 |
 - 페이지 이동(`$pageview`), 떠남(`$pageleave`, 머문 시간·스크롤 깊이), 클릭(`$autocapture`, 링크 주소 포함)을 자동으로 기록합니다. 이동 순서는 PostHog의 **Paths**에서 봅니다.
 - 세션 녹화와 히트맵은 PostHog 프로젝트 설정에서 켭니다.
 - 내 방문 제외: 사이트를 `/?ph_internal=1`로 한 번 열면 그 브라우저의 이벤트에 `internal_visit`가 붙습니다. PostHog 프로젝트의 테스트 계정 필터에 `internal_visit` 이벤트 속성이 "is not set"인 조건을 넣어 두면 "Filter out internal and test users"를 켠 화면에서 빠집니다. 기기·브라우저마다 한 번씩 엽니다. `localhost` 방문은 자동으로 내부 사용자입니다.
@@ -195,6 +196,8 @@ networks:
 - nginx는 `resume-web:3000`, `resume-admin:3001`로 프록시하고 HTTPS 종료와 인증서 갱신을 맡습니다. `X-Forwarded-Proto https`를 넘겨야 로그인 쿠키가 정상 동작합니다.
 - 호스트 포트(`127.0.0.1:${WEB_PORT}` 등)는 그대로 두어도 됩니다. 외부 트래픽은 프록시 네트워크로만 들어옵니다.
 - 어드민 주소는 공개하지 않고 `robots` noindex를 유지합니다. 어드민 업로드 한도(10MB)보다 nginx `client_max_body_size`를 크게 잡습니다.
+- `.env`에 `SITE_URL=https://example.com`을 두면 sitemap·공유 미리보기 주소가 그 값으로 고정됩니다. 비워도 프록시가 넘긴 `Host`·`X-Forwarded-Proto`로 같은 주소를 만듭니다.
+- 두 앱 모두 보안 응답 헤더(`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Content-Security-Policy`의 `frame-ancestors`, HSTS)를 직접 보냅니다. nginx에서 다시 붙일 필요가 없습니다.
 - 갱신: `git pull && docker compose up --build -d`. 데이터는 `admin-data` 볼륨에 있어 이미지를 다시 빌드해도 유지됩니다.
 
 ## Vercel (apps/web, 선택)
@@ -257,11 +260,15 @@ GitHub Actions([`.github/workflows/ci.yml`](.github/workflows/ci.yml))가 `main`
 - 공개 API가 DB 게시본 제공, 응답 계약 검증, 공개 사이트 샘플/API 모드 분리
 - 앱별 Dockerfile, 데이터 볼륨을 쓰는 로컬 Docker Compose, `.env.example`
 - 선택형 방문 분석(PostHog): 페이지 이동 경로, 클릭, 재방문 식별
+- 검색·공유: `sitemap.xml`, `robots.txt`, 페이지별 정식 주소(canonical)와 Open Graph 메타, 프로필·프로젝트·회사 내용으로 그리는 1200×630 공유 미리보기 이미지
+- 보안 응답 헤더(클릭재킹·MIME 추측 차단, 참조 주소 최소화, HSTS), `X-Powered-By` 제거
+- GitHub Actions CI(lint · typecheck · 단위 테스트 · 빌드 · 스모크), Vitest 단위 테스트
 
 **아직 없음**
 - 드래그로 모듈 이동·크기 변경 (지금은 숫자와 버튼으로 조정. 목록 항목·챕터·페이지 순서는 드래그 가능)
 - S3 호환 미디어 저장소 어댑터 (지금은 서버 디스크 `/data/media`)
-- 실행 중 백업 명령, 보안 응답 헤더, 2단계 인증·패스키
+- 실행 중 백업 명령, 2단계 인증·패스키
+- 스크립트 출처까지 제한하는 CSP (지금은 `frame-ancestors`·`object-src`·`base-uri`·`form-action`만)
 - 사용자 페이지 추가
 
 다음 작업은 [docs/next-steps.md](docs/next-steps.md)에 정리했습니다.

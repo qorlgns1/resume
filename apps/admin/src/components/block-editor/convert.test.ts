@@ -190,6 +190,8 @@ describe("editorToBlocks", () => {
   it("drops external image URLs and warns, but keeps uploaded images", () => {
     const asset: MediaAsset = {
       id: "med_0123456789abcdef",
+      originalName: "cover.png",
+      animated: false,
       width: 1200,
       height: 800,
       widths: [480, 960, 1200],

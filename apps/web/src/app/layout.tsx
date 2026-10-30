@@ -5,10 +5,17 @@ import { connection } from "next/server";
 import type { ReactNode } from "react";
 import { Analytics } from "@/components/analytics";
 import { readAnalyticsConfig } from "@/lib/analytics/config";
+import { resolveSiteUrl } from "@/lib/site-url";
 
-export const metadata: Metadata = {
-  title: { default: "포트폴리오", template: "%s · 포트폴리오" },
-};
+/** 사이트 공통 메타데이터. 절대 주소(metadataBase)는 요청마다 SITE_URL이나 요청 헤더로 정한다. */
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = await resolveSiteUrl();
+  return {
+    ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
+    title: { default: "포트폴리오", template: "%s · 포트폴리오" },
+    twitter: { card: "summary_large_image" },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#f2f3f5",
