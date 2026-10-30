@@ -25,7 +25,7 @@
   --rs-blue-50: #eef3ff;
   --rs-blue-100: #dbe5ff;
   --rs-blue-200: #b9ccff;
-  --rs-blue-500: #2f6bff;
+  --rs-blue-500: #2d66f7;
   --rs-blue-600: #1f58e6;
   --rs-blue-700: #1a49bd;
 
@@ -53,7 +53,7 @@
   --rs-color-text-inverse-muted: #b8bcc5;
 
   /* ── Semantic: brand ──────────────────────────────── */
-  --rs-color-primary: var(--rs-blue-500); /* 강조색 #2F6BFF, 큰 텍스트·버튼 배경 */
+  --rs-color-primary: var(--rs-blue-500); /* 강조색 #2D66F7, 큰 텍스트·버튼 배경 */
   --rs-color-primary-hover: var(--rs-blue-600);
   --rs-color-primary-foreground: var(--rs-gray-0);
   --rs-color-primary-soft: var(--rs-blue-50);

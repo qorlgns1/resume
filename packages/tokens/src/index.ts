@@ -60,7 +60,7 @@ export const semanticColors = [
   {
     cssVar: "--rs-color-primary",
     utility: "primary",
-    value: "#2f6bff",
+    value: "#2d66f7",
     description: "강조색 — 버튼 배경, 큰 텍스트",
   },
   {

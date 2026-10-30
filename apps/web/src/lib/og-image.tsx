@@ -17,7 +17,7 @@ const COLORS = {
   background: "#1C1D21",
   foreground: "#FFFFFF",
   muted: "#A3A6AD",
-  primary: "#2F6BFF",
+  primary: "#2D66F7",
   onPrimary: "#FFFFFF",
 };
 

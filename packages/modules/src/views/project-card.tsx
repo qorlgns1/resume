@@ -127,15 +127,23 @@ export function ProjectCard({
   project,
   layout,
   options,
+  headingLevel = 3,
+  priority = false,
 }: {
   project: Project;
   layout: "wide" | "stacked";
   options: RenderOptions;
+  /** 카드 제목의 단계. 홈 모듈(h2 아래)은 3, 페이지 제목(h1) 바로 아래 목록은 2 */
+  headingLevel?: 2 | 3;
+  /** 첫 화면에 보이는 카드는 커버를 지연 로딩하지 않는다 */
+  priority?: boolean;
 }) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   const media = (
     <CoverMedia
       media={project.cover}
       options={options}
+      priority={priority}
       sizes={
         layout === "wide"
           ? "(min-width: 1024px) 640px, 100vw"
@@ -167,7 +175,7 @@ export function ProjectCard({
           <ProjectIcon project={project} />
           <div className="flex min-w-0 flex-col gap-0.5">
             <div className="flex flex-wrap items-center gap-1.5">
-              <h3 className="text-title font-bold tracking-tight">{project.title}</h3>
+              <Heading className="text-title font-bold tracking-tight">{project.title}</Heading>
               <ProjectStatusBadge project={project} />
             </div>
             <p className="text-body-sm text-muted-foreground">{project.tagline}</p>

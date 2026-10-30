@@ -3,7 +3,7 @@
  * 사용 측 CSS에서 `@import "tailwindcss";` 다음에 import한다.
  *
  * 색상 이름은 shadcn/ui 관례를 따른다.
- *  - primary   : 브랜드 강조색(#2F6BFF)
+ *  - primary   : 브랜드 강조색(#2D66F7)
  *  - accent    : shadcn 관례상 "옅은 hover 배경". 브랜드 강조색이 아님에 주의
  *  - inverse   : 어두운 카드(#1C1D21)
  *  - canvas    : 페이지 배경(#F2F3F5)

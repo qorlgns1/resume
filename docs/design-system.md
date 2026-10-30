@@ -17,7 +17,7 @@
 | 페이지 배경        | `--rs-color-canvas`          | #F2F3F5                     | `bg-canvas`                                                            |
 | 기본 카드          | `--rs-color-surface`         | #FFFFFF                     | `bg-card`, `bg-background`                                             |
 | 어두운 카드        | `--rs-color-surface-inverse` | #1C1D21                     | `bg-inverse`                                                           |
-| 강조색             | `--rs-color-primary`         | #2F6BFF                     | `bg-primary`                                                           |
+| 강조색             | `--rs-color-primary`         | #2D66F7                     | `bg-primary`                                                           |
 | 작은 링크 텍스트   | `--rs-color-primary-text`    | #1F58E6                     | `text-primary-text`                                                    |
 | 본문 / 보조 / 캡션 | `--rs-color-text*`           | #111214 / #4B5260 / #636A76 | `text-foreground` / `text-muted-foreground` / `text-subtle-foreground` |
 - shadcn/ui 관례를 따르므로 **`primary`가 브랜드 강조색**이고, **`accent`는 옅은 hover 배경**입니다.
@@ -34,13 +34,13 @@
 | 본문 #111214 / 캔버스                       | 16.9:1                            |
 | 보조 텍스트 #4B5260 / 캔버스                | 7.1:1                             |
 | 캡션 #636A76 / 캔버스                       | 4.9:1                             |
-| 흰 글자 / 강조색 #2F6BFF                    | 4.5:1 (버튼, 굵은 글자)           |
+| 흰 글자 / 강조색 #2D66F7                    | 4.8:1 (버튼, 작은 글자도 통과)    |
 | 작은 링크 #1F58E6 / 캔버스                  | 5.3:1                             |
 | 어두운 카드 보조 텍스트 #B8BCC5 / #1C1D21   | 8.9:1                             |
 | 입력 경계선 #868D98 / 흰 배경               | 3.2:1 (비텍스트 3:1 기준)         |
-| 흰 아이콘 / 프로젝트 색 14종(`--rs-tone-*`) | 4.5:1 이상 (가장 낮은 파랑 4.5:1) |
+| 흰 아이콘 / 프로젝트 색 14종(`--rs-tone-*`) | 4.5:1 이상 (가장 낮은 파랑 4.8:1) |
 
-#2F6BFF는 회색 배경 위의 작은 글자에서 4.0:1이므로, 작은 링크에는 `primary-text`를 씁니다.
+강조색은 원래 #2F6BFF였으나 흰 글자와의 대비가 4.49:1로 AA 기준(4.5:1)에 아슬아슬하게 못 미쳐 한 단계 어두운 #2D66F7로 조정했습니다. #2D66F7는 회색 배경 위의 작은 글자에서 4.3:1이므로, 작은 링크에는 여전히 `primary-text`를 씁니다.
 
 ## 공통 UI (`@resume/ui`)
 

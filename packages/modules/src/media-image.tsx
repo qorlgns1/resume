@@ -1,5 +1,6 @@
 import { type Media, mediaUrl, PUBLIC_MEDIA_BASE } from "@resume/contracts";
 import { cn } from "@resume/ui/lib/utils";
+import type { CSSProperties } from "react";
 import { PlaceholderMedia } from "./placeholder-media";
 import type { RenderOptions } from "./types";
 
@@ -11,7 +12,8 @@ interface MediaImageProps {
   /** 화면에서 차지하는 너비 (srcset 선택 기준) */
   sizes: string;
   className?: string;
-  /** 첫 화면에 보이는 이미지는 지연 로딩하지 않는다 */
+  style?: CSSProperties;
+  /** 첫 화면에 보이는 이미지(LCP 후보)는 지연 로딩하지 않고 먼저 받는다 */
   priority?: boolean;
 }
 
@@ -24,6 +26,7 @@ export function MediaImage({
   options,
   sizes,
   className,
+  style,
   priority = false,
 }: MediaImageProps) {
   const base = options.mediaBase ?? PUBLIC_MEDIA_BASE;
@@ -38,8 +41,10 @@ export function MediaImage({
       width={media.width}
       height={media.height}
       loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : undefined}
       decoding="async"
       className={cn("h-auto max-w-full", className)}
+      style={style}
     />
   );
 }
@@ -51,6 +56,7 @@ export function CoverMedia({
   sizes,
   frame = "window",
   className,
+  priority,
 }: {
   media: Media | undefined;
   options: RenderOptions;
@@ -58,6 +64,7 @@ export function CoverMedia({
   /** 자리 표시의 모양, 그리고 이미지일 때 잘라 맞출 비율 */
   frame?: "window" | "phone" | "natural";
   className?: string;
+  priority?: boolean;
 }) {
   if (!media) return null;
   if (media.kind === "placeholder") {
@@ -75,11 +82,12 @@ export function CoverMedia({
       media={media}
       options={options}
       sizes={sizes}
+      priority={priority}
       className={cn(
-        "rs-line rounded-lg border bg-muted",
-        frame !== "natural" && "w-full",
+        "rs-line w-full rounded-lg border bg-muted",
         // 원래 비율 그대로 보여주되, 세로로 긴 사진이 화면을 다 차지하지 않게 높이를 제한한다.
-        frame === "natural" && "max-h-[36rem] w-auto",
+        // 너비를 100%로 두고 비율을 명시해야 이미지를 받기 전에도 자리를 잡아 레이아웃이 흔들리지 않는다.
+        frame === "natural" && "max-h-[36rem] object-contain",
         frame === "window" && "aspect-[16/10] object-cover",
         frame === "phone" &&
           (media.height > media.width
@@ -87,6 +95,11 @@ export function CoverMedia({
             : "aspect-[4/3] max-w-[16rem] object-cover"),
         className,
       )}
+      style={
+        frame === "natural"
+          ? { maxWidth: media.width, aspectRatio: `${media.width} / ${media.height}` }
+          : undefined
+      }
     />
   );
 }

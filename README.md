@@ -278,7 +278,7 @@ GitHub Actions([`.github/workflows/ci.yml`](.github/workflows/ci.yml))가 `main`
 
 ## 디자인 기준
 
-공개 사이트는 크기가 다른 카드를 정돈된 그리드로 배치하는 벤토 카드 레이아웃을 사용합니다. 배경 #F2F3F5, 흰 카드, 강조색 #2F6BFF, 어두운 카드 #1C1D21, Pretendard 서체가 기본입니다.
+공개 사이트는 크기가 다른 카드를 정돈된 그리드로 배치하는 벤토 카드 레이아웃을 사용합니다. 배경 #F2F3F5, 흰 카드, 강조색 #2D66F7, 어두운 카드 #1C1D21, Pretendard 서체가 기본입니다.
 저장소에 들어 있는 인물·회사·프로젝트·수치는 모두 "샘플"로 표시한 가상 콘텐츠입니다. 자세한 내용은 [docs/design-system.md](docs/design-system.md)를 보세요.
 
 ## 라이선스

@@ -22,11 +22,18 @@ export function ProjectListView({
   if (content.projects.length === 0) return <EmptyList>아직 등록한 프로젝트가 없습니다.</EmptyList>;
   return (
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
-      {content.projects.map((project) => (
+      {content.projects.map((project, index) => (
         <li key={project.id} className="min-w-0">
           {wrapItem(
             { section: "projects", itemId: project.id, label: project.title },
-            <ProjectCard project={project} layout="stacked" options={options} />,
+            <ProjectCard
+              project={project}
+              layout="stacked"
+              options={options}
+              headingLevel={2}
+              // 첫 줄(최대 3칸)은 첫 화면에 보이므로 커버를 바로 받는다.
+              priority={index < 3}
+            />,
           )}
         </li>
       ))}
@@ -34,9 +41,18 @@ export function ProjectListView({
   );
 }
 
-function Meta({ label, children }: { label: string; children: React.ReactNode }) {
+/** 정보 카드의 항목. dl 바로 아래의 div 하나만 허용되므로 감싸는 요소를 더 두지 않는다. */
+function Meta({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={cn("flex flex-col gap-1.5", className)}>
       <dt className="text-caption font-semibold text-subtle-foreground">{label}</dt>
       <dd className="text-body-sm">{children}</dd>
     </div>
@@ -94,6 +110,7 @@ export function ProjectDetailView({
               media={project.cover}
               options={options}
               frame="natural"
+              priority
               sizes="(min-width: 1024px) 896px, 100vw"
               className="mx-auto block max-w-[min(100%,56rem)]"
             />
@@ -123,19 +140,17 @@ export function ProjectDetailView({
               </Meta>
             ) : null}
             {project.tags.length > 0 ? (
-              <div className="col-span-2 lg:col-span-1">
-                <Meta label="태그">
-                  <ul className="flex flex-wrap gap-1.5">
-                    {project.tags.map((tag) => (
-                      <li key={tag}>
-                        <Badge variant="outline" className="rounded-sm">
-                          {tag}
-                        </Badge>
-                      </li>
-                    ))}
-                  </ul>
-                </Meta>
-              </div>
+              <Meta label="태그" className="col-span-2 lg:col-span-1">
+                <ul className="flex flex-wrap gap-1.5">
+                  {project.tags.map((tag) => (
+                    <li key={tag}>
+                      <Badge variant="outline" className="rounded-sm">
+                        {tag}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              </Meta>
             ) : null}
           </dl>
           {headings.length > 1 ? (

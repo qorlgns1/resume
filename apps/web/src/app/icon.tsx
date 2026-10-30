@@ -10,7 +10,7 @@ export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 
 /** --rs-color-primary, --rs-color-primary-foreground */
-const PRIMARY = "#2F6BFF";
+const PRIMARY = "#2D66F7";
 const ON_PRIMARY = "#FFFFFF";
 
 /** 첫 글자(한글 포함)를 그릴 글꼴. 배포 출력에 포함되도록 next.config의 outputFileTracingIncludes에도 적는다. */
