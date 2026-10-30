@@ -1,0 +1,54 @@
+# main에 올릴 때마다 Storybook을 빌드해 GitHub Pages로 공개한다.
+# 저장소 설정 › Pages › Source가 "GitHub Actions"여야 한다.
+name: Storybook
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/storybook/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/storybook.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/configure-pages@v6
+        with:
+          # 처음 실행할 때 Pages가 꺼져 있으면 켠다 (저장소 관리자 권한의 GITHUB_TOKEN이 필요)
+          enablement: true
+      - run: pnpm build:storybook
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: apps/storybook/storybook-static
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
