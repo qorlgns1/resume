@@ -1,0 +1,41 @@
+# Dependabot: 의존성 새 버전을 PR로 올린다. PR마다 ci.yml이 lint·typecheck·테스트·스모크를 돌린다.
+# 한 주에 한 번, 월요일 새벽(한국 시간)에만 확인해 PR이 평일 작업 중에 쏟아지지 않게 한다.
+version: 2
+updates:
+  # pnpm 워크스페이스 전체. 루트 package.json과 pnpm-lock.yaml을 기준으로 apps/*, packages/*를 함께 본다.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: Asia/Seoul
+    open-pull-requests-limit: 5
+    # 새 버전이 나온 뒤 7일은 기다린다. 공개 직후 회수되거나 악성으로 밝혀지는 배포를 피한다.
+    cooldown:
+      default-days: 7
+    groups:
+      # 함께 올려야 깨지지 않는 묶음은 메이저 포함 한 PR로 받는다.
+      next:
+        patterns: ["next", "@next/*"]
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+      storybook:
+        patterns: ["storybook", "@storybook/*"]
+      blocknote:
+        patterns: ["@blocknote/*"]
+      # 나머지 마이너·패치는 한 PR로 묶는다. 메이저는 패키지별로 따로 올라온다.
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  # 워크플로에서 쓰는 actions/*, pnpm/action-setup 버전.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: Asia/Seoul
+    groups:
+      actions:
+        patterns: ["*"]

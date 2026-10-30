@@ -235,6 +235,8 @@ pnpm test:smoke    # 빌드 결과물로 스모크 검증 (31xx 포트 사용)
 
 GitHub Actions([`.github/workflows/ci.yml`](.github/workflows/ci.yml))가 `main` 푸시와 PR마다 같은 순서로 전부 실행하고, 스모크 스크린샷과 실패 트레이스를 아티팩트로 남깁니다.
 
+의존성은 [Dependabot](.github/dependabot.yml)이 매주 월요일 새벽(KST)에 확인해 PR로 올립니다. 마이너·패치는 한 PR로 묶고, Next.js·React·Storybook·BlockNote처럼 함께 올려야 하는 묶음은 메이저까지 묶어서 받습니다. 새 버전은 공개 후 7일이 지나야 반영해 회수되거나 악성으로 밝혀지는 배포를 피합니다. 각 PR은 위 CI를 통과해야 합니다.
+
 운영 사이트의 Lighthouse 점수 (2026-10-30, Lighthouse 13.6, 모바일 기준):
 
 | 페이지        | 성능 | 접근성 | 권장사항 | SEO |
@@ -285,7 +287,7 @@ GitHub Actions([`.github/workflows/ci.yml`](.github/workflows/ci.yml))가 `main`
 - 선택형 방문 분석(PostHog): 페이지 이동 경로, 클릭, 재방문 식별
 - 검색·공유: `sitemap.xml`, `robots.txt`, 페이지별 정식 주소(canonical)와 Open Graph 메타, 프로필·프로젝트·회사 내용으로 그리는 1200×630 공유 미리보기 이미지
 - 보안 응답 헤더(클릭재킹·MIME 추측 차단, 참조 주소 최소화, HSTS), `X-Powered-By` 제거
-- GitHub Actions CI(lint · typecheck · 단위 테스트 · 빌드 · 스모크), Vitest 단위 테스트
+- GitHub Actions CI(lint · typecheck · 단위 테스트 · 빌드 · 스모크), Vitest 단위 테스트, Dependabot 주간 의존성 업데이트
 
 **아직 없음**
 - 드래그로 모듈 이동·크기 변경 (지금은 숫자와 버튼으로 조정. 목록 항목·챕터·페이지 순서는 드래그 가능)
