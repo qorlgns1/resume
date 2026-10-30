@@ -35,8 +35,9 @@ services:
       dockerfile: apps/web/Dockerfile
     environment:
       CONTENT_SOURCE: ${CONTENT_SOURCE:-api}
-      # 브라우저가 여는 공개 사이트 주소. sitemap·공유 미리보기의 절대 주소에 쓴다.
-      SITE_URL: ${SITE_URL:-http://localhost:${WEB_PORT:-3000}}
+      # 브라우저가 여는 공개 사이트 주소 (선택). sitemap·공유 미리보기의 절대 주소에 쓴다.
+      # 비우면 요청의 Host·X-Forwarded-Proto로 만들므로 리버스 프록시 뒤에서는 비워도 된다.
+      SITE_URL: ${SITE_URL:-}
       # web 서버가 컨테이너 네트워크 안에서 호출하는 주소 (브라우저용 주소가 아님)
       CONTENT_API_URL: http://admin:3001
       # 방문 분석 (선택). POSTHOG_KEY가 비어 있으면 꺼진다.
