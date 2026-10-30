@@ -24,12 +24,14 @@ export interface RenderOptions {
 }
 
 /** 기본 페이지 목록에서 고를 수 있는 원본 콘텐츠 하나 (어드민 미리보기에서 편집 대상으로 고른다) */
-export interface ContentTarget {
-  section: "projects" | "companies" | "history";
-  itemId: string;
+export type ContentTarget = (
+  | { section: "projects" | "companies" | "history"; itemId: string }
+  /** 프로필처럼 하나뿐인 콘텐츠는 항목 ID가 없다. */
+  | { section: "profile"; itemId?: undefined }
+) & {
   /** 선택 버튼의 접근성 이름에 쓴다 */
   label: string;
-}
+};
 
 /** 목록의 원본 콘텐츠를 감싸는 함수. 어드민 미리보기에서 선택 영역을 덧씌울 때 사용한다. */
 export type WrapContent = (target: ContentTarget, node: ReactNode) => ReactNode;

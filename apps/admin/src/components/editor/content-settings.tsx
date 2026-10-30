@@ -458,6 +458,17 @@ function ProfileForm() {
           </div>
         ))}
       </Group>
+      <BodyEditor
+        title={`${profile.name} 소개`}
+        label="소개 페이지 본문"
+        body={profile.about}
+        path={[...path, "about"]}
+        onChange={(blocks) =>
+          edit((d) => {
+            d.content.profile.about = blocks;
+          })
+        }
+      />
     </FieldGroup>
   );
 }

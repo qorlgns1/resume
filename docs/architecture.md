@@ -50,14 +50,14 @@ apps/storybook ┘          │
 SiteDocument (버전 관리 단위: 콘텐츠 + 배치를 함께 저장)
 ├─ site: SiteSettings          제목, 내비게이션, 푸터
 ├─ content: ContentLibrary     원본 콘텐츠 — 여러 페이지가 ID로 공유
-│   ├─ profile (+ principles)
+│   ├─ profile (+ principles, about: Block[] 소개 페이지 본문)
 │   ├─ projects[]  고정 메타데이터 + body: Block[] (노션형 블록)
 │   ├─ companies[] 회사별 경험 + body: Block[]
 │   ├─ achievements[]
 │   ├─ techStack[]
 │   └─ history.chapters[]  챕터 + 타임라인 항목 (회사·프로젝트 참조 또는 직접 작성)
 └─ pages: Page[]
-    ├─ kind: system(home/projects/experience/history) | custom(slug)
+    ├─ kind: system(home/projects/experience/history/about) | custom(slug)
     ├─ modules: ModuleInstance[]   id(안정적) · type · label · props · style
     └─ layout
         ├─ desktop: 12칼럼 {moduleId, col, colSpan, row, rowSpan}

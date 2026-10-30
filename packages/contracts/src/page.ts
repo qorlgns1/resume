@@ -4,7 +4,7 @@ import { ModuleInstanceSchema } from "./modules";
 import { HrefSchema, IdSchema, ImageMediaSchema, LinkSchema, SlugSchema } from "./primitives";
 
 /** 기본 제공 페이지. 사용자가 추가한 페이지는 kind "custom"으로 구분한다. */
-export const SystemPageKeySchema = z.enum(["home", "projects", "experience", "history"]);
+export const SystemPageKeySchema = z.enum(["home", "projects", "experience", "history", "about"]);
 export type SystemPageKey = z.infer<typeof SystemPageKeySchema>;
 
 const pageBase = {
@@ -78,6 +78,22 @@ export const PageSchema = z
     }
   });
 export type Page = z.infer<typeof PageSchema>;
+
+/** 소개 페이지 기본값. 소개 페이지가 생기기 전에 저장한 문서에는 이 페이지를 덧붙인다. */
+export function createAboutPage(): Page {
+  return {
+    id: "page_about",
+    kind: "system",
+    systemKey: "about",
+    title: "소개",
+    description: "어떤 개발자인지, 어떻게 일하는지 소개합니다.",
+    modules: [],
+    layout: {
+      desktop: { columns: 12, items: [] },
+      mobile: { columns: 2, strategy: "auto", items: [] },
+    },
+  };
+}
 
 export const NavItemSchema = z.object({
   id: IdSchema,

@@ -31,6 +31,8 @@ const BlockEditor = dynamic(
 interface BodyEditorProps {
   /** 패널 제목에 쓸 항목 이름 */
   title: string;
+  /** 본문 종류. 기본은 "상세 본문" */
+  label?: string;
   body: readonly Block[];
   /** 본문 경로: ["content", "projects", i, "body"] */
   path: Path;
@@ -38,10 +40,10 @@ interface BodyEditorProps {
 }
 
 /**
- * 프로젝트·회사 상세 본문 편집. 넓은 패널에서 노션처럼 쓰고, 바뀐 내용은 바로 작업본에 반영된다.
+ * 프로젝트·회사 상세 본문과 소개 본문 편집. 넓은 패널에서 노션처럼 쓰고, 바뀐 내용은 바로 작업본에 반영된다.
  * 저장·게시는 다른 편집과 마찬가지로 상단의 초안 저장·게시를 쓴다.
  */
-export function BodyEditor({ title, body, path, onChange }: BodyEditorProps) {
+export function BodyEditor({ title, label = "상세 본문", body, path, onChange }: BodyEditorProps) {
   const { issues } = useEditor();
   const { upload, lookup } = useMediaLibrary();
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -51,7 +53,7 @@ export function BodyEditor({ title, body, path, onChange }: BodyEditorProps) {
     <div className="flex flex-col gap-2 rounded-lg border border-border p-3">
       <div className="flex items-center justify-between gap-2">
         <span className="flex flex-col">
-          <span className="text-caption font-semibold text-muted-foreground">상세 본문</span>
+          <span className="text-caption font-semibold text-muted-foreground">{label}</span>
           <span className="text-body-sm">
             {body.length > 0 ? `블록 ${body.length}개` : "아직 비어 있습니다"}
           </span>

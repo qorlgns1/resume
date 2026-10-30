@@ -6,4 +6,5 @@ export const publicPaths = {
   experience: "/experience",
   company: (slug: string) => `/experience/${slug}`,
   history: "/history",
+  about: "/about",
 } as const;

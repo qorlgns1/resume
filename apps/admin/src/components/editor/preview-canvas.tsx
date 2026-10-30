@@ -36,7 +36,7 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
   const { page } = useCurrentPage();
   const content = document.content;
   const selectedModuleId = selection?.kind === "module" ? selection.moduleId : null;
-  const selectedItemId = selection?.kind === "content" ? selection.itemId : null;
+  const selectedContent = selection?.kind === "content" ? selection : null;
   const onSelectModule = (moduleId: string) => select({ kind: "module", moduleId });
   const width = FRAME_WIDTH[viewport];
   const { outerRef, innerRef, scale, height } = useFitScale(width);
@@ -63,16 +63,18 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
     );
   }
 
-  /** 기본 페이지 목록의 프로젝트·회사·히스토리를 누르면 그 원본 콘텐츠 편집으로 간다. */
+  /** 기본 페이지의 프로젝트·회사·히스토리·소개 본문을 누르면 그 원본 콘텐츠 편집으로 간다. */
   function wrapContent(target: ContentTarget, node: ReactNode) {
-    // 카드(프로젝트·회사)는 카드 모서리를, 히스토리 글은 글 주변에 여백을 두고 테두리를 그린다.
+    // 카드(프로젝트·회사·소개 본문)는 카드 모서리를, 히스토리 글은 글 주변에 여백을 두고 테두리를 그린다.
     const card = target.section !== "history";
     const selectable = (
       <div className={cn("relative", card && "h-full")}>
         {node}
         <SelectOverlay
           label={`${target.label} 편집`}
-          selected={target.itemId === selectedItemId}
+          selected={
+            target.section === selectedContent?.section && target.itemId === selectedContent.itemId
+          }
           onSelect={() =>
             select({ kind: "content", section: target.section, itemId: target.itemId })
           }
@@ -156,11 +158,15 @@ export function PreviewCanvas({ viewport }: { viewport: PreviewViewport }) {
                 options={previewOptions}
                 wrapModule={wrapModule}
                 wrapContent={wrapContent}
-                wrapChapter={(target, node) => (
-                  <SortableItem id={target.itemId} label={target.label}>
-                    {node}
-                  </SortableItem>
-                )}
+                wrapChapter={(target, node) =>
+                  target.itemId ? (
+                    <SortableItem id={target.itemId} label={target.label}>
+                      {node}
+                    </SortableItem>
+                  ) : (
+                    node
+                  )
+                }
                 listFooter={
                   page.systemKey === "history" ? (
                     <AddButton

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ContentLibrarySchema } from "./content";
-import { PageSchema, SiteSettingsSchema } from "./page";
+import { createAboutPage, PageSchema, SiteSettingsSchema } from "./page";
 import { findMissingReferences } from "./references";
 
 /*
@@ -13,7 +13,15 @@ export const SiteDocumentSchema = z
   .object({
     site: SiteSettingsSchema,
     content: ContentLibrarySchema,
-    pages: z.array(PageSchema).min(1),
+    // 소개 페이지가 생기기 전에 저장한 문서도 소개 페이지를 편집·게시할 수 있게 덧붙인다.
+    pages: z
+      .array(PageSchema)
+      .min(1)
+      .transform((pages) =>
+        pages.some((p) => p.kind === "system" && p.systemKey === "about")
+          ? pages
+          : [...pages, createAboutPage()],
+      ),
   })
   .superRefine((document, ctx) => {
     const pageIds = new Set<string>();

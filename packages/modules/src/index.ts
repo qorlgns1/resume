@@ -32,6 +32,7 @@ export type {
   RenderOptions,
   WrapContent,
 } from "./types";
+export { AboutView } from "./views/about-views";
 export { CompanyDetailView, CompanyListView, findCompanyBySlug } from "./views/company-views";
 export { HistoryTimelineView } from "./views/history-views";
 export { BackLink, PageHeader } from "./views/page-header";

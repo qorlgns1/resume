@@ -1,4 +1,5 @@
 import type { Page, PageLayout, SystemPageKey } from "../index";
+import { createAboutPage } from "../page";
 import { DEFAULT_MODULE_STYLE } from "../style";
 
 const emptyLayout: PageLayout = {
@@ -27,6 +28,7 @@ export const sampleHomePage: Page = {
             href: "#mod_home_projects",
             emphasis: "primary",
           },
+          { id: "act_about", label: "더 알아보기", href: "/about", emphasis: "secondary" },
           { id: "act_github", label: "GitHub", href: "https://github.com", emphasis: "secondary" },
           {
             id: "act_contact",
@@ -166,7 +168,7 @@ export const sampleHomePage: Page = {
 };
 
 function systemPage(
-  systemKey: Exclude<SystemPageKey, "home">,
+  systemKey: Exclude<SystemPageKey, "home" | "about">,
   title: string,
   description: string,
 ): Page {
@@ -186,4 +188,5 @@ export const samplePages: Page[] = [
   systemPage("projects", "개인 프로젝트", "직접 기획하고 만든 프로젝트 목록입니다."),
   systemPage("experience", "회사 경험", "회사별 역할과 경험을 정리합니다."),
   systemPage("history", "히스토리", "챕터와 타임라인으로 지나온 경험을 기록합니다."),
+  createAboutPage(),
 ];

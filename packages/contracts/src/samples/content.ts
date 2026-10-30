@@ -15,6 +15,7 @@ export const sampleSite: SiteSettings = {
     { id: "nav_projects", label: "개인 프로젝트", href: "/projects" },
     { id: "nav_experience", label: "회사 경험", href: "/experience" },
     { id: "nav_history", label: "히스토리", href: "/history" },
+    { id: "nav_about", label: "소개", href: "/about" },
   ],
   footer: {
     links: [
@@ -36,6 +37,157 @@ export const sampleContent: ContentLibrary = {
       { id: "pr_plan", title: "직접 기획하고", keywords: ["문제 정의", "기능 설계"] },
       { id: "pr_build", title: "끝까지 만들고", keywords: ["프론트엔드", "배포"] },
       { id: "pr_improve", title: "출시 후 개선합니다", keywords: ["운영", "피드백 반영"] },
+    ],
+    about: [
+      {
+        id: "ab_note",
+        type: "callout",
+        tone: "info",
+        text: [
+          {
+            text: "샘플 소개입니다. 인물·회사·경험은 모두 가상이며, 어드민의 콘텐츠 › 프로필 › 소개 페이지 본문에서 바꿀 수 있습니다.",
+          },
+        ],
+      },
+      {
+        id: "ab_quote",
+        type: "quote",
+        text: [
+          { text: "좋은 제품은 출시한 날이 아니라, 고쳐 나가는 날마다 만들어진다고 믿습니다." },
+        ],
+      },
+      { id: "ab_h_who", type: "heading", level: 2, text: [{ text: "어떤 개발자인가요" }] },
+      {
+        id: "ab_p_who",
+        type: "paragraph",
+        text: [
+          { text: "안녕하세요, 6년 차 프론트엔드 개발자 홍길동입니다. 작은 불편에서 출발해 " },
+          { text: "직접 쓰는 제품", marks: ["bold"] },
+          {
+            text: "을 만들고, 출시한 뒤에도 사용자의 피드백으로 계속 고쳐 나가는 일을 가장 좋아합니다.",
+          },
+        ],
+      },
+      {
+        id: "ab_p_who2",
+        type: "paragraph",
+        text: [
+          {
+            text: "화면을 만드는 데서 멈추지 않고, 왜 만드는지 정의하는 기획부터 배포·운영·지표 확인까지 한 흐름으로 맡는 것을 제 일이라고 생각합니다.",
+          },
+        ],
+      },
+      { id: "ab_h_path", type: "heading", level: 2, text: [{ text: "걸어온 길" }] },
+      {
+        id: "ab_p_path",
+        type: "paragraph",
+        text: [
+          { text: "사내 업무 시스템과 B2B SaaS 대시보드를 만들며 " },
+          { text: "팀에서 협업하고 운영하는 법", marks: ["bold"] },
+          {
+            text: "을 배웠습니다. 이후 교육 플랫폼에서 실시간 수업 화면의 연결 안정성을, 커머스에서 첫 화면 로딩 성능을 개선했습니다.",
+          },
+        ],
+      },
+      {
+        id: "ab_p_path2",
+        type: "paragraph",
+        text: [
+          { text: "회사 밖에서는 " },
+          { text: "타임카드", href: "/projects/timecard" },
+          { text: "와 " },
+          { text: "책갈피", href: "/projects/bookmark" },
+          {
+            text: "처럼 제가 먼저 필요했던 서비스를 직접 기획하고 출시해 운영하고 있습니다. 자세한 흐름은 ",
+          },
+          { text: "히스토리", href: "/history" },
+          { text: "에 정리해 두었습니다." },
+        ],
+      },
+      { id: "ab_h_how", type: "heading", level: 2, text: [{ text: "어떻게 일하나요" }] },
+      {
+        id: "ab_list_how",
+        type: "bulleted-list",
+        items: [
+          {
+            text: [{ text: "문제를 먼저 정의합니다", marks: ["bold"] }],
+            children: [
+              {
+                text: [
+                  { text: "누가, 언제, 왜 불편한지 한 문장으로 쓸 수 있을 때 만들기 시작합니다." },
+                ],
+              },
+              { text: [{ text: "가장 작은 해결책부터 내놓고 반응을 봅니다." }] },
+            ],
+          },
+          {
+            text: [{ text: "끝까지 책임집니다", marks: ["bold"] }],
+            children: [
+              { text: [{ text: "배포 자동화와 오류 모니터링까지 직접 챙깁니다." }] },
+              { text: [{ text: "출시 후 첫 2주는 사용자 문의와 로그를 매일 확인합니다." }] },
+            ],
+          },
+          {
+            text: [{ text: "근거로 우선순위를 정합니다", marks: ["bold"] }],
+            children: [
+              { text: [{ text: "지표와 사용자 의견을 함께 보고, 바꾼 결과를 다시 측정합니다." }] },
+            ],
+          },
+        ],
+      },
+      { id: "ab_h_team", type: "heading", level: 2, text: [{ text: "함께 일할 때" }] },
+      {
+        id: "ab_table_team",
+        type: "table",
+        headerRow: true,
+        rows: [
+          [[{ text: "상황" }], [{ text: "이렇게 합니다" }]],
+          [
+            [{ text: "요구사항이 모호할 때" }],
+            [{ text: "화면 초안과 질문 목록을 먼저 만들어 짧게 맞춥니다." }],
+          ],
+          [
+            [{ text: "일정이 빠듯할 때" }],
+            [{ text: "꼭 필요한 범위와 나중에 해도 되는 범위를 나눠 제안합니다." }],
+          ],
+          [
+            [{ text: "의견이 다를 때" }],
+            [{ text: "사용자 관점의 근거를 기준으로 이야기하고, 결정은 문서로 남깁니다." }],
+          ],
+          [
+            [{ text: "코드 리뷰" }],
+            [{ text: "왜 그렇게 했는지 설명을 남기고, 리뷰는 하루 안에 답합니다." }],
+          ],
+        ],
+      },
+      { id: "ab_h_now", type: "heading", level: 2, text: [{ text: "요즘 관심 있는 것" }] },
+      {
+        id: "ab_list_now",
+        type: "bulleted-list",
+        items: [
+          { text: [{ text: "접근성과 성능을 처음부터 고려한 디자인 시스템" }] },
+          {
+            text: [
+              { text: "React Server Components와 " },
+              { text: "Next.js", marks: ["code"] },
+              { text: " App Router로 화면 구조 단순하게 만들기" },
+            ],
+          },
+          { text: [{ text: "Playwright로 핵심 흐름을 지키는 가벼운 스모크 테스트" }] },
+        ],
+      },
+      { id: "ab_h_next", type: "heading", level: 2, text: [{ text: "이런 팀을 찾고 있어요" }] },
+      {
+        id: "ab_p_next",
+        type: "paragraph",
+        text: [
+          {
+            text: "사용자 가까이에서 빠르게 만들고 배우는 팀, 개발자도 제품의 방향을 함께 고민하는 팀에서 일하고 싶습니다. 이야기 나누고 싶으시면 ",
+          },
+          { text: "메일", href: "mailto:hello@example.com" },
+          { text: "로 편하게 연락 주세요." },
+        ],
+      },
     ],
   },
   projects: [

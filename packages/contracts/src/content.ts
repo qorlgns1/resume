@@ -34,6 +34,11 @@ export const ProfileSchema = z.object({
       }),
     )
     .max(4),
+  /**
+   * 소개 페이지(/about) 본문 (노션형 블록).
+   * 소개 페이지가 생기기 전에 저장한 문서도 읽을 수 있게 비어 있는 본문으로 채운다.
+   */
+  about: z.array(BlockSchema).default([]),
 });
 export type Profile = z.infer<typeof ProfileSchema>;
 

@@ -3,8 +3,10 @@ import { expect, type Page, test } from "@playwright/test";
 import {
   ApiErrorResponseSchema,
   PublicPageResponseSchema,
+  SiteDocumentSchema,
   type SystemPageKey,
 } from "@resume/contracts";
+import { sampleSiteDocument } from "@resume/contracts/samples";
 import { ports, testAdmin } from "../playwright.config";
 import { centerPixel, gpsPhoto, imageInfo, redLogo } from "./fixtures";
 
@@ -21,7 +23,13 @@ async function expectNoHorizontalScroll(page: Page) {
 }
 
 test.describe("공개 콘텐츠 API (DB 게시본)", () => {
-  for (const key of ["home", "projects", "experience", "history"] satisfies SystemPageKey[]) {
+  for (const key of [
+    "home",
+    "projects",
+    "experience",
+    "history",
+    "about",
+  ] satisfies SystemPageKey[]) {
     test(`${key} 응답이 계약을 만족한다`, async ({ request }) => {
       const res = await request.get(`${admin}/api/public/v1/pages/${key}`);
       expect(res.status()).toBe(200);
@@ -56,7 +64,7 @@ test.describe("공개 사이트 홈", () => {
 
   test("메뉴 링크가 모두 열린다", async ({ page, request }) => {
     await page.goto(web);
-    for (const path of ["/", "/projects", "/experience", "/history"]) {
+    for (const path of ["/", "/projects", "/experience", "/history", "/about"]) {
       expect((await request.get(`${web}${path}`)).status(), path).toBe(200);
     }
   });
@@ -168,6 +176,30 @@ test.describe("목록·상세·히스토리 페이지", () => {
     await expect(page).toHaveURL(`${web}/experience/company-c`);
     await expect(page.getByRole("heading", { level: 2, name: "맡은 일" })).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "이 회사에서의 성과" })).toBeVisible();
+  });
+
+  test("홈의 더 알아보기에서 소개 페이지로 이동한다", async ({ page }) => {
+    await page.goto(web);
+    await page.getByRole("link", { name: "더 알아보기" }).click();
+    await expect(page).toHaveURL(`${web}/about`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("소개");
+    await expect(page.getByRole("heading", { level: 2, name: "어떻게 일하나요" })).toBeVisible();
+    await page.screenshot({ path: `${screens}/about-1440.png`, fullPage: true });
+  });
+
+  test("소개 페이지가 없던 문서도 읽으면 소개 페이지와 빈 본문이 생긴다", () => {
+    const { about: _about, ...profile } = sampleSiteDocument.content.profile;
+    const document = SiteDocumentSchema.parse({
+      ...sampleSiteDocument,
+      content: { ...sampleSiteDocument.content, profile },
+      pages: sampleSiteDocument.pages.filter(
+        (p) => !(p.kind === "system" && p.systemKey === "about"),
+      ),
+    });
+    expect(document.content.profile.about).toEqual([]);
+    expect(
+      document.pages.filter((p) => p.kind === "system" && p.systemKey === "about"),
+    ).toHaveLength(1);
   });
 
   test("히스토리의 챕터와 연결 링크가 모두 열린다", async ({ page, request }) => {

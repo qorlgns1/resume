@@ -2,13 +2,14 @@ import type { ContentLibrary, ModuleInstance, Page } from "@resume/contracts";
 import type { ReactNode } from "react";
 import { BentoGrid } from "../bento-grid";
 import type { RenderOptions, WrapContent } from "../types";
+import { AboutView } from "./about-views";
 import { CompanyListView } from "./company-views";
 import { HistoryTimelineView } from "./history-views";
 import { PageHeader } from "./page-header";
 import { ProjectListView } from "./project-views";
 
 /**
- * 기본 페이지(개인 프로젝트·회사 경험·히스토리)의 본문.
+ * 기본 페이지(개인 프로젝트·회사 경험·히스토리·소개)의 본문.
  * 원본 콘텐츠로 목록·타임라인을 그리고, 어드민에서 배치한 모듈이 있으면 그 아래에 붙인다.
  * 공개 사이트와 어드민 미리보기가 함께 쓴다.
  */
@@ -50,6 +51,9 @@ export function SystemPageView({
           wrapItem={wrapContent}
           wrapChapter={wrapChapter}
         />
+      ) : null}
+      {systemKey === "about" ? (
+        <AboutView content={content} options={options} wrapItem={wrapContent} />
       ) : null}
       {listFooter}
       {page.modules.length > 0 ? (
