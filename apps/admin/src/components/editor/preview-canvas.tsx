@@ -18,7 +18,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@resume/ui/com
 import { cn } from "@resume/ui/lib/utils";
 import { Menu, Plus } from "lucide-react";
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { newHistoryChapter } from "./content-settings";
+import { newHistoryChapter } from "./content/content-model";
 import { ContentSortProvider, SortableItem } from "./content-sortable";
 import type { PreviewViewport } from "./editor";
 import { useCurrentPage, useEditor } from "./editor-context";

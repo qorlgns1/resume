@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@resume/ui/components/
 import { cn } from "@resume/ui/lib/utils";
 import { AlertCircle, FileText, Plus } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { contentSectionLabels, createContentItem } from "./content-settings";
+import { contentSectionLabels, createContentItem } from "./content/content-model";
 import { ContentSortProvider, SortableRow } from "./content-sortable";
 import { type ContentSection, useCurrentPage, useEditor } from "./editor-context";
 
