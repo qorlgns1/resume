@@ -22,7 +22,7 @@ import { GripVertical } from "lucide-react";
 import { createContext, type ReactNode, useContext } from "react";
 
 /*
- * 미리보기에서 히스토리 챕터·개인 프로젝트의 순서를 끌어서 바꾼다.
+ * 미리보기에서 히스토리 챕터·개인 프로젝트의 순서를, 사이드바에서 페이지 순서를 끌어서 바꾼다.
  * 미리보기는 transform: scale()로 축소되어 있어서, 화면 좌표로 계산된 이동 거리를 축소 비율로 나눠 적용한다.
  */
 
@@ -148,6 +148,56 @@ export function SortableItem({
       >
         <GripVertical aria-hidden="true" className="size-4" />
       </button>
+    </div>
+  );
+}
+
+/** 순서를 바꿀 수 있는 목록 한 줄. 왼쪽 손잡이를 잡고 끌어 옮긴다. (사이드바처럼 축소되지 않은 곳) */
+export function SortableRow({
+  id,
+  label,
+  children,
+}: {
+  id: string;
+  label: string;
+  children: ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "group/sortable relative flex items-center rounded-md",
+        isDragging && "z-10 bg-card shadow-lg",
+      )}
+      style={{
+        transform: transform ? `translate3d(0, ${transform.y}px, 0)` : undefined,
+        transition,
+      }}
+    >
+      <button
+        type="button"
+        ref={setActivatorNodeRef}
+        aria-label={`${label} 순서 바꾸기`}
+        {...attributes}
+        {...listeners}
+        className={cn(
+          "flex h-8 w-5 shrink-0 cursor-grab touch-none items-center justify-center rounded-sm text-subtle-foreground opacity-0 transition-opacity group-hover/sortable:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-primary active:cursor-grabbing",
+          isDragging && "cursor-grabbing opacity-100",
+        )}
+      >
+        <GripVertical aria-hidden="true" className="size-4" />
+      </button>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }

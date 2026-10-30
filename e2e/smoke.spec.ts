@@ -14,6 +14,11 @@ const web = `http://localhost:${ports.web}`;
 const admin = `http://localhost:${ports.admin}`;
 const screens = "test-results/screens";
 
+/** 어드민 알림 띠. 끌어서 옮기기의 스크린 리더 안내(DndLiveRegion)도 status 역할이라 뺀다. */
+function notice(page: Page) {
+  return page.getByRole("status").and(page.locator(":not([id^=DndLiveRegion])"));
+}
+
 async function expectNoHorizontalScroll(page: Page) {
   const [scrollWidth, innerWidth] = await page.evaluate(() => [
     document.documentElement.scrollWidth,
@@ -324,11 +329,12 @@ test.describe("어드민", () => {
     await page.getByRole("button", { name: /데스크톱/ }).click();
 
     // 기본 페이지는 공개 사이트와 같은 목록을 미리보기로 보여준다
-    await sidebar.getByRole("button", { name: /회사 경험/ }).click();
+    // 페이지 줄마다 "순서 바꾸기" 손잡이가 있어서, 글자가 보이는 페이지 버튼만 고른다
+    await sidebar.locator("button", { hasText: "회사 경험" }).click();
     await expect(
       page.locator("[data-viewport]").getByRole("heading", { name: "샘플 회사 A" }),
     ).toBeVisible();
-    await sidebar.getByRole("button", { name: /^홈/ }).click();
+    await sidebar.locator("button", { hasText: /^홈/ }).click();
   });
 
   test("바꿀 것이 없으면 저장·게시 버튼이 꺼져 있다", async () => {
@@ -359,7 +365,7 @@ test.describe("어드민", () => {
     await expect(page.getByRole("button", { name: "게시", exact: true })).toBeDisabled();
 
     await page.keyboard.press("ControlOrMeta+s");
-    await expect(page.getByRole("status")).toContainText("초안을 저장했습니다");
+    await expect(notice(page)).toContainText("초안을 저장했습니다");
     await expect(page.getByTestId("draft-status")).toHaveText("게시하지 않은 초안");
 
     // 저장만 해서는 공개 사이트가 바뀌지 않는다
@@ -370,7 +376,7 @@ test.describe("어드민", () => {
     await page.getByRole("button", { name: "게시", exact: true }).click();
     await page.getByLabel("메모 (선택)").fill("스모크 테스트 게시");
     await page.getByRole("dialog").getByRole("button", { name: "게시" }).click();
-    await expect(page.getByRole("status")).toContainText("버전 2을 게시했습니다");
+    await expect(notice(page)).toContainText("버전 2을 게시했습니다");
     await expect(page.getByTestId("draft-status")).toHaveText("게시됨 · 버전 2");
 
     await visitor.reload();
@@ -392,12 +398,12 @@ test.describe("어드민", () => {
       .getByRole("dialog", { name: /버전 1의 내용으로/ })
       .getByRole("button", { name: "복원" })
       .click();
-    await expect(page.getByRole("status")).toContainText("버전 1의 내용을 초안으로 가져왔습니다");
+    await expect(notice(page)).toContainText("버전 1의 내용을 초안으로 가져왔습니다");
     await expect(page.getByTestId("draft-status")).toHaveText("게시하지 않은 초안");
 
     await page.getByRole("button", { name: "게시", exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: "게시" }).click();
-    await expect(page.getByRole("status")).toContainText("버전 3을 게시했습니다");
+    await expect(notice(page)).toContainText("버전 3을 게시했습니다");
 
     const versions = await page.request.get(`${admin}/api/admin/versions`);
     const body = (await versions.json()) as {
@@ -427,6 +433,59 @@ test.describe("어드민", () => {
     await expect(page.getByTestId("draft-status")).toHaveText("게시됨 · 버전 3");
   });
 
+  test("페이지 목록을 끌어서 옮기면 메뉴 순서도 바뀐다", async () => {
+    const sidebar = page.getByRole("complementary", { name: "페이지와 콘텐츠" });
+    await sidebar.getByRole("tab", { name: "페이지" }).click();
+    const pageNames = sidebar.getByRole("list").first().locator("li");
+    const menu = page.locator("[data-viewport] header li");
+    await expect(menu).toHaveText(["홈", "개인 프로젝트", "회사 경험", "히스토리", "소개"]);
+
+    // 키보드로 소개를 잡아 세 칸 위로 옮긴다
+    const handle = sidebar.getByRole("button", { name: "소개 순서 바꾸기" });
+    await handle.focus();
+    // 끌기 상태가 바뀔 때마다 스크린 리더 안내가 갱신되므로, 안내를 기다리며 한 칸씩 옮긴다
+    const live = page.locator("[id^=DndLiveRegion]");
+    await page.keyboard.press("Space");
+    await expect(live).toHaveText(/^소개.* 5번째/);
+    // 끌기를 시작하면 다음 애니메이션 프레임에 목록 위치를 잰다. 재기 전에 누른 방향키는 무시된다.
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    for (const position of [4, 3, 2]) {
+      await page.keyboard.press("ArrowUp");
+      await expect(live).toHaveText(`소개이 ${position}번째 위치에 있습니다.`);
+    }
+    await page.keyboard.press("Space");
+    await expect(pageNames).toHaveText([
+      /^홈/,
+      /^소개/,
+      /^개인 프로젝트/,
+      /^회사 경험/,
+      /^히스토리/,
+    ]);
+    await expect(menu).toHaveText(["홈", "소개", "개인 프로젝트", "회사 경험", "히스토리"]);
+
+    // 마우스로 끌어서 맨 아래로 되돌린다
+    const box = await pageNames.filter({ hasText: /^히스토리/ }).boundingBox();
+    await pageNames.filter({ hasText: /^소개/ }).hover();
+    await sidebar
+      .getByRole("list")
+      .first()
+      .screenshot({ path: `${screens}/admin-pages-sort.png` });
+    const handleBox = await handle.boundingBox();
+    if (!box || !handleBox) throw new Error("페이지 목록 위치를 찾지 못했습니다.");
+    await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 20, box.y + box.height / 2, { steps: 8 });
+    await page.mouse.move(box.x + 20, box.y + box.height - 2, { steps: 4 });
+    await page.mouse.up();
+    await expect(menu).toHaveText(["홈", "개인 프로젝트", "회사 경험", "히스토리", "소개"]);
+    // 원래 순서로 돌아왔으므로 저장된 초안과 같다
+    await expect(page.getByRole("button", { name: "초안 저장" })).toBeDisabled();
+    // dnd-kit은 끌기를 마친 뒤 50ms 동안 클릭을 막는다. 다음 테스트의 첫 클릭이 묻히지 않게 기다린다.
+    await page.waitForTimeout(100);
+  });
+
   test("다른 곳에서 먼저 저장하면 덮어쓰지 않고 알린다", async () => {
     const { draft } = (await (await page.request.get(`${admin}/api/admin/draft`)).json()) as {
       draft: { revision: number; document: unknown };
@@ -444,7 +503,7 @@ test.describe("어드민", () => {
 
     page.once("dialog", (dialog) => void dialog.accept());
     await page.getByRole("button", { name: "최신 초안 불러오기" }).click();
-    await expect(page.getByRole("status")).toContainText("최신 초안을 불러왔습니다");
+    await expect(notice(page)).toContainText("최신 초안을 불러왔습니다");
     await expect(page.getByTestId("draft-status")).toHaveText("게시됨 · 버전 3");
   });
 
@@ -496,7 +555,7 @@ test.describe("어드민", () => {
 
     await expect(page.getByText("블록 2개")).toBeVisible();
     await page.keyboard.press("ControlOrMeta+s");
-    await expect(page.getByRole("status")).toContainText("초안을 저장했습니다");
+    await expect(notice(page)).toContainText("초안을 저장했습니다");
 
     const { draft } = (await (await page.request.get(`${admin}/api/admin/draft`)).json()) as {
       draft: { document: { content: { projects: { title: string; body: unknown[] }[] } } };
@@ -524,10 +583,10 @@ test.describe("어드민", () => {
     await page.screenshot({ path: `${screens}/admin-history-editor.png` });
 
     await page.keyboard.press("ControlOrMeta+s");
-    await expect(page.getByRole("status")).toContainText("초안을 저장했습니다");
+    await expect(notice(page)).toContainText("초안을 저장했습니다");
     await page.getByRole("button", { name: "게시", exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: "게시" }).click();
-    await expect(page.getByRole("status")).toContainText("을 게시했습니다");
+    await expect(notice(page)).toContainText("을 게시했습니다");
 
     const visitor = await browser.newPage();
     await visitor.goto(`http://localhost:${ports.webApi}/history`);
@@ -610,10 +669,10 @@ test.describe("어드민", () => {
     await expect(picker).toBeHidden();
     await settings.getByLabel("대체 텍스트").fill("독서 기록 화면");
     await page.keyboard.press("ControlOrMeta+s");
-    await expect(page.getByRole("status")).toContainText("초안을 저장했습니다");
+    await expect(notice(page)).toContainText("초안을 저장했습니다");
     await page.getByRole("button", { name: "게시", exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: "게시" }).click();
-    await expect(page.getByRole("status")).toContainText("을 게시했습니다");
+    await expect(notice(page)).toContainText("을 게시했습니다");
 
     const visitor = await browser.newPage();
     await visitor.goto(`http://localhost:${ports.webApi}/projects/bookmark`);
@@ -654,10 +713,10 @@ test.describe("어드민", () => {
   }) => {
     const publish = async () => {
       await page.keyboard.press("ControlOrMeta+s");
-      await expect(page.getByRole("status")).toContainText("초안을 저장했습니다");
+      await expect(notice(page)).toContainText("초안을 저장했습니다");
       await page.getByRole("button", { name: "게시", exact: true }).click();
       await page.getByRole("dialog").getByRole("button", { name: "게시" }).click();
-      await expect(page.getByRole("status")).toContainText("을 게시했습니다");
+      await expect(notice(page)).toContainText("을 게시했습니다");
     };
     const visitor = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     const mark = visitor.locator('header a[href="/"] [aria-hidden="true"]');

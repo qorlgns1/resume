@@ -1,5 +1,6 @@
 "use client";
 
+import { publicPaths, type SiteDocument } from "@resume/contracts";
 import { createModuleDraft, getModuleCatalogEntry, moduleCatalog } from "@resume/modules";
 import { Button } from "@resume/ui/components/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@resume/ui/components/tabs";
@@ -7,6 +8,7 @@ import { cn } from "@resume/ui/lib/utils";
 import { AlertCircle, FileText, Plus } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { contentSectionLabels, createContentItem } from "./content-settings";
+import { ContentSortProvider, SortableRow } from "./content-sortable";
 import { type ContentSection, useCurrentPage, useEditor } from "./editor-context";
 
 function Section({
@@ -59,6 +61,30 @@ export function Sidebar() {
   );
 }
 
+/**
+ * 페이지 순서를 바꾸고, 공개 사이트 메뉴도 같은 순서로 맞춘다.
+ * 기본 페이지를 가리키는 메뉴 항목끼리만 자리를 바꾸고, 그 밖의 메뉴 항목은 제자리에 둔다.
+ */
+function movePage(document: SiteDocument, from: number, to: number) {
+  const [moved] = document.pages.splice(from, 1);
+  if (!moved) return;
+  document.pages.splice(to, 0, moved);
+
+  const pageHrefs: string[] = document.pages.flatMap((p) =>
+    p.kind === "system" ? [publicPaths[p.systemKey]] : [],
+  );
+  const navigation = document.site.navigation;
+  const slots = navigation.flatMap((item, index) => (pageHrefs.includes(item.href) ? [index] : []));
+  const ordered = slots
+    .map((index) => navigation[index])
+    .filter((item) => item !== undefined)
+    .sort((a, b) => pageHrefs.indexOf(a.href) - pageHrefs.indexOf(b.href));
+  slots.forEach((slot, i) => {
+    const item = ordered[i];
+    if (item) navigation[slot] = item;
+  });
+}
+
 function PagesTab() {
   const { document, edit, issues, pageId, selectPage, selection, select } = useEditor();
   const { page, pageIndex } = useCurrentPage();
@@ -91,33 +117,45 @@ function PagesTab() {
   return (
     <>
       <Section title="페이지">
-        <ul className="flex flex-col gap-0.5">
-          {document.pages.map((p, index) => {
-            const current = p.id === pageId;
-            const hasIssues = issues.under(["pages", index]).length > 0;
-            return (
-              <li key={p.id}>
-                <button
-                  type="button"
-                  aria-current={current ? "page" : undefined}
-                  onClick={() => selectPage(p.id)}
-                  className={cn(
-                    itemClass,
-                    current &&
-                      "bg-primary-soft font-semibold text-primary-text hover:bg-primary-soft",
-                  )}
-                >
-                  <FileText aria-hidden="true" className="size-4 shrink-0" />
-                  <span className="flex-1 truncate">{p.title}</span>
-                  {hasIssues ? (
-                    <AlertCircle aria-label="오류 있음" className="size-4 text-destructive" />
-                  ) : null}
-                  <span className="text-caption text-subtle-foreground">{p.modules.length}</span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        <ContentSortProvider
+          items={document.pages.map((p) => ({ id: p.id, label: p.title }))}
+          noun="페이지"
+          layout="list"
+          scale={1}
+          onMove={(from, to) => edit((d) => movePage(d, from, to))}
+        >
+          <ul className="flex flex-col gap-0.5">
+            {document.pages.map((p, index) => {
+              const current = p.id === pageId;
+              const hasIssues = issues.under(["pages", index]).length > 0;
+              return (
+                <li key={p.id}>
+                  <SortableRow id={p.id} label={p.title}>
+                    <button
+                      type="button"
+                      aria-current={current ? "page" : undefined}
+                      onClick={() => selectPage(p.id)}
+                      className={cn(
+                        itemClass,
+                        current &&
+                          "bg-primary-soft font-semibold text-primary-text hover:bg-primary-soft",
+                      )}
+                    >
+                      <FileText aria-hidden="true" className="size-4 shrink-0" />
+                      <span className="flex-1 truncate">{p.title}</span>
+                      {hasIssues ? (
+                        <AlertCircle aria-label="오류 있음" className="size-4 text-destructive" />
+                      ) : null}
+                      <span className="text-caption text-subtle-foreground">
+                        {p.modules.length}
+                      </span>
+                    </button>
+                  </SortableRow>
+                </li>
+              );
+            })}
+          </ul>
+        </ContentSortProvider>
       </Section>
 
       <Section title="이 페이지의 모듈">

@@ -239,8 +239,8 @@ function SiteForm() {
         }
       />
       <p className="text-caption text-muted-foreground">
-        메뉴 구성은 기본 페이지로 고정되어 있습니다. 사용자 페이지를 추가하는 단계에서 편집할 수
-        있게 됩니다.
+        메뉴 구성은 기본 페이지로 고정되어 있습니다. 메뉴 순서는 페이지 탭의 페이지 목록에서 끌어서
+        바꿉니다.
       </p>
     </FieldGroup>
   );
