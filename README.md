@@ -1,5 +1,7 @@
 # Resume — 셀프 호스팅 포트폴리오
 
+[![CI](https://github.com/qorlgns1/resume/actions/workflows/ci.yml/badge.svg)](https://github.com/qorlgns1/resume/actions/workflows/ci.yml)
+
 관리자 화면에서 페이지 콘텐츠와 모듈 배치를 편집하는 오픈소스 포트폴리오입니다.
 저장소를 복제해 자신의 서버에 설치하고, 공개 사이트와 어드민을 따로 배포합니다.
 
@@ -209,10 +211,19 @@ networks:
 ```bash
 pnpm lint          # Biome (린트 + 포맷 검사)
 pnpm typecheck     # 모든 패키지·앱 tsc
+pnpm test          # 단위 테스트 (Vitest, 빌드 불필요)
+pnpm check         # 위 세 가지를 한 번에
 pnpm build         # web, admin, storybook 빌드
 pnpm test:smoke:install   # 처음 한 번: Playwright Chromium 설치
 pnpm test:smoke    # 빌드 결과물로 스모크 검증 (31xx 포트 사용)
 ```
+
+GitHub Actions([`.github/workflows/ci.yml`](.github/workflows/ci.yml))가 `main` 푸시와 PR마다 같은 순서로 전부 실행하고, 스모크 스크린샷과 실패 트레이스를 아티팩트로 남깁니다.
+
+단위 테스트는 외부 상태 없이 돌아가는 핵심 로직을 다룹니다.
+- `packages/contracts`: 샘플 문서와 공개 API 응답이 계약을 통과하는지, 참조 누락·중복 slug·목록 깊이·표 모양·허용 링크 규칙
+- `apps/admin`: 메모리 SQLite에 실제 마이그레이션을 적용한 저장소(시드, 초안 저장, revision 충돌, 게시, 복원), BlockNote ↔ 저장 블록 변환과 경고, 이미지 변환본 너비 계산
+- `apps/web`: 콘텐츠 출처 설정 파싱, API 모드의 실패 종류 구분(연결 실패·시간 초과·HTTP 오류·계약 불일치)
 
 스모크 검증은 다음을 확인합니다.
 - 공개 API 응답(DB 게시본)의 계약
@@ -250,7 +261,7 @@ pnpm test:smoke    # 빌드 결과물로 스모크 검증 (31xx 포트 사용)
 **아직 없음**
 - 드래그로 모듈 이동·크기 변경 (지금은 숫자와 버튼으로 조정. 목록 항목·챕터·페이지 순서는 드래그 가능)
 - S3 호환 미디어 저장소 어댑터 (지금은 서버 디스크 `/data/media`)
-- CI, 실행 중 백업 명령, 보안 응답 헤더, 2단계 인증·패스키
+- 실행 중 백업 명령, 보안 응답 헤더, 2단계 인증·패스키
 - 사용자 페이지 추가
 
 다음 작업은 [docs/next-steps.md](docs/next-steps.md)에 정리했습니다.

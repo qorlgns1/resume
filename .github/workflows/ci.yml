@@ -1,0 +1,59 @@
+# main에 올리거나 PR을 열 때마다 lint · typecheck · 단위 테스트 · 빌드 · 스모크 검증을 돌린다.
+# 로컬의 `pnpm check`와 `pnpm build && pnpm test:smoke`를 그대로 옮긴 것이다.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  check:
+    name: Lint · Typecheck · Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6 # 버전은 package.json의 packageManager를 따른다
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  smoke:
+    name: Build · Smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:smoke
+      - name: Upload screenshots and traces
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-results
+          path: |
+            test-results/screens
+            test-results/smoke
+          if-no-files-found: ignore
+          retention-days: 7
