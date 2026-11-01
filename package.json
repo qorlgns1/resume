@@ -31,7 +31,7 @@
     "@playwright/test": "1.64.1",
     "@resume/config": "workspace:*",
     "@resume/contracts": "workspace:*",
-    "@types/node": "24.19.2",
+    "@types/node": "26.6.5",
     "sharp": "0.35.5",
     "turbo": "2.11.10",
     "typescript": "6.0.3",
