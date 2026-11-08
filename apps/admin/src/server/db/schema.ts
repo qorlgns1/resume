@@ -183,7 +183,10 @@ export const interviewNotes = sqliteTable(
       .default("question"),
     position: integer("position").notNull(),
     question: text("question").notNull(),
+    /** 용어의 한 줄 정의 (질문은 answers를 쓴다) */
     summary: text("summary").notNull().default(""),
+    /** 질문의 답 목록 JSON [{ id, label, text }], 첫 번째가 대표 답 */
+    answers: text("answers", { mode: "json" }).notNull().default(sql`'[]'`),
     body: text("body", { mode: "json" }).notNull(),
     /** 연결한 포트폴리오 프로젝트 ID (사이트 문서 안의 ID라 외래 키 없음). null이면 공통 질문 */
     projectId: text("project_id"),

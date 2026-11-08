@@ -2,6 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import {
   BlockSchema,
+  InterviewAnswersSchema,
   type InterviewNote,
   type InterviewNoteInput,
   InterviewNoteInputSchema,
@@ -45,12 +46,17 @@ function toNote(row: Row): InterviewNote {
   if (!body.success) {
     throw new Error(`면접 노트 ${row.id}의 본문이 계약과 다릅니다: ${body.error.message}`);
   }
+  const answers = InterviewAnswersSchema.safeParse(row.answers);
+  if (!answers.success) {
+    throw new Error(`면접 노트 ${row.id}의 답이 계약과 다릅니다: ${answers.error.message}`);
+  }
   return {
     id: row.id,
     kind: row.kind,
     position: row.position,
     question: row.question,
     summary: row.summary,
+    answers: answers.data,
     body: body.data,
     status: row.status,
     projectId: row.projectId,
@@ -93,6 +99,7 @@ export function createInterviewNote(
         position: last === null ? 0 : last + 1,
         question: value.question,
         summary: value.summary,
+        answers: value.answers,
         body: value.body,
         status: value.status,
         projectId: value.projectId,
@@ -121,6 +128,7 @@ export function updateInterviewNote(
       .set({
         question: value.question,
         summary: value.summary,
+        answers: value.answers,
         body: value.body,
         status: value.status,
         projectId: value.projectId,

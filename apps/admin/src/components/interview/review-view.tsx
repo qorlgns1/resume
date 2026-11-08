@@ -13,11 +13,12 @@ import { Input } from "@resume/ui/components/input";
 import { cn } from "@resume/ui/lib/utils";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Search } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { formatSpeakingTime } from "./speaking-time";
 
 /*
  * 면접 노트 훑어보기. 한 화면에 하나만 보여준다.
  * - 왼쪽: 프로젝트 선택, 질문(전체를 고르면 프로젝트별로 묶음) / 용어집(가나다순, 검색) 목차
- * - 오른쪽: 고른 질문의 30초 답변과 자세한 답변, 또는 용어 설명
+ * - 오른쪽: 고른 질문의 답(여러 개면 탭으로 고름, 읽는 시간 어림 포함)과 자세한 답변, 또는 용어 설명
  * - ←/→ 이전·다음, "답 가리기"를 켜면 먼저 답해 보고 Space로 펼친다(연습용)
  */
 
@@ -75,13 +76,18 @@ export function ReviewView({ notes, projectTitle, projectFilter, projectLabel }:
 
   const [hideAnswers, setHideAnswers] = useState(false);
   const [revealed, setRevealed] = useState(false);
+  /** 질문의 답 중 지금 보는 것 (0 = 대표 답). 다른 질문으로 넘어가면 대표 답으로 돌아간다. */
+  const [answerIndex, setAnswerIndex] = useState(0);
   const answerVisible = !hideAnswers || revealed;
+  const shownAnswer = current ? Math.min(answerIndex, Math.max(0, current.answers.length - 1)) : 0;
+  const answer = current?.answers[shownAnswer] ?? null;
 
   const contentRef = useRef<HTMLDivElement>(null);
   const go = (id: string | undefined) => {
     if (!id) return;
     setCurrentId(id);
     setRevealed(false);
+    setAnswerIndex(0);
     contentRef.current?.scrollTo({ top: 0 });
   };
   const changeSection = (next: Section) => {
@@ -261,12 +267,63 @@ export function ReviewView({ notes, projectTitle, projectFilter, projectLabel }:
 
             <h2 className="text-heading font-extrabold tracking-tight">{current.question}</h2>
 
+            {section === "question" && current.answers.length > 1 ? (
+              <fieldset className="flex flex-wrap gap-1.5">
+                <legend className="sr-only">답 고르기</legend>
+                {current.answers.map((answer, i) => {
+                  const time = formatSpeakingTime(answer.text);
+                  return (
+                    <Button
+                      key={answer.id}
+                      type="button"
+                      size="sm"
+                      variant={i === shownAnswer ? "secondary" : "ghost"}
+                      aria-pressed={i === shownAnswer}
+                      onClick={() => setAnswerIndex(i)}
+                      className={cn(i === shownAnswer && "ring-1 ring-border-strong")}
+                    >
+                      {answer.label}
+                      {time ? (
+                        <span className="text-caption font-normal text-subtle-foreground">
+                          {time}
+                        </span>
+                      ) : null}
+                    </Button>
+                  );
+                })}
+              </fieldset>
+            ) : null}
+
             {answerVisible ? (
               <>
-                {current.summary ? (
-                  <section aria-label={section === "question" ? "30초 답변" : "한 줄 정의"}>
+                {section === "question" ? (
+                  answer ? (
+                    <section aria-label={`답변 · ${answer.label}`}>
+                      <p className="mb-1.5 flex items-baseline gap-2 text-caption font-semibold text-primary-text">
+                        {shownAnswer === 0 ? "대표 답" : "답"} · {answer.label}
+                        {formatSpeakingTime(answer.text) ? (
+                          <span className="font-normal text-subtle-foreground tabular-nums">
+                            · 소리 내어 읽으면 {formatSpeakingTime(answer.text)}
+                          </span>
+                        ) : null}
+                      </p>
+                      {answer.text ? (
+                        <p className="rounded-md border-l-4 border-primary bg-primary-soft px-5 py-4 text-body leading-relaxed whitespace-pre-line">
+                          {answer.text}
+                        </p>
+                      ) : (
+                        <p className="text-body-sm text-muted-foreground">
+                          이 답을 아직 적지 않았습니다.
+                        </p>
+                      )}
+                    </section>
+                  ) : (
+                    <p className="text-body-sm text-muted-foreground">답을 아직 적지 않았습니다.</p>
+                  )
+                ) : current.summary ? (
+                  <section aria-label="한 줄 정의">
                     <p className="mb-1.5 text-caption font-semibold text-primary-text">
-                      {section === "question" ? "30초 답변" : "한 줄 정의"}
+                      한 줄 정의
                     </p>
                     <p className="rounded-md border-l-4 border-primary bg-primary-soft px-5 py-4 text-body leading-relaxed whitespace-pre-line">
                       {current.summary}
@@ -274,7 +331,7 @@ export function ReviewView({ notes, projectTitle, projectFilter, projectLabel }:
                   </section>
                 ) : (
                   <p className="text-body-sm text-muted-foreground">
-                    {section === "question" ? "30초 답변" : "한 줄 정의"}을 아직 적지 않았습니다.
+                    한 줄 정의를 아직 적지 않았습니다.
                   </p>
                 )}
                 {current.body.length > 0 ? (

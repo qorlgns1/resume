@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import type { InterviewNoteInput } from "@resume/contracts";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -26,6 +28,7 @@ function note(question: string, extra: Partial<InterviewNoteInput> = {}): Interv
     kind: "question",
     question,
     summary: "",
+    answers: [],
     body: [],
     status: "todo",
     projectId: null,
@@ -99,6 +102,43 @@ describe("interview-repository", () => {
       db,
     );
     expect(updated.kind).toBe("term");
+  });
+
+  it("keeps several answers in order, the first being the main one", () => {
+    const created = createInterviewNote(
+      note("1분 자기소개를 해 주세요.", {
+        answers: [
+          { id: "ans_default", label: "1분", text: "  긴 자기소개  " },
+          { id: "ans_short", label: "30초", text: "짧은 자기소개" },
+        ],
+      }),
+      db,
+    );
+    expect(created.answers).toEqual([
+      { id: "ans_default", label: "1분", text: "긴 자기소개" },
+      { id: "ans_short", label: "30초", text: "짧은 자기소개" },
+    ]);
+    const reordered = updateInterviewNote(
+      created.id,
+      {
+        revision: 1,
+        ...note("1분 자기소개를 해 주세요.", { answers: [...created.answers].reverse() }),
+      },
+      db,
+    );
+    expect(listInterviewNotes(db)[0]?.answers.map((a) => a.label)).toEqual(["30초", "1분"]);
+    expect(reordered.revision).toBe(2);
+  });
+
+  it("rejects duplicate answer ids and empty labels", () => {
+    const dup = [
+      { id: "a", label: "기본", text: "" },
+      { id: "a", label: "30초", text: "" },
+    ];
+    expect(() => createInterviewNote(note("q", { answers: dup }), db)).toThrow();
+    expect(() =>
+      createInterviewNote(note("q", { answers: [{ id: "a", label: "  ", text: "" }] }), db),
+    ).toThrow();
   });
 
   it("rejects an update based on a stale revision", () => {
@@ -180,5 +220,41 @@ describe("interview-repository", () => {
     );
     expect(listMedia(db)[0]?.usage.interview).toBe(true);
     await expect(deleteMedia(assetId, db)).rejects.toThrow(MediaInUseError);
+  });
+
+  it("migration 0006 moves an existing question's summary into a single default answer", () => {
+    // 0005까지만 있는 마이그레이션 폴더를 만들어 예전 DB를 재현한다.
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "interview-migration-"));
+    const oldDir = path.join(tmp, "drizzle");
+    fs.cpSync(migrationsDir, oldDir, { recursive: true });
+    const journalPath = path.join(oldDir, "meta/_journal.json");
+    const journal = JSON.parse(fs.readFileSync(journalPath, "utf8")) as {
+      entries: { idx: number }[];
+    };
+    journal.entries = journal.entries.filter((e) => e.idx <= 5);
+    fs.writeFileSync(journalPath, JSON.stringify(journal));
+    const file = path.join(tmp, "old.db");
+    try {
+      const old = openDatabase(file, oldDir);
+      const insert = old.sqlite.prepare(
+        "INSERT INTO interview_notes (id, kind, position, question, summary, body) VALUES (?, ?, ?, ?, ?, '[]')",
+      );
+      insert.run("iv_q", "question", 0, "질문", "예전 핵심 답변");
+      insert.run("iv_empty", "question", 1, "빈 질문", "");
+      insert.run("iv_t", "term", 2, "스냅샷", "한 줄 정의");
+      old.sqlite.close();
+
+      const upgraded = openDatabase(file, migrationsDir);
+      const notes = new Map(listInterviewNotes(upgraded.db).map((n) => [n.id, n]));
+      expect(notes.get("iv_q")).toMatchObject({
+        summary: "",
+        answers: [{ id: "ans_default", label: "기본", text: "예전 핵심 답변" }],
+      });
+      expect(notes.get("iv_empty")?.answers).toEqual([]);
+      expect(notes.get("iv_t")).toMatchObject({ summary: "한 줄 정의", answers: [] });
+      upgraded.sqlite.close();
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });

@@ -828,7 +828,16 @@ test.describe("어드민", () => {
     await page.getByRole("button", { name: "새 질문" }).click();
     await expect(notice(page)).toContainText("새 질문을 만들었습니다");
     await page.getByLabel("질문", { exact: true }).fill("왜 문서 스냅샷 방식인가요?");
-    await page.getByLabel("30초 답변").fill("관리자 1명, 드문 쓰기, 전체 되돌리기가 핵심입니다.");
+    // 새 질문에는 "기본" 답 하나가 있고, 답을 더 추가할 수 있다
+    await page.getByLabel("답변 · 기본").fill("관리자 1명, 드문 쓰기, 전체 되돌리기가 핵심입니다.");
+    await expect(page.getByTestId("speaking-time")).toHaveText("소리 내어 읽으면 약 5초");
+    await page.getByRole("button", { name: "답 추가" }).click();
+    await expect(page.getByLabel("답 2 이름표")).toHaveValue("30초");
+    await page.getByLabel("답변 · 30초").fill("관리자 1명이라 문서 통째로 버전 관리합니다.");
+    await page.getByRole("button", { name: "답 추가" }).click();
+    await page.getByLabel("답 3 이름표").fill("버릴 답");
+    await page.getByRole("button", { name: "버릴 답 답 삭제" }).click();
+    await expect(page.getByTestId("answer-card")).toHaveCount(2);
     await page.getByLabel("정리 상태").click();
     await page.getByRole("option", { name: "정리 완료" }).click();
     const editor = page.getByRole("textbox", { name: "자세한 답변" });
@@ -842,8 +851,11 @@ test.describe("어드민", () => {
     await page.reload();
     const list = page.getByRole("navigation", { name: "면접 노트 목록" });
     await expect(list.getByRole("button", { name: /왜 문서 스냅샷 방식인가요\?/ })).toBeVisible();
-    await expect(page.getByLabel("30초 답변")).toHaveValue(
+    await expect(page.getByLabel("답변 · 기본")).toHaveValue(
       "관리자 1명, 드문 쓰기, 전체 되돌리기가 핵심입니다.",
+    );
+    await expect(page.getByLabel("답변 · 30초")).toHaveValue(
+      "관리자 1명이라 문서 통째로 버전 관리합니다.",
     );
 
     // 훑어보기는 한 번에 하나씩 보여주고, 목차는 프로젝트별로 묶는다
@@ -855,6 +867,14 @@ test.describe("어드민", () => {
     ).toBeVisible();
     await expect(page.getByTestId("review-position")).toHaveText("질문 1 / 1");
     await expect(page.getByText("canonicalJson으로 키 순서를 정규화한다.")).toBeVisible();
+    // 대표 답이 먼저 보이고, 탭으로 다른 답을 고른다
+    await expect(page.getByRole("region", { name: "답변 · 기본" })).toBeVisible();
+    await page.getByRole("button", { name: /^30초/ }).click();
+    await expect(page.getByText("관리자 1명이라 문서 통째로 버전 관리합니다.")).toBeVisible();
+    await expect(page.getByText("관리자 1명, 드문 쓰기, 전체 되돌리기가 핵심입니다.")).toHaveCount(
+      0,
+    );
+    await page.getByRole("button", { name: /^기본/ }).click();
     await expect(page.getByRole("button", { name: "훑어보기" })).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -940,7 +960,7 @@ test.describe("어드민", () => {
     await page.getByRole("searchbox", { name: "용어 찾기" }).fill("없는 말");
     await expect(toc.getByText("찾는 용어가 없습니다.")).toBeVisible();
     await page.getByRole("button", { name: "편집", exact: true }).click();
-    await page.getByRole("button", { name: "삭제" }).click();
+    await page.getByRole("button", { name: "삭제", exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: "삭제" }).click();
     await expect(notice(page)).toContainText("노트를 삭제했습니다");
     await page.getByRole("button", { name: /^질문/ }).click();
@@ -963,7 +983,7 @@ test.describe("어드민", () => {
     expect(await publicHome.text()).not.toContain("문서 스냅샷 방식");
 
     for (const remaining of [1, 0]) {
-      await page.getByRole("button", { name: "삭제" }).click();
+      await page.getByRole("button", { name: "삭제", exact: true }).click();
       await page.getByRole("dialog").getByRole("button", { name: "삭제" }).click();
       await expect(notice(page)).toContainText("노트를 삭제했습니다");
       await expect(page.getByTestId("interview-progress")).toContainText(`/ ${remaining}`);

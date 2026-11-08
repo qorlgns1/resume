@@ -40,6 +40,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminApiError, adminApi } from "../editor/api-client";
 import { MediaLibraryProvider, useMediaLibrary } from "../editor/media-library";
 import { SignOutButton } from "../editor/sign-out-button";
+import { AnswersEditor } from "./answers-editor";
 import { ReviewView, statusBadge } from "./review-view";
 
 configureKoreanErrors();
@@ -68,6 +69,7 @@ function toInput(note: InterviewNote): InterviewNoteInput {
     kind: note.kind,
     question: note.question,
     summary: note.summary,
+    answers: note.answers,
     body: note.body,
     status: note.status,
     projectId: note.projectId,
@@ -108,8 +110,9 @@ const copy = {
     /** 목적격 조사를 붙인 형태 */
     object: "질문을",
     title: "질문",
-    summary: "30초 답변",
-    summaryHelp: "처음 질문을 받았을 때 바로 말할 핵심 답변입니다. 훑어보기에서 맨 위에 보입니다.",
+    summary: "답변",
+    summaryHelp:
+      "처음 질문을 받았을 때 바로 말할 답입니다. 1분·30초·회사별처럼 쓰임새가 다른 답을 여러 개 둘 수 있고, 맨 위 답이 대표로 훑어보기에 먼저 보입니다.",
     body: "자세한 답변 · 꼬리질문",
     bodyHelp: "코드 근거, 예상 꼬리질문과 답, 약점과 개선 계획을 적습니다.",
     editor: "자세한 답변",
@@ -147,7 +150,7 @@ interface InterviewWorkspaceProps {
  * 면접 노트 화면 (어드민 전용).
  * - 노트는 면접 질문 또는 용어집 항목이다. 목록 위의 탭으로 고른다.
  * - 노트마다 포트폴리오 프로젝트를 연결하거나 공통으로 둔다. 목록과 훑어보기를 프로젝트별로 거른다.
- * - 편집: 왼쪽 목록에서 질문을 고르고 오른쪽에서 질문·30초 답변·본문을 고친다. 노트마다 따로 저장한다.
+ * - 편집: 왼쪽 목록에서 질문을 고르고 오른쪽에서 질문·답(여러 개)·본문을 고친다. 노트마다 따로 저장한다.
  * - 훑어보기: 면접 직전에 읽도록 고른 범위의 노트를 프로젝트별로 묶어 한 페이지에 보여준다.
  */
 export function InterviewWorkspace(props: InterviewWorkspaceProps) {
@@ -184,9 +187,11 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
     const result = InterviewNoteInputSchema.safeParse(working);
     const map = new Map<string, string>();
     if (!result.success) {
+      // 맨 위 필드("answers")와 정확한 경로("answers.0.label") 양쪽으로 찾을 수 있게 둔다.
       for (const issue of result.error.issues) {
-        const key = String(issue.path[0] ?? "");
-        if (!map.has(key)) map.set(key, issue.message);
+        for (const key of [String(issue.path[0] ?? ""), issue.path.join(".")]) {
+          if (!map.has(key)) map.set(key, issue.message);
+        }
       }
     }
     return map;
@@ -241,6 +246,7 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
         kind,
         question: `새 ${text.noun}`,
         summary: "",
+        answers: kind === "question" ? [{ id: "ans_default", label: "기본", text: "" }] : [],
         body: [],
         status: "todo",
         projectId: filter === "all" || filter === COMMON ? null : filter,
@@ -626,20 +632,31 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
                   </FieldDescription>
                 </Field>
 
-                <Field data-invalid={issues.has("summary") ? "true" : undefined}>
-                  <FieldLabel htmlFor="iv-summary">{text.summary}</FieldLabel>
-                  <Textarea
-                    id="iv-summary"
-                    value={working.summary}
-                    maxLength={2000}
-                    rows={5}
-                    aria-invalid={issues.has("summary") ? true : undefined}
-                    className="bg-background"
-                    onChange={(e) => edit({ summary: e.target.value })}
+                {kind === "question" ? (
+                  <AnswersEditor
+                    answers={working.answers}
+                    onChange={(answers) => edit({ answers })}
+                    issues={issues}
+                    help={text.summaryHelp}
                   />
-                  <FieldDescription>{text.summaryHelp}</FieldDescription>
-                  {issues.has("summary") ? <FieldError>{issues.get("summary")}</FieldError> : null}
-                </Field>
+                ) : (
+                  <Field data-invalid={issues.has("summary") ? "true" : undefined}>
+                    <FieldLabel htmlFor="iv-summary">{text.summary}</FieldLabel>
+                    <Textarea
+                      id="iv-summary"
+                      value={working.summary}
+                      maxLength={2000}
+                      rows={3}
+                      aria-invalid={issues.has("summary") ? true : undefined}
+                      className="bg-background"
+                      onChange={(e) => edit({ summary: e.target.value })}
+                    />
+                    <FieldDescription>{text.summaryHelp}</FieldDescription>
+                    {issues.has("summary") ? (
+                      <FieldError>{issues.get("summary")}</FieldError>
+                    ) : null}
+                  </Field>
+                )}
 
                 <div className="flex flex-col gap-2">
                   <span className="text-body-sm font-medium">{text.body}</span>

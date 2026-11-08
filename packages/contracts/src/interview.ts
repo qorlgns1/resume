@@ -24,6 +24,27 @@ export const InterviewNoteKindSchema = z.enum(INTERVIEW_NOTE_KINDS);
 export type InterviewNoteKind = z.infer<typeof InterviewNoteKindSchema>;
 
 export const MAX_INTERVIEW_NOTES = 300;
+/** 질문 하나에 둘 수 있는 답의 수 */
+export const MAX_INTERVIEW_ANSWERS = 10;
+
+/**
+ * 질문에 대한 답 하나. 같은 질문에 쓰임새가 다른 답(1분 / 30초 / 회사별 등)을 나란히 둔다.
+ * 목록의 첫 번째가 대표 답이다(훑어보기에서 먼저 보인다).
+ */
+export const InterviewAnswerSchema = z.object({
+  id: IdSchema,
+  /** 이름표: "기본", "30초", "스타트업용" 등 */
+  label: z.string().trim().min(1).max(30),
+  text: z.string().trim().max(2000),
+});
+export type InterviewAnswer = z.infer<typeof InterviewAnswerSchema>;
+
+export const InterviewAnswersSchema = z
+  .array(InterviewAnswerSchema)
+  .max(MAX_INTERVIEW_ANSWERS)
+  .refine((answers) => new Set(answers.map((a) => a.id)).size === answers.length, {
+    message: "답 ID가 중복됩니다.",
+  });
 
 /** 편집할 수 있는 필드 */
 export const InterviewNoteInputSchema = z.object({
@@ -31,8 +52,10 @@ export const InterviewNoteInputSchema = z.object({
   kind: InterviewNoteKindSchema.default("question"),
   /** 질문이면 질문 문장, 용어면 용어 이름 */
   question: z.string().trim().min(1).max(300),
-  /** 질문이면 30초 안에 말할 핵심 답변, 용어면 한 줄 정의 */
-  summary: z.string().trim().max(2000),
+  /** 용어의 한 줄 정의. 질문은 쓰지 않는다(답은 answers에 둔다). */
+  summary: z.string().trim().max(2000).default(""),
+  /** 질문의 답들. 첫 번째가 대표 답. 용어는 쓰지 않는다. */
+  answers: InterviewAnswersSchema.default([]),
   /** 질문이면 자세한 답변·코드 근거·꼬리질문, 용어면 쉬운 설명과 이 프로젝트에서의 예 (블록 본문) */
   body: z.array(BlockSchema),
   status: InterviewStatusSchema,

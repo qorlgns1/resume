@@ -43,6 +43,13 @@
       "when": 1794177080374,
       "tag": "0005_interview_note_kind",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794180697163,
+      "tag": "0006_interview_answers",
+      "breakpoints": true
     }
   ]
 }
