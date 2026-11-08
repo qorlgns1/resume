@@ -12,11 +12,11 @@ import { Button } from "@resume/ui/components/button";
 import { Input } from "@resume/ui/components/input";
 import { cn } from "@resume/ui/lib/utils";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Search } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 /*
  * 면접 노트 훑어보기. 한 화면에 하나만 보여준다.
- * - 왼쪽: 질문(프로젝트별로 묶음) / 용어집(가나다순, 검색) 목차
+ * - 왼쪽: 프로젝트 선택, 질문(전체를 고르면 프로젝트별로 묶음) / 용어집(가나다순, 검색) 목차
  * - 오른쪽: 고른 질문의 30초 답변과 자세한 답변, 또는 용어 설명
  * - ←/→ 이전·다음, "답 가리기"를 켜면 먼저 답해 보고 Space로 펼친다(연습용)
  */
@@ -33,6 +33,10 @@ interface ReviewViewProps {
   /** 보여줄 노트 (질문과 용어가 섞여 있다) */
   notes: InterviewNote[];
   projectTitle: (id: string | null) => string;
+  /** 목차 맨 위의 프로젝트 선택 (편집 화면과 같은 값을 쓴다) */
+  projectFilter: ReactNode;
+  /** 한 프로젝트(또는 공통)를 골랐으면 그 이름. 전체면 null */
+  projectLabel: string | null;
 }
 
 function isTyping(target: EventTarget | null) {
@@ -42,7 +46,7 @@ function isTyping(target: EventTarget | null) {
   );
 }
 
-export function ReviewView({ notes, projectTitle }: ReviewViewProps) {
+export function ReviewView({ notes, projectTitle, projectFilter, projectLabel }: ReviewViewProps) {
   const questions = useMemo(() => notes.filter((n) => n.kind === "question"), [notes]);
   const allTerms = useMemo(
     () =>
@@ -114,13 +118,7 @@ export function ReviewView({ notes, projectTitle }: ReviewViewProps) {
     return [...map.values()];
   }, [questions, projectTitle]);
 
-  if (notes.length === 0) {
-    return (
-      <p className="row-start-3 px-6 py-10 text-body-sm text-muted-foreground">
-        아직 질문이나 용어가 없습니다.
-      </p>
-    );
-  }
+  // 비어 있어도 목차(프로젝트 선택)는 그린다. 다른 프로젝트로 바꿀 수 있어야 한다.
 
   const noun = section === "question" ? "질문" : "용어";
   const prev = items[index - 1];
@@ -156,6 +154,7 @@ export function ReviewView({ notes, projectTitle }: ReviewViewProps) {
         aria-label="훑어보기 목차"
         className="flex min-h-0 flex-col gap-3 border-r border-border bg-card p-3"
       >
+        {projectFilter}
         <fieldset className="grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1">
           <legend className="sr-only">보기</legend>
           {(
@@ -203,9 +202,11 @@ export function ReviewView({ notes, projectTitle }: ReviewViewProps) {
           {section === "question" ? (
             groups.map((group) => (
               <div key={group.title} className="flex flex-col gap-0.5">
-                <span className="px-2 text-caption font-semibold text-muted-foreground">
-                  {group.title}
-                </span>
+                {projectLabel === null ? (
+                  <span className="px-2 text-caption font-semibold text-muted-foreground">
+                    {group.title}
+                  </span>
+                ) : null}
                 <ol className="flex flex-col gap-0.5">
                   {group.items.map(({ note, n }) => (
                     <li key={note.id}>{tocButton(note, `${n}. ${note.question}`)}</li>
@@ -233,6 +234,7 @@ export function ReviewView({ notes, projectTitle }: ReviewViewProps) {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="flex items-center gap-2 text-caption text-subtle-foreground">
                 <span className="tabular-nums" data-testid="review-position">
+                  {section === "question" && projectLabel ? `${projectLabel} ` : ""}
                   {noun} {index + 1} / {items.length}
                 </span>
                 <Badge variant="secondary" className="rounded-sm">
@@ -333,7 +335,9 @@ export function ReviewView({ notes, projectTitle }: ReviewViewProps) {
           </article>
         ) : (
           <p className="px-8 py-10 text-body-sm text-muted-foreground">
-            {section === "question" ? "이 범위에 질문이 없습니다." : "찾는 용어가 없습니다."}
+            {section === "question"
+              ? `${projectLabel ?? "이 범위"}에 아직 질문이 없습니다. 편집에서 질문을 추가하세요.`
+              : "찾는 용어가 없습니다."}
           </p>
         )}
       </div>

@@ -328,12 +328,33 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
     id === null ? "공통" : (projects.find((p) => p.id === id)?.title ?? "삭제된 프로젝트");
   const doneCount = visible.filter((n) => n.status === "done").length;
   const selectedIndex = selected ? visible.findIndex((n) => n.id === selected.id) : -1;
-  const countIn = (f: Filter) => notes.filter((n) => matches(n, { kind, filter: f })).length;
-  const filterOptions = [
-    { value: "all", label: "전체", count: countIn("all") },
-    { value: COMMON, label: "공통", count: countIn(COMMON) },
-    ...projects.map((p) => ({ value: p.id, label: p.title, count: countIn(p.id) })),
-  ];
+  /** 프로젝트 선택. 괄호 안 개수는 countKind 노트 수 (편집: 보고 있는 탭, 훑어보기: 질문) */
+  const projectSelect = (id: string, countKind: InterviewNoteKind) => {
+    const countIn = (f: Filter) =>
+      notes.filter((n) => matches(n, { kind: countKind, filter: f })).length;
+    const options = [
+      { value: "all", label: "전체", count: countIn("all") },
+      { value: COMMON, label: "공통", count: countIn(COMMON) },
+      ...projects.map((p) => ({ value: p.id, label: p.title, count: countIn(p.id) })),
+    ];
+    return (
+      <Field>
+        <FieldLabel htmlFor={id}>프로젝트</FieldLabel>
+        <Select value={filter} onValueChange={(value) => changeView({ filter: value })}>
+          <SelectTrigger id={id} className="w-full bg-background">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label} ({option.count})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+    );
+  };
   // 지운 프로젝트에 연결된 노트도 고를 수 있게 남겨 둔다.
   const projectOptions = [
     { value: COMMON, label: "공통 (프로젝트 없음)" },
@@ -423,6 +444,8 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
             (n) => inProject(n, filter) || (n.kind === "term" && n.projectId === null),
           )}
           projectTitle={projectTitle}
+          projectFilter={projectSelect("iv-review-filter", "question")}
+          projectLabel={filter === "all" ? null : projectTitle(filter === COMMON ? null : filter)}
         />
       ) : (
         <div className="row-start-3 grid min-h-0 grid-cols-[20rem_minmax(0,1fr)]">
@@ -449,21 +472,7 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
                 </Button>
               ))}
             </fieldset>
-            <Field>
-              <FieldLabel htmlFor="iv-filter">프로젝트</FieldLabel>
-              <Select value={filter} onValueChange={(value) => changeView({ filter: value })}>
-                <SelectTrigger id="iv-filter" className="w-full bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {filterOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label} ({option.count})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
+            {projectSelect("iv-filter", kind)}
             <Button size="sm" variant="outline" disabled={busy} onClick={() => void create()}>
               <Plus aria-hidden="true" />새 {text.noun}
             </Button>

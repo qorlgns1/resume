@@ -878,11 +878,22 @@ test.describe("어드민", () => {
     await page.keyboard.press("ControlOrMeta+s");
     await expect(notice(page)).toContainText("노트를 저장했습니다");
     await page.getByRole("button", { name: "훑어보기" }).click();
-    await expect(toc.getByText("단어장", { exact: true })).toBeVisible();
+    // 훑어보기도 편집에서 고른 프로젝트의 질문만 보여주고, 목차에서 프로젝트를 바꿀 수 있다
+    await expect(toc.getByLabel("프로젝트")).toHaveText("단어장 (1)");
+    await expect(page.getByTestId("review-position")).toHaveText("단어장 질문 1 / 1");
     await expect(
       page.getByRole("heading", { level: 2, name: "단어장 검색은 어떻게 만들었나요?" }),
     ).toBeVisible();
     await expect(page.getByText("왜 문서 스냅샷 방식인가요?")).toHaveCount(0);
+    await toc.getByLabel("프로젝트").click();
+    await page.getByRole("option", { name: "공통 (1)" }).click();
+    await expect(
+      page.getByRole("heading", { level: 2, name: "왜 문서 스냅샷 방식인가요?" }),
+    ).toBeVisible();
+    await expect(page.getByTestId("review-position")).toHaveText("공통 질문 1 / 1");
+    await toc.getByLabel("프로젝트").click();
+    await page.getByRole("option", { name: "책갈피 (0)" }).click();
+    await expect(page.getByText("책갈피에 아직 질문이 없습니다")).toBeVisible();
     await page.getByRole("button", { name: "편집", exact: true }).click();
     await page.getByLabel("프로젝트", { exact: true }).click();
     await page.getByRole("option", { name: /^전체/ }).click();
