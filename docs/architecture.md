@@ -4,26 +4,26 @@
 
 2026-10-22 기준으로 npm 레지스트리와 공식 문서(peer dependency, engines)를 확인해 정했습니다. canary, beta, rc 버전은 쓰지 않았고, 모든 의존성은 정확한 버전으로 고정했습니다. 잠금 파일은 `pnpm-lock.yaml`입니다.
 
-| 항목              | 버전             | 비고                                                                                          |
-| ----------------- | ---------------- | --------------------------------------------------------------------------------------------- |
-| Node.js           | 24.x             | Docker 이미지 `node:24-alpine`. Next 16(>=20.9), Vite 8(>=20.19/22.12)과 호환                 |
-| pnpm              | 10.33.0          | `packageManager`에 고정                                                                       |
-| Turborepo         | 2.11.10          |                                                                                               |
-| TypeScript        | **6.0.3**        | 7.0.2(Go 구현)가 최신이지만 Next/Storybook 도구 체인과의 호환을 아직 확인하지 않아 6.0을 사용 |
-| Next.js           | 16.4.2           | web·admin 모두 App Router, Turbopack 빌드                                                     |
-| React / React DOM | 19.3.1           |                                                                                               |
-| Tailwind CSS      | 4.3.3            | `@tailwindcss/postcss`(Next), `@tailwindcss/vite`(Storybook)                                  |
-| shadcn CLI        | 4.22.1           | new-york 스타일, `radix-ui` 1.8.1 통합 패키지                                                 |
-| Zod               | 4.6.7            |                                                                                               |
-| Storybook         | 10.6.3           | `@storybook/react-vite` + Vite 8.3.5, addon-docs, addon-a11y                                  |
-| Biome             | 2.6.2            | 린트 + 포맷. `next`, `react` 도메인 규칙 사용                                                 |
-| Playwright        | 1.64.1           | 스모크 검증 전용                                                                              |
-| Pretendard        | 1.3.9            | variable dynamic subset                                                                       |
-| better-sqlite3    | 13.0.3           | SQLite 3.53. 패키지에 플랫폼별 바이너리(glibc·musl 포함)가 들어 있어 설치 시 빌드하지 않음    |
-| Drizzle ORM / Kit | 0.45.4 / 0.31.11 | 스키마·마이그레이션. 1.0은 아직 RC라 0.45 사용                                                |
-| Better Auth       | 1.7.12           | 아이디 + 비밀번호(username 플러그인), Drizzle 어댑터                                          |
-| sharp             | 0.35.5           | 업로드 이미지 변환 (Next 16이 쓰는 버전과 같음, alpine용 바이너리 포함)                       |
-| BlockNote         | 0.56.0           | 어드민 본문 편집기(@blocknote/core·react·shadcn). 1.0 전이라 정확한 버전으로 고정             |
+| 항목              | 버전             | 비고                                                                                           |
+| ----------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
+| Node.js           | 24.x             | Docker 이미지 `node:24-alpine`. Next 16(>=20.9), Vite 8(>=20.19/22.12)과 호환                  |
+| pnpm              | 10.33.0          | `packageManager`에 고정                                                                        |
+| Turborepo         | 2.11.10          |                                                                                                |
+| TypeScript        | **7.0.2**        | Go 구현. 예전 JS API는 없지만 Next 빌드 타입 검사·Storybook·drizzle-kit 동작 확인 (2026-11-09) |
+| Next.js           | 16.4.3           | web·admin 모두 App Router, Turbopack 빌드                                                      |
+| React / React DOM | 19.3.1           |                                                                                                |
+| Tailwind CSS      | 4.3.3            | `@tailwindcss/postcss`(Next), `@tailwindcss/vite`(Storybook)                                   |
+| shadcn CLI        | 4.22.1           | new-york 스타일, `radix-ui` 1.8.1 통합 패키지                                                  |
+| Zod               | 4.6.7            |                                                                                                |
+| Storybook         | 10.6.5           | `@storybook/react-vite` + Vite 8.3.5, addon-docs, addon-a11y                                   |
+| Biome             | 2.6.4            | 린트 + 포맷. `next`, `react` 도메인 규칙 사용                                                  |
+| Playwright        | 1.64.1           | 스모크 검증 전용                                                                               |
+| Pretendard        | 1.3.9            | variable dynamic subset                                                                        |
+| better-sqlite3    | 13.0.3           | SQLite 3.53. 패키지에 플랫폼별 바이너리(glibc·musl 포함)가 들어 있어 설치 시 빌드하지 않음     |
+| Drizzle ORM / Kit | 0.45.4 / 0.31.11 | 스키마·마이그레이션. 1.0은 아직 RC라 0.45 사용                                                 |
+| Better Auth       | 1.7.15           | 아이디 + 비밀번호(username 플러그인), Drizzle 어댑터                                           |
+| sharp             | 0.35.5           | 업로드 이미지 변환 (Next 16이 쓰는 버전과 같음, alpine용 바이너리 포함)                        |
+| BlockNote         | 0.57.0           | 어드민 본문 편집기(@blocknote/core·react·shadcn). 1.0 전이라 정확한 버전으로 고정              |
 
 **ESLint 대신 Biome를 쓴 이유:** `eslint-config-next`가 쓰는 플러그인 일부(react, import, jsx-a11y)가 ESLint 10을 peer로 허용하지 않고, typescript-eslint는 TypeScript `<6.1`만 지원합니다. 그래서 소유자와 협의해 린트와 포맷을 한 도구로 처리하는 Biome를 택했습니다. 타입 정보가 필요한 규칙의 빈자리는 각 패키지의 `tsc --noEmit`으로 보완합니다.
 
