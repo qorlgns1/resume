@@ -5,6 +5,11 @@ import {
   adminApiPaths,
   DraftResponseSchema,
   type DraftState,
+  type InterviewNote,
+  type InterviewNoteInput,
+  InterviewNoteListResponseSchema,
+  InterviewNoteResponseSchema,
+  interviewApiPaths,
   type MediaAsset,
   MediaListResponseSchema,
   MediaUploadResponseSchema,
@@ -61,6 +66,23 @@ async function call<T extends z.ZodType>(
   return parsed.data;
 }
 
+/** 본문 없이 204로 답하는 삭제 요청 */
+async function remove(path: string): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(path, { method: "DELETE", cache: "no-store" });
+  } catch {
+    throw new AdminApiError(0, "network", "서버에 연결하지 못했습니다. 네트워크를 확인하세요.");
+  }
+  if (res.ok) return;
+  const parsed = ApiErrorResponseSchema.safeParse(await res.json().catch(() => null));
+  throw new AdminApiError(
+    res.status,
+    parsed.success ? parsed.data.error.code : "unknown",
+    parsed.success ? parsed.data.error.message : `삭제하지 못했습니다 (HTTP ${res.status}).`,
+  );
+}
+
 export const adminApi = {
   listMedia: async (): Promise<MediaAsset[]> =>
     (await call(adminApiPaths.media, MediaListResponseSchema)).assets,
@@ -71,16 +93,7 @@ export const adminApi = {
       await call(adminApiPaths.media, MediaUploadResponseSchema, { method: "POST", body: form })
     ).asset;
   },
-  deleteMedia: async (id: string): Promise<void> => {
-    const res = await fetch(adminApiPaths.mediaItem(id), { method: "DELETE", cache: "no-store" });
-    if (res.ok) return;
-    const parsed = ApiErrorResponseSchema.safeParse(await res.json().catch(() => null));
-    throw new AdminApiError(
-      res.status,
-      parsed.success ? parsed.data.error.code : "unknown",
-      parsed.success ? parsed.data.error.message : `삭제하지 못했습니다 (HTTP ${res.status}).`,
-    );
-  },
+  deleteMedia: (id: string): Promise<void> => remove(adminApiPaths.mediaItem(id)),
   getDraft: async (): Promise<DraftState> =>
     (await call(adminApiPaths.draft, DraftResponseSchema)).draft,
   saveDraft: async (revision: number, document: SiteDocument): Promise<DraftState> =>
@@ -104,4 +117,32 @@ export const adminApi = {
         body: JSON.stringify({ revision }),
       })
     ).draft,
+  listInterviewNotes: async (): Promise<InterviewNote[]> =>
+    (await call(interviewApiPaths.list, InterviewNoteListResponseSchema)).notes,
+  createInterviewNote: async (input: InterviewNoteInput): Promise<InterviewNote> =>
+    (
+      await call(interviewApiPaths.list, InterviewNoteResponseSchema, {
+        method: "POST",
+        body: JSON.stringify(input),
+      })
+    ).note,
+  updateInterviewNote: async (
+    id: string,
+    revision: number,
+    input: InterviewNoteInput,
+  ): Promise<InterviewNote> =>
+    (
+      await call(interviewApiPaths.item(id), InterviewNoteResponseSchema, {
+        method: "PUT",
+        body: JSON.stringify({ ...input, revision }),
+      })
+    ).note,
+  deleteInterviewNote: (id: string): Promise<void> => remove(interviewApiPaths.item(id)),
+  reorderInterviewNotes: async (ids: string[]): Promise<InterviewNote[]> =>
+    (
+      await call(interviewApiPaths.order, InterviewNoteListResponseSchema, {
+        method: "PUT",
+        body: JSON.stringify({ ids }),
+      })
+    ).notes,
 };

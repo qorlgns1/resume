@@ -2,6 +2,7 @@ export * from "./api";
 export * from "./blocks";
 export * from "./content";
 export * from "./errors";
+export * from "./interview";
 export * from "./layout";
 export * from "./media";
 export * from "./modules";

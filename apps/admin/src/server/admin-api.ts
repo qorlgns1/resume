@@ -3,6 +3,11 @@ import { type ApiErrorResponse, configureKoreanErrors } from "@resume/contracts"
 import { ZodError, type z } from "zod";
 import { getAuth } from "./auth";
 import { getAdminUrl } from "./env";
+import {
+  InterviewNoteConflictError,
+  InterviewNoteNotFoundError,
+  InterviewRequestError,
+} from "./interview-repository";
 import { MediaInUseError, MediaNotFoundError, MediaRejectedError } from "./media-store";
 import {
   ConflictError,
@@ -71,6 +76,9 @@ export async function withAdmin(request: Request, handler: () => Response | Prom
     if (cause instanceof MediaInUseError) return error(409, "in_use", cause.message);
     if (cause instanceof MediaNotFoundError)
       return error(404, "not_found", "이미지를 찾을 수 없습니다.");
+    if (cause instanceof InterviewNoteConflictError) return error(409, "conflict", cause.message);
+    if (cause instanceof InterviewNoteNotFoundError) return error(404, "not_found", cause.message);
+    if (cause instanceof InterviewRequestError) return error(400, "invalid_request", cause.message);
     if (cause instanceof InvalidRequestError) return error(400, "invalid_request", cause.message);
     if (cause instanceof ZodError) {
       const message = cause.issues

@@ -13,7 +13,7 @@ import {
 import { desc, eq, sql } from "drizzle-orm";
 import sharp, { type Metadata } from "sharp";
 import { type AppDatabase, getDb } from "./db/client";
-import { mediaAssets, publishedVersions, siteDraft } from "./db/schema";
+import { interviewNotes, mediaAssets, publishedVersions, siteDraft } from "./db/schema";
 import { getMediaDir } from "./env";
 
 /*
@@ -21,7 +21,7 @@ import { getMediaDir } from "./env";
  * - 형식은 확장자가 아니라 파일 내용으로 판별한다. JPEG·PNG·WebP·GIF만 받는다(SVG 거부).
  * - 휴대폰 사진의 회전 정보를 반영한 뒤 EXIF(위치 정보 포함) 등 메타데이터를 모두 지운다.
  * - 원본은 저장하지 않고, 너비별 WebP 변환본만 MEDIA_DIR/{id}/{width}.webp로 저장한다.
- * - 초안이나 어느 게시 버전에서든 쓰이는 이미지는 삭제할 수 없다.
+ * - 초안, 어느 게시 버전, 면접 노트에서든 쓰이는 이미지는 삭제할 수 없다.
  */
 
 export class MediaRejectedError extends Error {
@@ -35,7 +35,7 @@ export class MediaRejectedError extends Error {
 
 export class MediaInUseError extends Error {
   constructor() {
-    super("초안이나 게시 버전에서 쓰고 있어 삭제할 수 없습니다.");
+    super("초안, 게시 버전, 면접 노트 중 한 곳에서 쓰고 있어 삭제할 수 없습니다.");
   }
 }
 
@@ -57,7 +57,7 @@ export function targetWidths(originalWidth: number): number[] {
 
 type Row = typeof mediaAssets.$inferSelect;
 
-/** 이 이미지를 쓰는 곳: 초안 여부와 게시 버전 번호 */
+/** 이 이미지를 쓰는 곳: 초안 여부, 게시 버전 번호, 면접 노트 사용 여부 */
 function usageOf(db: AppDatabase, id: string): MediaAsset["usage"] {
   // 문서는 JSON 문자열로 저장되므로 참조("assetId":"<id>")를 문자열로 찾는다. ID 형식이 고정이라 오탐이 없다.
   const needle = `%"assetId":"${id}"%`;
@@ -73,7 +73,12 @@ function usageOf(db: AppDatabase, id: string): MediaAsset["usage"] {
     .orderBy(desc(publishedVersions.version))
     .all()
     .map((r) => r.version);
-  return { draft: Boolean(draft), versions };
+  const interview = db
+    .select({ id: interviewNotes.id })
+    .from(interviewNotes)
+    .where(sql`${interviewNotes.body} LIKE ${needle}`)
+    .get();
+  return { draft: Boolean(draft), versions, interview: Boolean(interview) };
 }
 
 function toAsset(db: AppDatabase, row: Row): MediaAsset {
@@ -176,7 +181,7 @@ export async function deleteMedia(id: string, db: AppDatabase = getDb()): Promis
   const row = db.select().from(mediaAssets).where(eq(mediaAssets.id, id)).get();
   if (!row) throw new MediaNotFoundError();
   const usage = usageOf(db, id);
-  if (usage.draft || usage.versions.length > 0) throw new MediaInUseError();
+  if (usage.draft || usage.versions.length > 0 || usage.interview) throw new MediaInUseError();
   db.delete(mediaAssets).where(eq(mediaAssets.id, id)).run();
   await fs.rm(path.join(getMediaDir(), id), { recursive: true, force: true });
 }

@@ -5,3 +5,26 @@
 
 /* 본문 블록 편집기(BlockNote shadcn 테마)가 쓰는 유틸리티 클래스 */
 @source "../../node_modules/@blocknote/shadcn";
+
+/*
+ * 면접 노트 훑어보기: 본문 블록의 제목은 질문·용어 이름보다 작게 보인다.
+ * BlockContent의 제목은 공개 사이트 상세 본문 크기라, 여기서는 한 단계 낮춘다.
+ * (레이어 밖 규칙이라 Tailwind 유틸리티보다 우선한다.)
+ */
+.rs-interview-body h2 {
+  margin-top: 0.5rem;
+  border-top: 0;
+  padding-top: 0;
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  font-weight: 800;
+}
+.rs-interview-body h2:first-child {
+  margin-top: 0;
+}
+.rs-interview-body h3 {
+  margin-top: 0.25rem;
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  font-weight: 700;
+}

@@ -197,7 +197,7 @@ describe("editorToBlocks", () => {
       widths: [480, 960, 1200],
       bytes: 1000,
       createdAt: new Date().toISOString(),
-      usage: { draft: false, versions: [] },
+      usage: { draft: false, versions: [], interview: false },
     };
     const { blocks, warnings } = editorToBlocks(
       editor([

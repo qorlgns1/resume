@@ -1,0 +1,1 @@
+ALTER TABLE `interview_notes` ADD `kind` text DEFAULT 'question' NOT NULL;

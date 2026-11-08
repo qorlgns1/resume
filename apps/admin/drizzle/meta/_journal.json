@@ -22,6 +22,27 @@
       "when": 1792659754307,
       "tag": "0002_media_assets",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794175428898,
+      "tag": "0003_interview_notes",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794175771957,
+      "tag": "0004_interview_note_project",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794177080374,
+      "tag": "0005_interview_note_kind",
+      "breakpoints": true
     }
   ]
 }

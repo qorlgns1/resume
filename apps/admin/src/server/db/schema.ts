@@ -166,3 +166,38 @@ export const mediaAssets = sqliteTable("media_assets", {
   animated: integer("animated", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).default(now).notNull(),
 });
+
+// ── 면접 노트 (어드민 전용) ─────────────────────────────
+
+/**
+ * 기술면접 질문과 답 기록. 사이트 문서와 따로 두어 게시·버전 관리에 포함하지 않고, 공개 API로 내보내지 않는다.
+ * body는 Block[] JSON이며 읽고 쓸 때 @resume/contracts의 스키마로 검증한다.
+ */
+export const interviewNotes = sqliteTable(
+  "interview_notes",
+  {
+    id: text("id").primaryKey(),
+    /** question: 면접 질문, term: 용어집 항목 (question 열에 용어 이름을 둔다) */
+    kind: text("kind", { enum: ["question", "term"] })
+      .notNull()
+      .default("question"),
+    position: integer("position").notNull(),
+    question: text("question").notNull(),
+    summary: text("summary").notNull().default(""),
+    body: text("body", { mode: "json" }).notNull(),
+    /** 연결한 포트폴리오 프로젝트 ID (사이트 문서 안의 ID라 외래 키 없음). null이면 공통 질문 */
+    projectId: text("project_id"),
+    status: text("status", { enum: ["todo", "discussing", "done"] })
+      .notNull()
+      .default("todo"),
+    /** 저장할 때마다 1씩 증가. 다른 탭의 변경을 덮어쓰지 않도록 비교에 쓴다. */
+    revision: integer("revision").notNull().default(1),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).default(now).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).default(now).notNull(),
+  },
+  (table) => [
+    index("interview_notes_position_idx").on(table.position),
+    index("interview_notes_project_idx").on(table.projectId),
+    check("interview_notes_status", sql`${table.status} in ('todo', 'discussing', 'done')`),
+  ],
+);

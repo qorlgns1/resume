@@ -26,7 +26,12 @@ export const MediaAssetSchema = z.object({
   animated: z.boolean(),
   createdAt: z.iso.datetime(),
   /** 이 이미지를 쓰는 곳. 하나라도 있으면 삭제할 수 없다. */
-  usage: z.object({ draft: z.boolean(), versions: z.array(z.number().int().positive()) }),
+  usage: z.object({
+    draft: z.boolean(),
+    versions: z.array(z.number().int().positive()),
+    /** 면접 노트 본문에서 쓰는지 (어드민 전용) */
+    interview: z.boolean(),
+  }),
 });
 export type MediaAsset = z.infer<typeof MediaAssetSchema>;
 

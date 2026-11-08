@@ -26,12 +26,14 @@ import {
   AlertCircle,
   ArrowUpRight,
   History,
+  MessagesSquare,
   Monitor,
   RotateCcw,
   Save,
   Send,
   Smartphone,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { adminApi } from "./api-client";
 import type { PreviewViewport } from "./editor";
@@ -157,6 +159,10 @@ export function EditorTopBar({
             <span className="sr-only">(새 탭에서 열림)</span>
           </a>
         ) : null}
+        <Link href="/interview" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <MessagesSquare aria-hidden="true" />
+          면접 노트
+        </Link>
         <Button variant="ghost" size="sm" onClick={() => setHistoryOpen(true)}>
           <History aria-hidden="true" />
           버전 기록

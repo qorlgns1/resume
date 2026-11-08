@@ -809,6 +809,158 @@ test.describe("어드민", () => {
     expect(invalid.status()).toBe(400);
   });
 
+  test("면접 노트를 만들고 고쳐 저장하면 훑어보기에 보이고, 공개되지 않는다", async ({
+    request,
+  }) => {
+    // 로그인하지 않은 요청과 다른 출처의 변경 요청은 막는다
+    expect((await request.get(`${admin}/api/admin/interview`)).status()).toBe(401);
+    const crossSite = await page.request.post(`${admin}/api/admin/interview`, {
+      headers: { origin: "https://attacker.example" },
+      data: { question: "x", summary: "", body: [], status: "todo" },
+    });
+    expect(crossSite.status()).toBe(403);
+
+    await page.goto(admin);
+    await page.getByRole("link", { name: "면접 노트" }).click();
+    await expect(page).toHaveURL(`${admin}/interview`);
+    await expect(page.getByTestId("interview-progress")).toHaveText("정리 완료 0 / 0");
+
+    await page.getByRole("button", { name: "새 질문" }).click();
+    await expect(notice(page)).toContainText("새 질문을 만들었습니다");
+    await page.getByLabel("질문", { exact: true }).fill("왜 문서 스냅샷 방식인가요?");
+    await page.getByLabel("30초 답변").fill("관리자 1명, 드문 쓰기, 전체 되돌리기가 핵심입니다.");
+    await page.getByLabel("정리 상태").click();
+    await page.getByRole("option", { name: "정리 완료" }).click();
+    const editor = page.getByRole("textbox", { name: "자세한 답변" });
+    await editor.click();
+    await page.keyboard.insertText("canonicalJson으로 키 순서를 정규화한다.");
+    await page.keyboard.press("ControlOrMeta+s");
+    await expect(notice(page)).toContainText("노트를 저장했습니다");
+    await expect(page.getByTestId("interview-progress")).toHaveText("정리 완료 1 / 1");
+
+    // 새로고침해도 남아 있다
+    await page.reload();
+    const list = page.getByRole("navigation", { name: "면접 노트 목록" });
+    await expect(list.getByRole("button", { name: /왜 문서 스냅샷 방식인가요\?/ })).toBeVisible();
+    await expect(page.getByLabel("30초 답변")).toHaveValue(
+      "관리자 1명, 드문 쓰기, 전체 되돌리기가 핵심입니다.",
+    );
+
+    // 훑어보기는 한 번에 하나씩 보여주고, 목차는 프로젝트별로 묶는다
+    await page.getByRole("button", { name: "훑어보기" }).click();
+    const toc = page.getByRole("navigation", { name: "훑어보기 목차" });
+    await expect(toc.getByText("공통", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 2, name: "왜 문서 스냅샷 방식인가요?" }),
+    ).toBeVisible();
+    await expect(page.getByTestId("review-position")).toHaveText("질문 1 / 1");
+    await expect(page.getByText("canonicalJson으로 키 순서를 정규화한다.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "훑어보기" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(page.getByRole("button", { name: "편집", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    await page.mouse.move(0, 400);
+    await page.screenshot({ path: `${screens}/admin-interview-review.png` });
+
+    // 프로젝트로 거르면 그 프로젝트의 질문으로 만들어지고, 훑어보기도 그 프로젝트만 보인다
+    await page.getByRole("button", { name: "편집", exact: true }).click();
+    await page.getByLabel("프로젝트", { exact: true }).click();
+    await page.getByRole("option", { name: /^단어장/ }).click();
+    await expect(page.getByTestId("interview-progress")).toHaveText("정리 완료 0 / 0");
+    await page.getByRole("button", { name: "새 질문" }).click();
+    await expect(notice(page)).toContainText("새 질문을 만들었습니다");
+    await expect(page.getByLabel("연결한 프로젝트")).toHaveText("단어장");
+    await page.getByLabel("질문", { exact: true }).fill("단어장 검색은 어떻게 만들었나요?");
+    await page.keyboard.press("ControlOrMeta+s");
+    await expect(notice(page)).toContainText("노트를 저장했습니다");
+    await page.getByRole("button", { name: "훑어보기" }).click();
+    await expect(toc.getByText("단어장", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 2, name: "단어장 검색은 어떻게 만들었나요?" }),
+    ).toBeVisible();
+    await expect(page.getByText("왜 문서 스냅샷 방식인가요?")).toHaveCount(0);
+    await page.getByRole("button", { name: "편집", exact: true }).click();
+    await page.getByLabel("프로젝트", { exact: true }).click();
+    await page.getByRole("option", { name: /^전체/ }).click();
+    await expect(page.getByTestId("interview-progress")).toHaveText("정리 완료 1 / 2");
+
+    // 용어 탭에서 만든 용어는 훑어보기 끝의 용어집에 보인다
+    await page.getByRole("button", { name: /^용어/ }).click();
+    await page.getByRole("button", { name: "새 용어" }).click();
+    await expect(notice(page)).toContainText("새 용어를 만들었습니다");
+    await page.getByLabel("용어", { exact: true }).fill("스냅샷");
+    await page.getByLabel("한 줄 정의").fill("어느 한 시점의 전체 상태를 통째로 저장한 사본");
+    await page.keyboard.press("ControlOrMeta+s");
+    await expect(notice(page)).toContainText("노트를 저장했습니다");
+    await page.getByRole("button", { name: "훑어보기" }).click();
+
+    // ←/→로 넘기고, 답을 가리면 Space로 펼친다 (포커스가 버튼에 있어도 버튼을 누르지 않는다)
+    await expect(page.getByTestId("review-position")).toHaveText("질문 1 / 2");
+    await page.keyboard.press("ArrowRight");
+    await expect(page.getByTestId("review-position")).toHaveText("질문 2 / 2");
+    await page.getByRole("button", { name: /^이전/ }).click();
+    await expect(page.getByTestId("review-position")).toHaveText("질문 1 / 2");
+    await page.getByRole("button", { name: "답 가리기" }).click();
+    await expect(page.getByText("관리자 1명, 드문 쓰기, 전체 되돌리기가 핵심입니다.")).toHaveCount(
+      0,
+    );
+    await page.keyboard.press("Space");
+    await expect(
+      page.getByText("관리자 1명, 드문 쓰기, 전체 되돌리기가 핵심입니다."),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "답 보이기" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await page.getByRole("button", { name: /^다음/ }).click();
+    await expect(page.getByTestId("review-position")).toHaveText("질문 2 / 2");
+    await page.keyboard.press("Space");
+    await expect(page.getByTestId("review-position")).toHaveText("질문 2 / 2");
+    await page.getByRole("button", { name: "답 보이기" }).click();
+
+    // 용어집은 따로 보고, 검색할 수 있다
+    await toc.getByRole("button", { name: "용어집 (1)" }).click();
+    await expect(page.getByRole("heading", { level: 2, name: "스냅샷" })).toBeVisible();
+    await expect(page.getByText("어느 한 시점의 전체 상태를 통째로 저장한 사본")).toBeVisible();
+    await page.getByRole("searchbox", { name: "용어 찾기" }).fill("없는 말");
+    await expect(toc.getByText("찾는 용어가 없습니다.")).toBeVisible();
+    await page.getByRole("button", { name: "편집", exact: true }).click();
+    await page.getByRole("button", { name: "삭제" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "삭제" }).click();
+    await expect(notice(page)).toContainText("노트를 삭제했습니다");
+    await page.getByRole("button", { name: /^질문/ }).click();
+
+    // 다른 탭에서 먼저 고친 노트는 덮어쓰지 않는다
+    const { notes } = (await (await page.request.get(`${admin}/api/admin/interview`)).json()) as {
+      notes: { id: string; revision: number; question: string }[];
+    };
+    const [saved] = notes;
+    expect(saved?.question).toBe("왜 문서 스냅샷 방식인가요?");
+    expect(notes[1]).toMatchObject({ question: "단어장 검색은 어떻게 만들었나요?" });
+    const stale = await page.request.put(`${admin}/api/admin/interview/${saved?.id}`, {
+      headers: { origin: admin },
+      data: { revision: 1, question: "덮어쓰기", summary: "", body: [], status: "todo" },
+    });
+    expect(stale.status()).toBe(409);
+
+    // 공개 콘텐츠 API에는 면접 노트가 없다
+    const publicHome = await request.get(`${admin}/api/public/v1/pages/home`);
+    expect(await publicHome.text()).not.toContain("문서 스냅샷 방식");
+
+    for (const remaining of [1, 0]) {
+      await page.getByRole("button", { name: "삭제" }).click();
+      await page.getByRole("dialog").getByRole("button", { name: "삭제" }).click();
+      await expect(notice(page)).toContainText("노트를 삭제했습니다");
+      await expect(page.getByTestId("interview-progress")).toContainText(`/ ${remaining}`);
+    }
+    await page.getByRole("link", { name: "편집 화면" }).click();
+    await expect(page).toHaveURL(`${admin}/`);
+  });
+
   test("로그아웃하면 다시 로그인 화면으로 간다", async () => {
     await page.getByRole("button", { name: "로그아웃" }).click();
     await expect(page).toHaveURL(`${admin}/login`);

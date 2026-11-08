@@ -157,7 +157,11 @@ export function MediaLibraryPanel() {
       <ul className="grid grid-cols-2 gap-3">
         {assets?.map((asset) => {
           const working = usesInWorkingCopy(asset.id);
-          const inUse = working || asset.usage.draft || asset.usage.versions.length > 0;
+          const inUse =
+            working ||
+            asset.usage.draft ||
+            asset.usage.versions.length > 0 ||
+            asset.usage.interview;
           return (
             <li key={asset.id} className="flex flex-col gap-1.5">
               <Thumbnail asset={asset} />
@@ -182,6 +186,11 @@ export function MediaLibraryPanel() {
                 {asset.usage.versions.length > 0 ? (
                   <Badge variant="outline" className="rounded-sm">
                     버전 {asset.usage.versions.join(", ")}
+                  </Badge>
+                ) : null}
+                {asset.usage.interview ? (
+                  <Badge variant="outline" className="rounded-sm">
+                    면접 노트
                   </Badge>
                 ) : null}
               </span>
