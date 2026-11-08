@@ -21,7 +21,7 @@
   "dependencies": {
     "@resume/contracts": "workspace:*",
     "@resume/ui": "workspace:*",
-    "lucide-react": "1.61.0"
+    "lucide-react": "1.66.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",
