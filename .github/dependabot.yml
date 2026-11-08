@@ -14,6 +14,11 @@ updates:
     # 새 버전이 나온 뒤 7일은 기다린다. 공개 직후 회수되거나 악성으로 밝혀지는 배포를 피한다.
     cooldown:
       default-days: 7
+    # @types/node는 실제로 도는 Node 메이저(.nvmrc, Dockerfile의 node:24)에 맞춘다.
+    # 더 높은 메이저의 타입은 Node 24에 없는 API도 통과시킨다. Node를 올릴 때 함께 올린다.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       # 함께 올려야 깨지지 않는 묶음은 메이저 포함 한 PR로 받는다.
       next:
