@@ -919,6 +919,29 @@ test.describe("어드민", () => {
     await page.getByRole("option", { name: /^전체/ }).click();
     await expect(page.getByTestId("interview-progress")).toHaveText("정리 완료 1 / 2");
 
+    // (선택된 노트는 목록 첫 질문인 "왜 문서 스냅샷 방식인가요?")
+    // 질문에 지원 회사를 적으면 회사별로 거를 수 있고, 훑어보기에도 회사 이름이 붙는다
+    await page.getByLabel("지원 회사").fill("아이제라");
+    await page.keyboard.press("ControlOrMeta+s");
+    await expect(notice(page)).toContainText("노트를 저장했습니다");
+    await page.getByLabel("회사", { exact: true }).click();
+    await page.getByRole("option", { name: "아이제라 (1)" }).click();
+    await expect(page.getByTestId("interview-progress")).toHaveText("정리 완료 1 / 1");
+    await page.getByRole("button", { name: "훑어보기" }).click();
+    await expect(page.getByTestId("review-position")).toHaveText("아이제라 질문 1 / 1");
+    await expect(
+      page.getByRole("heading", { level: 2, name: "왜 문서 스냅샷 방식인가요?" }),
+    ).toBeVisible();
+    await toc.getByLabel("회사").click();
+    await page.getByRole("option", { name: "회사 무관 (1)" }).click();
+    await expect(
+      page.getByRole("heading", { level: 2, name: "단어장 검색은 어떻게 만들었나요?" }),
+    ).toBeVisible();
+    await toc.getByLabel("회사").click();
+    await page.getByRole("option", { name: /^전체/ }).click();
+    await page.getByRole("button", { name: "편집", exact: true }).click();
+    await expect(page.getByTestId("interview-progress")).toHaveText("정리 완료 1 / 2");
+
     // 용어 탭에서 만든 용어는 훑어보기 끝의 용어집에 보인다
     await page.getByRole("button", { name: /^용어/ }).click();
     await page.getByRole("button", { name: "새 용어" }).click();

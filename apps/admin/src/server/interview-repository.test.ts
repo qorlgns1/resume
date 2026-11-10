@@ -32,6 +32,7 @@ function note(question: string, extra: Partial<InterviewNoteInput> = {}): Interv
     body: [],
     status: "todo",
     projectId: null,
+    company: "",
     ...extra,
   };
 }
@@ -88,6 +89,20 @@ describe("interview-repository", () => {
     expect(common.projectId).toBeNull();
     // 프로젝트 ID는 사이트 문서의 ID 형식을 따른다
     expect(() => createInterviewNote(note("x", { projectId: "공백 있는 id" }), db)).toThrow();
+  });
+
+  it("tags a question with a target company, trimmed, and never a term", () => {
+    const created = createInterviewNote(
+      note("왜 우리 회사에 지원했나요?", { company: "  아이제라 " }),
+      db,
+    );
+    expect(created.company).toBe("아이제라");
+    const general = updateInterviewNote(created.id, { revision: 1, ...note("지원 동기") }, db);
+    expect(general.company).toBe("");
+    // 용어는 회사와 상관없다
+    const term = createInterviewNote(note("MES", { kind: "term", company: "아이제라" }), db);
+    expect(term.company).toBe("");
+    expect(() => createInterviewNote(note("x", { company: "가".repeat(41) }), db)).toThrow();
   });
 
   it("keeps a term as a term even if an update says otherwise", () => {

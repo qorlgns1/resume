@@ -60,6 +60,7 @@ function toNote(row: Row): InterviewNote {
     body: body.data,
     status: row.status,
     projectId: row.projectId,
+    company: row.company,
     revision: row.revision,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -103,6 +104,7 @@ export function createInterviewNote(
         body: value.body,
         status: value.status,
         projectId: value.projectId,
+        company: value.kind === "term" ? "" : value.company,
       })
       .returning()
       .get();
@@ -132,6 +134,7 @@ export function updateInterviewNote(
         body: value.body,
         status: value.status,
         projectId: value.projectId,
+        company: current.kind === "term" ? "" : value.company,
         revision: current.revision + 1,
         updatedAt: new Date(),
       })

@@ -38,6 +38,8 @@ interface ReviewViewProps {
   projectFilter: ReactNode;
   /** 한 프로젝트(또는 공통)를 골랐으면 그 이름. 전체면 null */
   projectLabel: string | null;
+  /** 지원 회사로 걸렀으면 그 이름("회사 무관" 포함). 전체면 null */
+  companyLabel: string | null;
 }
 
 function isTyping(target: EventTarget | null) {
@@ -47,7 +49,13 @@ function isTyping(target: EventTarget | null) {
   );
 }
 
-export function ReviewView({ notes, projectTitle, projectFilter, projectLabel }: ReviewViewProps) {
+export function ReviewView({
+  notes,
+  projectTitle,
+  projectFilter,
+  projectLabel,
+  companyLabel,
+}: ReviewViewProps) {
   const questions = useMemo(() => notes.filter((n) => n.kind === "question"), [notes]);
   const allTerms = useMemo(
     () =>
@@ -240,12 +248,22 @@ export function ReviewView({ notes, projectTitle, projectFilter, projectLabel }:
             <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="flex items-center gap-2 text-caption text-subtle-foreground">
                 <span className="tabular-nums" data-testid="review-position">
-                  {section === "question" && projectLabel ? `${projectLabel} ` : ""}
+                  {section === "question"
+                    ? [companyLabel, projectLabel]
+                        .filter(Boolean)
+                        .map((label) => `${label} `)
+                        .join("")
+                    : ""}
                   {noun} {index + 1} / {items.length}
                 </span>
                 <Badge variant="secondary" className="rounded-sm">
                   {projectTitle(current.projectId)}
                 </Badge>
+                {current.company ? (
+                  <Badge variant="outline" className="rounded-sm">
+                    {current.company}
+                  </Badge>
+                ) : null}
                 <Badge variant={statusBadge[current.status]} className="rounded-sm">
                   {interviewStatusLabels[current.status]}
                 </Badge>

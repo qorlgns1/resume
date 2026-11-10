@@ -9,6 +9,7 @@ import {
   type InterviewNoteKind,
   type InterviewStatus,
   interviewStatusLabels,
+  MAX_INTERVIEW_COMPANY_LENGTH,
 } from "@resume/contracts";
 import { Badge } from "@resume/ui/components/badge";
 import { Button, buttonVariants } from "@resume/ui/components/button";
@@ -73,6 +74,7 @@ function toInput(note: InterviewNote): InterviewNoteInput {
     body: note.body,
     status: note.status,
     projectId: note.projectId,
+    company: note.company,
   };
 }
 
@@ -93,14 +95,26 @@ function inProject(note: InterviewNote, filter: Filter) {
   return note.projectId === filter;
 }
 
-/** 편집 목록에 보이는 범위: 노트 종류 + 프로젝트 */
+/** 지원 회사 필터: 전체, 회사 무관(빈 회사), 또는 "co:회사 이름" */
+type CompanyFilter = "all" | "none" | `co:${string}`;
+const companyValue = (name: string): CompanyFilter => `co:${name}`;
+
+/** 회사 필터는 질문에만 걸린다. 용어는 회사와 상관없이 늘 보인다. */
+function inCompany(note: InterviewNote, filter: CompanyFilter) {
+  if (note.kind === "term" || filter === "all") return true;
+  if (filter === "none") return note.company === "";
+  return note.company === filter.slice(3);
+}
+
+/** 편집 목록에 보이는 범위: 노트 종류 + 프로젝트 + 지원 회사 */
 interface View {
   kind: InterviewNoteKind;
   filter: Filter;
+  company: CompanyFilter;
 }
 
 function matches(note: InterviewNote, view: View) {
-  return note.kind === view.kind && inProject(note, view.filter);
+  return note.kind === view.kind && inProject(note, view.filter) && inCompany(note, view.company);
 }
 
 /** 노트 종류별 화면 문구 */
@@ -150,6 +164,7 @@ interface InterviewWorkspaceProps {
  * 면접 노트 화면 (어드민 전용).
  * - 노트는 면접 질문 또는 용어집 항목이다. 목록 위의 탭으로 고른다.
  * - 노트마다 포트폴리오 프로젝트를 연결하거나 공통으로 둔다. 목록과 훑어보기를 프로젝트별로 거른다.
+ * - 질문에는 지원 회사를 적을 수 있고, 목록과 훑어보기를 회사별로도 거른다.
  * - 편집: 왼쪽 목록에서 질문을 고르고 오른쪽에서 질문·답(여러 개)·본문을 고친다. 노트마다 따로 저장한다.
  * - 훑어보기: 면접 직전에 읽도록 고른 범위의 노트를 프로젝트별로 묶어 한 페이지에 보여준다.
  */
@@ -163,8 +178,8 @@ export function InterviewWorkspace(props: InterviewWorkspaceProps) {
 
 function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps) {
   const [notes, setNotes] = useState(initialNotes);
-  const [view, setView] = useState<View>({ kind: "question", filter: "all" });
-  const { kind, filter } = view;
+  const [view, setView] = useState<View>({ kind: "question", filter: "all", company: "all" });
+  const { kind, filter, company } = view;
   const text = copy[kind];
   const visible = notes.filter((n) => matches(n, view));
   const [selectedId, setSelectedId] = useState<string | null>(
@@ -250,6 +265,7 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
         body: [],
         status: "todo",
         projectId: filter === "all" || filter === COMMON ? null : filter,
+        company: kind === "question" && company.startsWith("co:") ? company.slice(3) : "",
       });
       setNotes((current) => [...current, note]);
       open(note);
@@ -323,7 +339,7 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
 
   const changeView = (patch: Partial<View>) => {
     const next = { ...view, ...patch };
-    if (next.kind === kind && next.filter === filter) return;
+    if (next.kind === kind && next.filter === filter && next.company === company) return;
     const current = selected && matches(selected, next) ? selected : null;
     if (!current && !confirmDiscard()) return;
     setView(next);
@@ -334,10 +350,13 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
     id === null ? "공통" : (projects.find((p) => p.id === id)?.title ?? "삭제된 프로젝트");
   const doneCount = visible.filter((n) => n.status === "done").length;
   const selectedIndex = selected ? visible.findIndex((n) => n.id === selected.id) : -1;
-  /** 프로젝트 선택. 괄호 안 개수는 countKind 노트 수 (편집: 보고 있는 탭, 훑어보기: 질문) */
+  /**
+   * 프로젝트 선택. 괄호 안 개수는 지금 회사 범위의 countKind 노트 수
+   * (편집: 보고 있는 탭, 훑어보기: 질문)
+   */
   const projectSelect = (id: string, countKind: InterviewNoteKind) => {
     const countIn = (f: Filter) =>
-      notes.filter((n) => matches(n, { kind: countKind, filter: f })).length;
+      notes.filter((n) => matches(n, { kind: countKind, filter: f, company })).length;
     const options = [
       { value: "all", label: "전체", count: countIn("all") },
       { value: COMMON, label: "공통", count: countIn(COMMON) },
@@ -354,6 +373,49 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
             {options.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label} ({option.count})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+    );
+  };
+  /** 질문에 적힌 지원 회사 이름 (가나다순) */
+  const companies = [
+    ...new Set(notes.filter((n) => n.kind === "question" && n.company).map((n) => n.company)),
+  ].sort((a, b) => a.localeCompare(b, "ko"));
+  const companyLabel = company.startsWith("co:")
+    ? company.slice(3)
+    : company === "none"
+      ? "회사 무관"
+      : null;
+  /** 지원 회사 선택. 괄호 안 개수는 지금 프로젝트 범위의 질문 수 */
+  const companySelect = (id: string) => {
+    const countIn = (c: CompanyFilter) =>
+      notes.filter((n) => matches(n, { kind: "question", filter, company: c })).length;
+    const names =
+      company.startsWith("co:") && !companies.includes(company.slice(3))
+        ? [...companies, company.slice(3)]
+        : companies;
+    const options = [
+      { value: "all", label: "전체" },
+      { value: "none", label: "회사 무관" },
+      ...names.map((name) => ({ value: companyValue(name), label: name })),
+    ] as const satisfies readonly { value: CompanyFilter; label: string }[];
+    return (
+      <Field>
+        <FieldLabel htmlFor={id}>회사</FieldLabel>
+        <Select
+          value={company}
+          onValueChange={(value) => changeView({ company: value as CompanyFilter })}
+        >
+          <SelectTrigger id={id} className="w-full bg-background">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label} ({countIn(option.value)})
               </SelectItem>
             ))}
           </SelectContent>
@@ -447,11 +509,19 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
         <ReviewView
           // 공통 용어는 어느 프로젝트를 골라도 용어집에 함께 보인다.
           notes={notes.filter(
-            (n) => inProject(n, filter) || (n.kind === "term" && n.projectId === null),
+            (n) =>
+              (inProject(n, filter) && inCompany(n, company)) ||
+              (n.kind === "term" && n.projectId === null),
           )}
           projectTitle={projectTitle}
-          projectFilter={projectSelect("iv-review-filter", "question")}
+          projectFilter={
+            <div className="grid grid-cols-2 gap-2">
+              {projectSelect("iv-review-filter", "question")}
+              {companySelect("iv-review-company")}
+            </div>
+          }
           projectLabel={filter === "all" ? null : projectTitle(filter === COMMON ? null : filter)}
+          companyLabel={companyLabel}
         />
       ) : (
         <div className="row-start-3 grid min-h-0 grid-cols-[20rem_minmax(0,1fr)]">
@@ -478,7 +548,14 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
                 </Button>
               ))}
             </fieldset>
-            {projectSelect("iv-filter", kind)}
+            {kind === "question" ? (
+              <div className="grid grid-cols-2 gap-2">
+                {projectSelect("iv-filter", kind)}
+                {companySelect("iv-company")}
+              </div>
+            ) : (
+              projectSelect("iv-filter", kind)
+            )}
             <Button size="sm" variant="outline" disabled={busy} onClick={() => void create()}>
               <Plus aria-hidden="true" />새 {text.noun}
             </Button>
@@ -511,6 +588,11 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
                         {filter === "all" ? (
                           <Badge variant="secondary" className="rounded-sm">
                             {projectTitle(note.projectId)}
+                          </Badge>
+                        ) : null}
+                        {note.company && !company.startsWith("co:") ? (
+                          <Badge variant="outline" className="rounded-sm">
+                            {note.company}
                           </Badge>
                         ) : null}
                       </span>
@@ -631,6 +713,34 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
                     질문이면 공통으로 둡니다.
                   </FieldDescription>
                 </Field>
+
+                {kind === "question" ? (
+                  <Field data-invalid={issues.has("company") ? "true" : undefined}>
+                    <FieldLabel htmlFor="iv-company-name">지원 회사</FieldLabel>
+                    <Input
+                      id="iv-company-name"
+                      value={working.company}
+                      maxLength={MAX_INTERVIEW_COMPANY_LENGTH}
+                      list="iv-company-names"
+                      placeholder="비워 두면 회사와 상관없는 질문"
+                      aria-invalid={issues.has("company") ? true : undefined}
+                      className="bg-background"
+                      onChange={(e) => edit({ company: e.target.value })}
+                    />
+                    <datalist id="iv-company-names">
+                      {companies.map((name) => (
+                        <option key={name} value={name} />
+                      ))}
+                    </datalist>
+                    <FieldDescription>
+                      특정 회사 면접을 위해 준비한 질문이면 회사 이름을 적습니다. 목록과 훑어보기를
+                      회사별로 거를 수 있습니다.
+                    </FieldDescription>
+                    {issues.has("company") ? (
+                      <FieldError>{issues.get("company")}</FieldError>
+                    ) : null}
+                  </Field>
+                ) : null}
 
                 {kind === "question" ? (
                   <AnswersEditor

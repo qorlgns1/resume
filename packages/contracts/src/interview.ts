@@ -26,6 +26,8 @@ export type InterviewNoteKind = z.infer<typeof InterviewNoteKindSchema>;
 export const MAX_INTERVIEW_NOTES = 300;
 /** 질문 하나에 둘 수 있는 답의 수 */
 export const MAX_INTERVIEW_ANSWERS = 10;
+/** 지원 회사 이름 최대 길이 */
+export const MAX_INTERVIEW_COMPANY_LENGTH = 40;
 
 /**
  * 질문에 대한 답 하나. 같은 질문에 쓰임새가 다른 답(1분 / 30초 / 회사별 등)을 나란히 둔다.
@@ -64,6 +66,11 @@ export const InterviewNoteInputSchema = z.object({
    * 프로젝트는 사이트 문서 안에 있어 외래 키가 없다. 프로젝트를 지워도 노트는 남고 "삭제된 프로젝트"로 보인다.
    */
   projectId: IdSchema.nullable().default(null),
+  /**
+   * 이 질문을 준비하는 지원 회사 이름(자유 입력). 빈 문자열이면 어느 회사에서나 쓰는 질문.
+   * 프로젝트와 따로 고른다(프로젝트 질문이면서 특정 회사용일 수 있다). 용어는 쓰지 않는다.
+   */
+  company: z.string().trim().max(MAX_INTERVIEW_COMPANY_LENGTH).default(""),
 });
 export type InterviewNoteInput = z.infer<typeof InterviewNoteInputSchema>;
 

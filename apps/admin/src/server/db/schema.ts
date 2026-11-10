@@ -190,6 +190,8 @@ export const interviewNotes = sqliteTable(
     body: text("body", { mode: "json" }).notNull(),
     /** 연결한 포트폴리오 프로젝트 ID (사이트 문서 안의 ID라 외래 키 없음). null이면 공통 질문 */
     projectId: text("project_id"),
+    /** 지원 회사 이름. 빈 문자열이면 회사와 상관없는 질문 */
+    company: text("company").notNull().default(""),
     status: text("status", { enum: ["todo", "discussing", "done"] })
       .notNull()
       .default("todo"),

@@ -1,0 +1,1 @@
+ALTER TABLE `interview_notes` ADD `company` text DEFAULT '' NOT NULL;
