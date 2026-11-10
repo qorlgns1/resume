@@ -11,7 +11,7 @@ import { Badge } from "@resume/ui/components/badge";
 import { Button } from "@resume/ui/components/button";
 import { Input } from "@resume/ui/components/input";
 import { cn } from "@resume/ui/lib/utils";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Eye, EyeOff, List, Search } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { formatSpeakingTime } from "./speaking-time";
 
@@ -20,6 +20,7 @@ import { formatSpeakingTime } from "./speaking-time";
  * - 왼쪽: 프로젝트 선택, 질문(전체를 고르면 프로젝트별로 묶음) / 용어집(가나다순, 검색) 목차
  * - 오른쪽: 고른 질문의 답(여러 개면 탭으로 고름, 읽는 시간 어림 포함)과 자세한 답변, 또는 용어 설명
  * - ←/→ 이전·다음, "답 가리기"를 켜면 먼저 답해 보고 Space로 펼친다(연습용)
+ * - 좁은 화면(md 미만)에서는 목차와 본문을 한 번에 하나만 보여준다. 본문 위 막대에서 목차를 열고 넘긴다.
  */
 
 type Section = "question" | "term";
@@ -90,6 +91,8 @@ export function ReviewView({
   const shownAnswer = current ? Math.min(answerIndex, Math.max(0, current.answers.length - 1)) : 0;
   const answer = current?.answers[shownAnswer] ?? null;
 
+  /** 좁은 화면에서 목차를 펼쳤는지 (넓은 화면에서는 늘 둘 다 보인다) */
+  const [tocOpen, setTocOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const go = (id: string | undefined) => {
     if (!id) return;
@@ -141,9 +144,12 @@ export function ReviewView({
     <button
       type="button"
       aria-current={note.id === current?.id ? "true" : undefined}
-      onClick={() => go(note.id)}
+      onClick={() => {
+        go(note.id);
+        setTocOpen(false);
+      }}
       className={cn(
-        "flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-body-sm hover:bg-muted",
+        "flex w-full items-start gap-2 rounded-md px-2 py-2 md:py-1.5 text-left text-body-sm hover:bg-muted",
         note.id === current?.id && "bg-primary-soft font-semibold hover:bg-primary-soft",
       )}
     >
@@ -163,11 +169,23 @@ export function ReviewView({
   );
 
   return (
-    <div className="row-start-3 grid min-h-0 grid-cols-[20rem_minmax(0,1fr)]">
+    <div className="row-start-3 grid min-h-0 grid-cols-1 md:grid-cols-[20rem_minmax(0,1fr)]">
       <nav
         aria-label="훑어보기 목차"
-        className="flex min-h-0 flex-col gap-3 border-r border-border bg-card p-3"
+        className={cn(
+          "min-h-0 flex-col gap-3 bg-card p-3 md:flex md:border-r md:border-border",
+          tocOpen ? "flex" : "hidden",
+        )}
       >
+        <Button
+          size="sm"
+          variant="ghost"
+          className="self-start md:hidden"
+          onClick={() => setTocOpen(false)}
+        >
+          <ArrowLeft aria-hidden="true" />
+          본문으로
+        </Button>
         {projectFilter}
         <fieldset className="grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1">
           <legend className="sr-only">보기</legend>
@@ -242,12 +260,43 @@ export function ReviewView({
         </div>
       </nav>
 
-      <div ref={contentRef} className="min-h-0 overflow-y-auto bg-background">
+      <div
+        ref={contentRef}
+        className={cn("min-h-0 overflow-y-auto bg-background", tocOpen && "hidden md:block")}
+      >
+        {/* 좁은 화면: 목차 열기와 이전·다음을 엄지로 누르기 쉽게 위에 붙여 둔다 */}
+        <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-background/95 px-3 py-2 backdrop-blur md:hidden">
+          <Button size="sm" variant="outline" onClick={() => setTocOpen(true)}>
+            <List aria-hidden="true" />
+            목차
+          </Button>
+          <span className="flex-1 text-center text-caption text-subtle-foreground tabular-nums">
+            {current ? `${noun} ${index + 1} / ${items.length}` : null}
+          </span>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            aria-label="이전"
+            disabled={!prev}
+            onClick={() => go(prev?.id)}
+          >
+            <ArrowLeft aria-hidden="true" />
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            aria-label="다음"
+            disabled={!next}
+            onClick={() => go(next?.id)}
+          >
+            <ArrowRight aria-hidden="true" />
+          </Button>
+        </div>
         {current ? (
-          <article className="mx-auto flex max-w-3xl flex-col gap-6 px-8 py-8">
+          <article className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-5 md:gap-6 md:px-8 md:py-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="flex items-center gap-2 text-caption text-subtle-foreground">
-                <span className="tabular-nums" data-testid="review-position">
+                <span className="hidden tabular-nums md:inline" data-testid="review-position">
                   {section === "question"
                     ? [companyLabel, projectLabel]
                         .filter(Boolean)
@@ -326,7 +375,7 @@ export function ReviewView({
                         ) : null}
                       </p>
                       {answer.text ? (
-                        <p className="rounded-md border-l-4 border-primary bg-primary-soft px-5 py-4 text-body leading-relaxed whitespace-pre-line">
+                        <p className="rounded-md border-l-4 border-primary bg-primary-soft px-4 py-3 text-body leading-relaxed whitespace-pre-line md:px-5 md:py-4">
                           {answer.text}
                         </p>
                       ) : (
@@ -343,7 +392,7 @@ export function ReviewView({
                     <p className="mb-1.5 text-caption font-semibold text-primary-text">
                       한 줄 정의
                     </p>
-                    <p className="rounded-md border-l-4 border-primary bg-primary-soft px-5 py-4 text-body leading-relaxed whitespace-pre-line">
+                    <p className="rounded-md border-l-4 border-primary bg-primary-soft px-4 py-3 text-body leading-relaxed whitespace-pre-line md:px-5 md:py-4">
                       {current.summary}
                     </p>
                   </section>
@@ -361,7 +410,7 @@ export function ReviewView({
                 ) : null}
               </>
             ) : (
-              <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border-strong px-6 py-10 text-center">
+              <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border-strong px-4 py-10 text-center md:px-6">
                 <p className="text-body text-muted-foreground">
                   먼저 소리 내어 답해 보세요. 준비되면 답을 펼칩니다.
                 </p>
@@ -409,7 +458,7 @@ export function ReviewView({
             </nav>
           </article>
         ) : (
-          <p className="px-8 py-10 text-body-sm text-muted-foreground">
+          <p className="px-4 py-10 text-body-sm text-muted-foreground md:px-8">
             {section === "question"
               ? `${projectLabel ?? "이 범위"}에 아직 질문이 없습니다. 편집에서 질문을 추가하세요.`
               : "찾는 용어가 없습니다."}

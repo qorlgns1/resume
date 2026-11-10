@@ -34,7 +34,17 @@ import {
 } from "@resume/ui/components/select";
 import { Textarea } from "@resume/ui/components/textarea";
 import { cn } from "@resume/ui/lib/utils";
-import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, Pencil, Plus, Save, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  BookOpen,
+  List,
+  Pencil,
+  Plus,
+  Save,
+  Trash2,
+} from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -165,6 +175,7 @@ interface InterviewWorkspaceProps {
  * - 노트는 면접 질문 또는 용어집 항목이다. 목록 위의 탭으로 고른다.
  * - 노트마다 포트폴리오 프로젝트를 연결하거나 공통으로 둔다. 목록과 훑어보기를 프로젝트별로 거른다.
  * - 질문에는 지원 회사를 적을 수 있고, 목록과 훑어보기를 회사별로도 거른다.
+ * - 좁은 화면(md 미만)에서는 목록과 편집을 한 번에 하나만 보여준다.
  * - 편집: 왼쪽 목록에서 질문을 고르고 오른쪽에서 질문·답(여러 개)·본문을 고친다. 노트마다 따로 저장한다.
  * - 훑어보기: 면접 직전에 읽도록 고른 범위의 노트를 프로젝트별로 묶어 한 페이지에 보여준다.
  */
@@ -192,6 +203,8 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
   // 서버 값으로 작업본을 바꿀 때 편집기를 새로 만든다 (편집기는 처음 내용만 받는다).
   const [editorKey, setEditorKey] = useState(0);
   const [mode, setMode] = useState<Mode>("edit");
+  /** 좁은 화면에서 목록을 보고 있는지 (넓은 화면에서는 늘 둘 다 보인다) */
+  const [listOpen, setListOpen] = useState(true);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -214,6 +227,7 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
 
   const open = useCallback((note: InterviewNote | null) => {
     setSelectedId(note?.id ?? null);
+    if (note) setListOpen(false);
     setWorking(note ? toInput(note) : null);
     setWarnings([]);
     setEditorKey((k) => k + 1);
@@ -344,6 +358,8 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
     if (!current && !confirmDiscard()) return;
     setView(next);
     if (!current) open(notes.find((n) => matches(n, next)) ?? null);
+    // 좁은 화면에서는 거르기를 바꾼 뒤에도 목록에 머문다.
+    setListOpen(true);
   };
 
   const projectTitle = (id: string | null) =>
@@ -434,17 +450,25 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
 
   return (
     <div className="grid h-dvh min-h-0 grid-rows-[auto_auto_minmax(0,1fr)]">
-      <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5">
-        <div className="flex min-w-0 items-center gap-3">
-          <Link href="/" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+      <header className="flex items-center justify-between gap-2 border-b border-border bg-card px-2 py-2 md:gap-3 md:px-4 md:py-2.5">
+        <div className="flex min-w-0 items-center gap-2 md:gap-3">
+          <Link
+            href="/"
+            aria-label="편집 화면"
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
             <ArrowLeft aria-hidden="true" />
-            편집 화면
+            <span className="hidden md:inline">편집 화면</span>
           </Link>
-          <span className="text-border-strong" aria-hidden="true">
+          <span className="hidden text-border-strong md:inline" aria-hidden="true">
             /
           </span>
           <h1 className="truncate text-body-sm font-semibold">면접 노트</h1>
-          <Badge variant="outline" className="shrink-0 rounded-sm" data-testid="interview-progress">
+          <Badge
+            variant="outline"
+            className="hidden shrink-0 rounded-sm sm:inline-flex"
+            data-testid="interview-progress"
+          >
             정리 완료 {doneCount} / {visible.length}
           </Badge>
         </div>
@@ -474,9 +498,11 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
               </Button>
             ))}
           </fieldset>
-          <span className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
-          <span className="text-body-sm text-muted-foreground">{userName}</span>
-          <SignOutButton />
+          <span className="mx-1 hidden h-5 w-px bg-border md:inline" aria-hidden="true" />
+          <span className="hidden text-body-sm text-muted-foreground md:inline">{userName}</span>
+          <span className="hidden md:contents">
+            <SignOutButton />
+          </span>
         </div>
       </header>
 
@@ -524,10 +550,13 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
           companyLabel={companyLabel}
         />
       ) : (
-        <div className="row-start-3 grid min-h-0 grid-cols-[20rem_minmax(0,1fr)]">
+        <div className="row-start-3 grid min-h-0 grid-cols-1 md:grid-cols-[20rem_minmax(0,1fr)]">
           <nav
             aria-label="면접 노트 목록"
-            className="flex min-h-0 flex-col gap-2 border-r border-border bg-card p-3"
+            className={cn(
+              "min-h-0 flex-col gap-2 bg-card p-3 md:flex md:border-r md:border-border",
+              listOpen ? "flex" : "hidden",
+            )}
           >
             <fieldset className="grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1">
               <legend className="sr-only">노트 종류</legend>
@@ -569,7 +598,9 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
                     type="button"
                     aria-current={note.id === selectedId ? "true" : undefined}
                     onClick={() => {
-                      if (note.id !== selectedId && confirmDiscard()) open(note);
+                      // 좁은 화면에서 이미 고른 노트를 다시 누르면 편집으로 넘어간다.
+                      if (note.id === selectedId) setListOpen(false);
+                      else if (confirmDiscard()) open(note);
                     }}
                     className={cn(
                       "flex w-full items-start gap-2 rounded-md px-2 py-2 text-left text-body-sm hover:bg-muted",
@@ -603,10 +634,19 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
             </ol>
           </nav>
 
-          <main className="min-h-0 overflow-y-auto">
+          <main className={cn("min-h-0 overflow-y-auto", listOpen && "hidden md:block")}>
             {selected && working ? (
-              <div className="mx-auto flex max-w-3xl flex-col gap-5 px-6 py-6">
-                <div className="flex items-center justify-between gap-2">
+              <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-4 md:px-6 md:py-6">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="md:hidden"
+                    onClick={() => setListOpen(true)}
+                  >
+                    <List aria-hidden="true" />
+                    목록
+                  </Button>
                   <span className="text-caption text-subtle-foreground">
                     {text.noun} {selectedIndex + 1} / {visible.length}
                     {dirty ? " · 저장하지 않은 변경" : ""}
@@ -656,7 +696,7 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
                   </span>
                 </div>
 
-                <div className="grid grid-cols-[minmax(0,1fr)_10rem] gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
                   <Field data-invalid={issues.has("question") ? "true" : undefined}>
                     <FieldLabel htmlFor="iv-question">{text.title}</FieldLabel>
                     <Input
@@ -804,9 +844,20 @@ function Workspace({ initialNotes, projects, userName }: InterviewWorkspaceProps
                 </div>
               </div>
             ) : (
-              <p className="px-6 py-10 text-body-sm text-muted-foreground">
-                왼쪽에서 {text.object} 고르거나 새로 추가하세요.
-              </p>
+              <div className="flex flex-col items-start gap-3 px-4 py-10 md:px-6">
+                <p className="text-body-sm text-muted-foreground">
+                  목록에서 {text.object} 고르거나 새로 추가하세요.
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="md:hidden"
+                  onClick={() => setListOpen(true)}
+                >
+                  <List aria-hidden="true" />
+                  목록
+                </Button>
+              </div>
             )}
           </main>
         </div>

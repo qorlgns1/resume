@@ -68,7 +68,7 @@ export function AnswersEditor({ answers, onChange, issues, help }: AnswersEditor
               className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3"
               data-testid="answer-card"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {index === 0 ? (
                   <Badge variant="soft" className="shrink-0 rounded-sm">
                     대표

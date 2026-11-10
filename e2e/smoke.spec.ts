@@ -886,6 +886,29 @@ test.describe("어드민", () => {
     await page.mouse.move(0, 400);
     await page.screenshot({ path: `${screens}/admin-interview-review.png` });
 
+    // 휴대폰 너비: 목차와 본문, 목록과 편집을 한 번에 하나씩 보여준다
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(toc).toBeHidden();
+    await expect(
+      page.getByRole("heading", { level: 2, name: "왜 문서 스냅샷 방식인가요?" }),
+    ).toBeVisible();
+    await page.screenshot({ path: `${screens}/admin-interview-review-mobile.png` });
+    await page.getByRole("button", { name: "목차" }).click();
+    await expect(toc).toBeVisible();
+    await page.screenshot({ path: `${screens}/admin-interview-toc-mobile.png` });
+    await toc.getByRole("button", { name: /왜 문서 스냅샷 방식인가요/ }).click();
+    await expect(toc).toBeHidden();
+    await page.getByRole("button", { name: "편집", exact: true }).click();
+    await expect(list).toBeVisible();
+    await list.getByRole("button", { name: /왜 문서 스냅샷 방식인가요/ }).click();
+    await expect(list).toBeHidden();
+    await expect(page.getByLabel("질문", { exact: true })).toBeVisible();
+    await page.screenshot({ path: `${screens}/admin-interview-edit-mobile.png` });
+    await page.getByRole("button", { name: "목록" }).click();
+    await expect(list).toBeVisible();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.getByRole("button", { name: "훑어보기" }).click();
+
     // 프로젝트로 거르면 그 프로젝트의 질문으로 만들어지고, 훑어보기도 그 프로젝트만 보인다
     await page.getByRole("button", { name: "편집", exact: true }).click();
     await page.getByLabel("프로젝트", { exact: true }).click();
