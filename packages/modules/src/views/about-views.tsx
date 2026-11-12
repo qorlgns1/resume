@@ -10,8 +10,9 @@ import { EmptyList } from "./page-header";
 /*
  * 소개 페이지 본문.
  * - 왼쪽: 프로필의 소개 본문 (읽기 좋은 폭으로 제한)
- * - 오른쪽: 한눈에 보기. 회사 경험·성과·기술·학력·자격을 이미 입력된 콘텐츠에서 뽑아 요약한다.
- *   글을 다 읽지 않아도 언제 어디서 무엇을 했는지 알 수 있게 하려는 것이다.
+ * - 오른쪽: 한눈에 보기. 회사 경험·기술·학력·자격을 이미 입력된 콘텐츠에서 뽑아 요약한다.
+ *   글을 다 읽지 않아도 언제 어디서 일했는지 알 수 있게 하려는 것이다.
+ *   성과는 싣지 않는다. 본문의 답 안에서 근거로 쓰이고, 홈과 회사 상세가 따로 보여 준다.
  * 좁은 화면에서는 본문 아래로 내려간다.
  */
 
@@ -26,15 +27,8 @@ function SummarySection({ title, children }: { title: string; children: ReactNod
 
 function AboutSummary({ content, options }: { content: ContentLibrary; options: RenderOptions }) {
   const companies = sortCompanies(content.companies);
-  const { achievements, techStack, education, certifications } = content;
-  if (
-    companies.length +
-      achievements.length +
-      techStack.length +
-      education.length +
-      certifications.length ===
-    0
-  )
+  const { techStack, education, certifications } = content;
+  if (companies.length + techStack.length + education.length + certifications.length === 0)
     return null;
 
   return (
@@ -60,32 +54,6 @@ function AboutSummary({ content, options }: { content: ContentLibrary; options: 
               </li>
             ))}
           </ol>
-        </SummarySection>
-      ) : null}
-
-      {achievements.length > 0 ? (
-        <SummarySection title="성과">
-          <ul className="flex flex-col gap-3">
-            {achievements.map((achievement) => (
-              <li key={achievement.id} className="flex flex-col gap-0.5">
-                {achievement.metric ? (
-                  <span className="text-body-sm font-semibold tabular-nums">
-                    {achievement.metric.label} {achievement.metric.before} →{" "}
-                    <span className="text-primary-text">{achievement.metric.after}</span>
-                  </span>
-                ) : null}
-                <span
-                  className={
-                    achievement.metric
-                      ? "text-caption text-muted-foreground"
-                      : "text-body-sm font-semibold"
-                  }
-                >
-                  {achievement.title}
-                </span>
-              </li>
-            ))}
-          </ul>
         </SummarySection>
       ) : null}
 

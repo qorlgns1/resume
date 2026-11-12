@@ -189,10 +189,11 @@ test.describe("목록·상세·히스토리 페이지", () => {
     await expect(page).toHaveURL(`${web}/about`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("소개");
     await expect(page.getByRole("heading", { level: 2, name: "어떻게 일하나요" })).toBeVisible();
-    // 본문 옆에 경력·성과·기술 요약이 붙고, 회사 이름은 상세로 이어진다
+    // 본문 옆에 경력·기술 요약이 붙고, 회사 이름은 상세로 이어진다. 성과는 싣지 않는다
     const summary = page.getByRole("complementary", { name: "한눈에 보기" });
     await expect(summary.getByRole("heading", { level: 2, name: "경력" })).toBeVisible();
     await expect(summary.getByRole("heading", { level: 2, name: "기술" })).toBeVisible();
+    await expect(summary.getByRole("heading", { level: 2, name: "성과" })).toHaveCount(0);
     await expect(summary.getByRole("link").first()).toHaveAttribute("href", /^\/experience\//);
     await page.screenshot({ path: `${screens}/about-1440.png`, fullPage: true });
   });
