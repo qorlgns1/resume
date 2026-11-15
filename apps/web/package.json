@@ -16,7 +16,7 @@
     "@resume/tokens": "workspace:*",
     "@resume/ui": "workspace:*",
     "lucide-react": "1.66.0",
-    "next": "16.4.3",
+    "next": "16.4.5",
     "posthog-js": "1.444.0",
     "pretendard": "1.3.9",
     "react": "19.3.1",
